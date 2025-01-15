@@ -1,4 +1,4 @@
-package SimUtils;
+package net.berack.upo.valpre.bcnn.simutil;
 
 // EventList is implemented as a splay tree
 // v1.  class Event knows this and has fields

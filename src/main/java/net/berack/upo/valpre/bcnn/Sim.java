@@ -1,5 +1,7 @@
-import SimUtils.*;
-import SimUtils.Queue;
+package net.berack.upo.valpre.bcnn;
+
+import net.berack.upo.valpre.bcnn.simutil.*;
+import net.berack.upo.valpre.bcnn.simutil.Queue;
 
 import java.util.*;
 class Sim {

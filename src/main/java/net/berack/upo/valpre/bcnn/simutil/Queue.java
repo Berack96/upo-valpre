@@ -1,4 +1,4 @@
-package SimUtils;
+package net.berack.upo.valpre.bcnn.simutil;
 
 /**
 

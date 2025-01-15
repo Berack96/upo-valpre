@@ -1,6 +1,6 @@
-package SimUtils;
+package net.berack.upo.valpre.bcnn.simutil;
 
-public class Event implements Comparable {
+public class Event implements Comparable<Object> {
 
     public Event(int a_type, double a_time) { _type = a_type; time = a_time; }
 
