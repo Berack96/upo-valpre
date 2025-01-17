@@ -5,6 +5,10 @@ import java.util.List;
 import net.berack.upo.valpre.rand.Distribution;
 import net.berack.upo.valpre.rand.Rng;
 
+/**
+ * Represents a node in the network. It can be a source, a queue, or a sink
+ * based on the configuration passed as parameters.
+ */
 public class ServerNode {
     public final String name;
     public final int maxServers;
@@ -14,14 +18,35 @@ public class ServerNode {
     private final List<NodeChild> children = new ArrayList<>();
     private double sumProbabilities = 0.0;
 
+    /**
+     * Creates a source node with the given name and distribution.
+     * @param name The name of the node.
+     * @param distribution The distribution of the inter-arrival times.
+     * @return The created source node.
+     */
     public static ServerNode createSource(String name, Distribution distribution) {
         return new ServerNode(name, Integer.MAX_VALUE, distribution, false, true);
     }
 
+    /**
+     * Creates a queue node with the given name, maximum number of servers, and distribution.
+     * @param name The name of the node.
+     * @param maxServers The maximum number of servers in the queue.
+     * @param distribution The distribution of the service times.
+     * @return The created queue node.
+     */
     public static ServerNode createQueue(String name, int maxServers, Distribution distribution) {
         return new ServerNode(name, maxServers, distribution, false, false);
     }
 
+    /**
+     * Creates a generic node with the given name and distribution.
+     * @param name The name of the node.
+     * @param maxServers The maximum number of servers in the queue.
+     * @param distribution The distribution of the service times.
+     * @param isSink Whether the node is a sink.
+     * @param isSource Whether the node is a source.
+     */
     public ServerNode(String name, int maxServers, Distribution distribution, boolean isSink, boolean isSource) {
         this.name = name;
         this.maxServers = maxServers;
@@ -30,11 +55,21 @@ public class ServerNode {
         this.isSource = isSource;
     }
 
+    /**
+     * Adds a child node with the given probability to select it.
+     * @param node The child node to add.
+     * @param probability The probability of the child node.
+     */
     public void addChild(ServerNode node, double probability) {
         this.children.add(new NodeChild(node, probability));
         this.sumProbabilities += probability;
     }
 
+    /**
+     * Gets a child node based on the given random number generator.
+     * @param rng The random number generator to use.
+     * @return The child node selected based on the probabilities.
+     */
     public ServerNode getChild(Rng rng) {
         var random = rng.random();
         for (var child : this.children) {
@@ -46,6 +81,9 @@ public class ServerNode {
         return null;
     }
 
+    /**
+     * Represents a child node with a probability to select it.
+     */
     public static class NodeChild {
         public final ServerNode node;
         public final double probability;
