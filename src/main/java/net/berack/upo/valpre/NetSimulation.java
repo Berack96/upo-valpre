@@ -12,7 +12,6 @@ import net.berack.upo.valpre.rand.Rng;
  */
 public class NetSimulation {
     public final long seed;
-    private final Rng rng;
     private final Map<String, ServerNode> servers = new HashMap<>();
 
     /**
@@ -22,7 +21,6 @@ public class NetSimulation {
      */
     public NetSimulation(long seed) {
         this.seed = seed;
-        this.rng = new Rng(seed);
     }
 
     /**
@@ -36,40 +34,46 @@ public class NetSimulation {
 
     /**
      * Runs the simulation for the given number of total arrivals, stopping when the
-     * given node has reached the
-     * specified number of departures.
+     * given node has reached the specified number of departures.
+     * If needed the run method can be called by multiple threads.
      * 
-     * @param total              The total number of arrivals to simulate.
-     * @param untilDepartureNode The name of the node to stop at.
-     * @return A map of statistics for each server node in the network.
+     * @param criteria The criteria to determine when to end the simulation. If null
+     *                 then the simulation will run until there are no more events.
+     * @return The statistics of the nodes in the network.
      */
-    public Map<String, Statistics> run(long total, String untilDepartureNode) {
+    public Map<String, Statistics> run(EndSimulationCriteria... criteria) {
         // Initialization
         var timeNow = 0.0d;
-        var stats = new HashMap<String, Statistics>();
+        var rng = new Rng(this.seed); // TODO change here for thread variance (use Rngs with ids)
         var fel = new PriorityQueue<Event>();
+        var stats = new HashMap<String, Statistics>();
         for (var node : this.servers.values()) {
-            var s = new Statistics(this.rng);
-            s.addArrivalIf(node.isSource, node, timeNow, fel);
+            var s = new Statistics(rng);
+            s.addArrivalIf(node.shouldSpawnArrival(s.numArrivals), node, timeNow, fel);
             stats.put(node.name, s);
         }
 
         // Main Simulation Loop
-        var nodeStop = stats.get(untilDepartureNode);
-        while (nodeStop.numDepartures < total) {
+        while (!fel.isEmpty() && !this.shouldEnd(criteria, stats)) {
             var event = fel.poll();
-            if (event == null) {
-                break;
-            }
-
-            timeNow = event.time;
             var statsNode = stats.get(event.node.name);
+            timeNow = event.time;
+
             switch (event.type) {
                 case ARRIVAL -> statsNode.processArrival(event, timeNow, fel);
                 case DEPARTURE -> statsNode.processDeparture(event, timeNow, fel);
             }
         }
         return stats;
+    }
+
+    private boolean shouldEnd(EndSimulationCriteria[] criteria, Map<String, Statistics> stats) {
+        for (var c : criteria) {
+            if (c.shouldEnd(stats)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -137,7 +141,7 @@ public class NetSimulation {
             }
             this.lastEventTime = timeNow;
 
-            this.addArrivalIf(event.node.isSource, event.node, timeNow, fel);
+            this.addArrivalIf(event.node.shouldSpawnArrival(this.numArrivals), event.node, timeNow, fel);
         }
 
         /**
@@ -170,7 +174,7 @@ public class NetSimulation {
             this.lastEventTime = timeNow;
 
             var next = event.node.getChild(rng);
-            this.addArrivalIf(!event.node.isSink, next, timeNow, fel);
+            this.addArrivalIf(!event.node.shouldSinkDeparture(this.numDepartures), next, timeNow, fel);
         }
 
         /**

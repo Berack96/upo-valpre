@@ -14,6 +14,7 @@ public interface Distribution {
 
         /**
          * Creates a new exponential distribution with the given rate.
+         * 
          * @param lambda The rate of the distribution.
          */
         public Exponential(double lambda) {
@@ -35,7 +36,8 @@ public interface Distribution {
 
         /**
          * Creates a new normal distribution with the given mean and standard deviation.
-         * @param mean The mean of the distribution.
+         * 
+         * @param mean  The mean of the distribution.
          * @param sigma The standard deviation of the distribution.
          */
         public Normal(double mean, double sigma) {
@@ -60,7 +62,8 @@ public interface Distribution {
 
         /**
          * Creates a new normal distribution with the given mean and standard deviation.
-         * @param mean The mean of the distribution.
+         * 
+         * @param mean  The mean of the distribution.
          * @param sigma The standard deviation of the distribution.
          */
         public NormalBoxMuller(double mean, double sigma) {

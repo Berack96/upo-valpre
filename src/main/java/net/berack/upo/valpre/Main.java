@@ -4,16 +4,26 @@ import net.berack.upo.valpre.rand.Distribution;
 
 public class Main {
     public static void main(String[] args) {
+        // Parameters for the simulation
+        var seed = System.nanoTime();
+        var total = 1000;
+        var lambda = 1.0 / 4.5;
+        var mu = 3.2;
+        var sigma = 0.6;
+
         // Build the network
-        var node1 = ServerNode.createSource("Source", new Distribution.Exponential(1.0 / 4.5));
-        var node2 = ServerNode.createQueue("Queue", 1, new Distribution.NormalBoxMuller(3.2, 0.6));
+        var node1 = ServerNode.createLimitedSource("Source", new Distribution.Exponential(lambda), total);
+        var node2 = ServerNode.createQueue("Queue", 1, new Distribution.NormalBoxMuller(mu, sigma));
         node1.addChild(node2, 1.0);
 
         /// Run the simulation
-        var sim = new NetSimulation(System.nanoTime());
+        var sim = new NetSimulation(seed);
         sim.addNode(node1);
         sim.addNode(node2);
-        var results = sim.run(1000, "Queue");
+
+        var maxDepartures = new EndSimulationCriteria.MaxDepartures("Queue", total);
+        var maxTime = new EndSimulationCriteria.MaxTime(1000.0);
+        var results = sim.run(maxDepartures, maxTime);
 
         // Display the results
         for (var entry : results.entrySet()) {
