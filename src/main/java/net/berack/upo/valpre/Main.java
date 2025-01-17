@@ -6,7 +6,7 @@ public class Main {
     public static void main(String[] args) {
         // Parameters for the simulation
         var seed = System.nanoTime();
-        var total = 1000;
+        var total = 100000;
         var lambda = 1.0 / 4.5;
         var mu = 3.2;
         var sigma = 0.6;
@@ -22,8 +22,8 @@ public class Main {
         sim.addNode(node2);
 
         var maxDepartures = new EndSimulationCriteria.MaxDepartures("Queue", total);
-        var maxTime = new EndSimulationCriteria.MaxTime(1000.0);
-        var results = sim.run(maxDepartures, maxTime);
+        //var maxTime = new EndSimulationCriteria.MaxTime(1000.0);
+        var results = sim.run(maxDepartures);
 
         // Display the results
         for (var entry : results.entrySet()) {

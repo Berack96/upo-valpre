@@ -133,7 +133,7 @@ public class NetSimulation {
 
             if (event.node.maxServers > this.numServerBusy) {
                 this.numServerBusy++;
-                var time = event.node.distribution.sample(this.rng);
+                var time = event.node.getPositiveSample(this.rng);
                 var departure = Event.newDeparture(event.node, timeNow + time);
                 fel.add(departure);
             } else {
@@ -163,7 +163,7 @@ public class NetSimulation {
             if (this.queue.size() < this.numServerBusy) {
                 this.numServerBusy--;
             } else {
-                var time = event.node.distribution.sample(this.rng);
+                var time = event.node.getPositiveSample(this.rng);
                 var departure = Event.newDeparture(event.node, timeNow + time);
                 fel.add(departure);
             }
@@ -188,7 +188,7 @@ public class NetSimulation {
          */
         private void addArrivalIf(boolean condition, ServerNode node, double timeNow, PriorityQueue<Event> fel) {
             if (condition && node != null) {
-                var delay = node.distribution.sample(this.rng);
+                var delay = node.getPositiveSample(this.rng);
                 fel.add(Event.newArrival(node, timeNow + delay));
             }
         }

@@ -103,6 +103,22 @@ public class ServerNode {
     }
 
     /**
+     * Gets a positive sample from the distribution.
+     * This is useful if you need to generate a positive value from a distribution
+     * that can generate negative values. For example, the normal distribution.
+     * 
+     * @param rng The random number generator to use.
+     * @return A positive sample from the distribution.
+     */
+    public double getPositiveSample(Rng rng) {
+        double sample;
+        do {
+            sample = this.distribution.sample(rng);
+        } while (sample < 0);
+        return sample;
+    }
+
+    /**
      * Determines if the node should spawn an arrival based on the number of
      * arrivals.
      * 
