@@ -33,7 +33,7 @@ package net.berack.upo.valpre.rand;
  * Language        : Java
  * Latest Revision : 6-10-04
  */
-class Rngs {
+public class Rngs {
 	private final static int STREAMS = 256; /* # of streams, DON'T CHANGE THIS VALUE */
 	private final static long A256 = 22925; /* jump multiplier, DON'T CHANGE THIS VALUE */
 

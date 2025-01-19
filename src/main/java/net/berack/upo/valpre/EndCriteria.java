@@ -1,26 +1,22 @@
 package net.berack.upo.valpre;
 
-import java.util.Map;
-
-import net.berack.upo.valpre.NetSimulation.Statistics;
-
 /**
  * Criteria to determine when to end the simulation.
  */
-public interface EndSimulationCriteria {
+public interface EndCriteria {
     /**
      * Determines if the simulation should end based on the statistics of the nodes.
      * 
      * @param stats The statistics of the nodes in the network.
      * @return True if the simulation should end, false otherwise.
      */
-    public boolean shouldEnd(Map<String, Statistics> stats);
+    public boolean shouldEnd(NetStatistics.SingleRun stats);
 
     /**
      * Ends the simulation when the given node has reached the specified number of
      * arrivals.
      */
-    public static class MaxArrivals implements EndSimulationCriteria {
+    public static class MaxArrivals implements EndCriteria {
         private final String nodeName;
         private final int maxArrivals;
 
@@ -37,8 +33,8 @@ public interface EndSimulationCriteria {
         }
 
         @Override
-        public boolean shouldEnd(Map<String, Statistics> stats) {
-            return stats.get(nodeName).numArrivals >= this.maxArrivals;
+        public boolean shouldEnd(NetStatistics.SingleRun stats) {
+            return stats.nodes.get(nodeName).numArrivals >= this.maxArrivals;
         }
     }
 
@@ -46,7 +42,7 @@ public interface EndSimulationCriteria {
      * Ends the simulation when the given node has reached the specified number of
      * departures.
      */
-    public static class MaxDepartures implements EndSimulationCriteria {
+    public static class MaxDepartures implements EndCriteria {
         private final String nodeName;
         private final int maxDepartures;
 
@@ -63,8 +59,8 @@ public interface EndSimulationCriteria {
         }
 
         @Override
-        public boolean shouldEnd(Map<String, Statistics> stats) {
-            return stats.get(nodeName).numDepartures >= this.maxDepartures;
+        public boolean shouldEnd(NetStatistics.SingleRun stats) {
+            return stats.nodes.get(nodeName).numDepartures >= this.maxDepartures;
         }
     }
 
@@ -72,7 +68,7 @@ public interface EndSimulationCriteria {
      * Ends the simulation when the given node has reached the specified number of
      * departures.
      */
-    public static class MaxTime implements EndSimulationCriteria {
+    public static class MaxTime implements EndCriteria {
         private final double maxTime;
 
         /**
@@ -86,8 +82,8 @@ public interface EndSimulationCriteria {
         }
 
         @Override
-        public boolean shouldEnd(Map<String, Statistics> stats) {
-            return stats.values().stream().anyMatch(s -> s.lastEventTime >= this.maxTime);
+        public boolean shouldEnd(NetStatistics.SingleRun stats) {
+            return stats.simulationTime >= this.maxTime;
         }
     }
 }

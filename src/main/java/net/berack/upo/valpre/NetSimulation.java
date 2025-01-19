@@ -1,27 +1,22 @@
 package net.berack.upo.valpre;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.PriorityQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import net.berack.upo.valpre.NetStatistics.SingleRun;
 import net.berack.upo.valpre.rand.Rng;
+import net.berack.upo.valpre.rand.Rngs;
 
 /**
  * A network simulation that uses a discrete event simulation to model the
  * behavior of a network of servers.
  */
 public class NetSimulation {
-    public final long seed;
-    private final Map<String, ServerNode> servers = new HashMap<>();
-
-    /**
-     * Creates a new network simulation with the given seed.
-     * 
-     * @param seed The seed to use for the random number generator.
-     */
-    public NetSimulation(long seed) {
-        this.seed = seed;
-    }
+    private final Collection<ServerNode> servers = new ArrayList<>();
 
     /**
      * Adds a new server node to the network.
@@ -29,90 +24,152 @@ public class NetSimulation {
      * @param node The server node to add.
      */
     public void addNode(ServerNode node) {
-        this.servers.put(node.name, node);
+        this.servers.add(node);
     }
 
     /**
-     * Runs the simulation for the given number of total arrivals, stopping when the
-     * given node has reached the specified number of departures.
-     * If needed the run method can be called by multiple threads.
+     * Runs the simulation with the given seed until a given criteria is met.
      * 
-     * @param criteria The criteria to determine when to end the simulation. If null
-     *                 then the simulation will run until there are no more events.
-     * @return The statistics of the nodes in the network.
+     * @param seed      The seed to use for the random number generator.
+     * @param criterias The criteria to determine when to end the simulation. If
+     *                  null then the simulation will run until there are no more
+     *                  events.
+     * @return The statistics the network.
      */
-    public Map<String, Statistics> run(EndSimulationCriteria... criteria) {
-        // Initialization
-        var timeNow = 0.0d;
-        var rng = new Rng(this.seed); // TODO change here for thread variance (use Rngs with ids)
-        var fel = new PriorityQueue<Event>();
-        var stats = new HashMap<String, Statistics>();
-        for (var node : this.servers.values()) {
-            var s = new Statistics(rng);
-            s.addArrivalIf(node.shouldSpawnArrival(s.numArrivals), node, timeNow, fel);
-            stats.put(node.name, s);
+    public NetStatistics.SingleRun run(long seed, EndCriteria... criterias) {
+        return this.run(new Rng(seed), criterias);
+    }
+
+    /**
+     * Run the simualtion multiple times with the given seed and number of runs.
+     * The runs are calculated one after the other. For a parallel run see
+     * {@link #runParallel(long, int, EndCriteria...)}.
+     * 
+     * @param seed      The seed to use for the random number generator.
+     * @param runs      The number of runs to perform.
+     * @param criterias The criteria to determine when to end the simulation. If
+     *                  null then the simulation will run until there are no more
+     *                  events.
+     * @return The statistics the network.
+     */
+    public NetStatistics run(long seed, int runs, EndCriteria... criterias) {
+        var rng = new Rng(seed);
+        var stats = new SingleRun[runs];
+
+        for (int i = 0; i < runs; i++) {
+            stats[i] = this.run(rng, criterias);
+        }
+        return new NetStatistics(stats);
+    }
+
+    /**
+     * Runs the simulation multiple times with the given seed and number of runs.
+     * The runs are calculated in parallel using the given number of threads.
+     * 
+     * @param seed       The seed to use for the random number generator.
+     * @param runs       The number of runs to perform.
+     * @param numThreads The number of threads to use for the simulation.
+     * @param criterias  The criteria to determine when to end the simulation. If
+     *                   null then the simulation will run until there are no more
+     *                   events.
+     * @return The statistics the network.
+     * @throws InterruptedException If the threads are interrupted.
+     * @throws ExecutionException   If the one of the threads has been aborted.
+     */
+    public NetStatistics runParallel(long seed, int runs, EndCriteria... criterias)
+            throws InterruptedException, ExecutionException {
+        var rngs = new Rngs(seed);
+        var stats = new NetStatistics.SingleRun[runs];
+        var futures = new Future[runs];
+
+        var numThreads = Math.min(runs, Runtime.getRuntime().availableProcessors());
+        var threads = Executors.newFixedThreadPool(numThreads);
+
+        for (int i = 0; i < runs; i++) {
+            final var id = i;
+            futures[i] = threads.submit(() -> {
+                stats[id] = this.run(rngs.getRng(id), criterias);
+            });
         }
 
-        // Main Simulation Loop
-        while (!fel.isEmpty() && !this.shouldEnd(criteria, stats)) {
+        for (var i = 0; i < runs; i++) {
+            futures[i].get();
+        }
+
+        threads.shutdownNow();
+        return new NetStatistics(stats);
+    }
+
+    /**
+     * Runs the simulation until a given criteria is met.
+     * 
+     * @param rng       The random number generator to use.
+     * @param criterias The criteria to determine when to end the simulation. If
+     *                  null then the simulation will run until there are no more
+     *                  events.
+     * @return The statistics the network.
+     */
+    public NetStatistics.SingleRun run(Rng rng, EndCriteria... criterias) {
+        var run = new SimpleRun(this.servers, rng, criterias);
+        while (!run.hasEnded()) {
+            run.processNextEvent();
+        }
+        return run.endSimulation();
+    }
+
+    /**
+     * Process an entire run of the simulation.
+     */
+    public static class SimpleRun {
+
+        private final NetStatistics.SingleRun stats;
+        private final PriorityQueue<Event> fel;
+        private final EndCriteria[] criterias;
+
+        /**
+         * Creates a new run of the simulation with the given nodes and random number
+         * generator.
+         * 
+         * @param nodes The nodes in the network.
+         * @param rng   The random number generator to use.
+         */
+        private SimpleRun(Collection<ServerNode> nodes, Rng rng, EndCriteria... criterias) {
+            this.fel = new PriorityQueue<>();
+            this.stats = new NetStatistics.SingleRun(nodes, rng);
+            this.criterias = criterias;
+
+            // Initial arrivals (if spawned)
+            for (var node : nodes) {
+                if (node.shouldSpawnArrival(0))
+                    this.addEvent(node, Event.Type.ARRIVAL);
+            }
+        }
+
+        /**
+         * Processes the next event in the future event list.
+         * This method will throw NullPointerException if there are no more events.
+         * You should check if the simulation has ended before calling this method.
+         * 
+         * @see #hasEnded()
+         */
+        public void processNextEvent() {
             var event = fel.poll();
-            var statsNode = stats.get(event.node.name);
-            timeNow = event.time;
+            stats.simulationTime = event.time;
 
             switch (event.type) {
-                case ARRIVAL -> statsNode.processArrival(event, timeNow, fel);
-                case DEPARTURE -> statsNode.processDeparture(event, timeNow, fel);
+                case ARRIVAL -> this.processArrival(event);
+                case DEPARTURE -> this.processDeparture(event);
             }
         }
-        return stats;
-    }
-
-    private boolean shouldEnd(EndSimulationCriteria[] criteria, Map<String, Statistics> stats) {
-        for (var c : criteria) {
-            if (c.shouldEnd(stats)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Represents a statistical summary of the behavior of a server node in the
-     * network.
-     * It is used by the simulation to track the number of arrivals and departures,
-     * the maximum queue length, the busy time, and the response time.
-     */
-    public static class Statistics {
-        public int numArrivals = 0;
-        public int numDepartures = 0;
-        public int maxQueueLength = 0;
-        public double busyTime = 0.0;
-        public double responseTime = 0.0;
-        public double lastEventTime = 0.0;
-
-        private int numServerBusy = 0;
-        private ArrayDeque<Double> queue = new ArrayDeque<>();
-        private final Rng rng;
 
         /**
-         * Creates a new statistics object with the given random number generator.
+         * Ends the simulation and returns the statistics of the network.
          * 
-         * @param rng The random number generator to use.
+         * @return The statistics of the network.
          */
-        public Statistics(Rng rng) {
-            this.rng = rng;
-        }
-
-        /**
-         * Resets the statistics to their initial values.
-         */
-        public void reset() {
-            this.numArrivals = 0;
-            this.numDepartures = 0;
-            this.numServerBusy = 0;
-            this.busyTime = 0.0;
-            this.responseTime = 0.0;
-            this.queue.clear();
+        public NetStatistics.SingleRun endSimulation() {
+            this.stats.endSimulation();
+            return this.stats;
         }
 
         /**
@@ -122,26 +179,26 @@ public class NetSimulation {
          * arrival. If a server is available, a departure event is created and added to
          * the future event list.
          * 
-         * @param event   The arrival event to process.
-         * @param timeNow The current time of the simulation.
-         * @param fel     The future event list to add new events to.
+         * @param stats The statistics of the network.
+         * @param event The arrival event to process.
+         * @param fel   The future event list to add new events to.
          */
-        private void processArrival(Event event, double timeNow, PriorityQueue<Event> fel) {
-            this.numArrivals++;
-            this.queue.add(event.time);
-            this.maxQueueLength = Math.max(this.maxQueueLength, this.queue.size());
+        private void processArrival(Event event) {
+            var nodeStats = stats.nodes.get(event.node.name);
 
-            if (event.node.maxServers > this.numServerBusy) {
-                this.numServerBusy++;
-                var time = event.node.getPositiveSample(this.rng);
-                var departure = Event.newDeparture(event.node, timeNow + time);
-                fel.add(departure);
+            nodeStats.numArrivals++;
+            nodeStats.enqueue(event.time);
+            if (event.node.maxServers > nodeStats.numServerBusy) {
+                nodeStats.numServerBusy++;
+                this.addEvent(event.node, Event.Type.DEPARTURE);
             } else {
-                this.busyTime += timeNow - this.lastEventTime;
+                nodeStats.busyTime += stats.simulationTime - nodeStats.lastEventTime;
             }
-            this.lastEventTime = timeNow;
 
-            this.addArrivalIf(event.node.shouldSpawnArrival(this.numArrivals), event.node, timeNow, fel);
+            nodeStats.lastEventTime = stats.simulationTime;
+            if (event.node.shouldSpawnArrival(nodeStats.numArrivals)) {
+                this.addEvent(event.node, Event.Type.ARRIVAL);
+            }
         }
 
         /**
@@ -152,45 +209,63 @@ public class NetSimulation {
          * At the end it will add an arrival to the next node if the current node has a
          * child.
          * 
-         * @param event   The departure event to process.
-         * @param timeNow The current time of the simulation.
-         * @param fel     The future event list to add new events to.
+         * @param stats The statistics of the network.
+         * @param event The departure event to process.
+         * @param fel   The future event list to add new events to.
          */
-        private void processDeparture(Event event, double timeNow, PriorityQueue<Event> fel) {
-            var startService = this.queue.poll();
-            var response = timeNow - startService;
+        private void processDeparture(Event event) {
+            var nodeStats = stats.nodes.get(event.node.name);
+            var startService = nodeStats.dequeue();
+            var response = stats.simulationTime - startService;
 
-            if (this.queue.size() < this.numServerBusy) {
-                this.numServerBusy--;
+            if (nodeStats.getQueueSize() < nodeStats.numServerBusy) {
+                nodeStats.numServerBusy--;
             } else {
-                var time = event.node.getPositiveSample(this.rng);
-                var departure = Event.newDeparture(event.node, timeNow + time);
-                fel.add(departure);
+                this.addEvent(event.node, Event.Type.DEPARTURE);
             }
 
-            this.numDepartures++;
-            this.responseTime += response;
-            this.busyTime += timeNow - this.lastEventTime;
-            this.lastEventTime = timeNow;
+            nodeStats.numDepartures++;
+            nodeStats.responseTime += response;
+            nodeStats.busyTime += stats.simulationTime - nodeStats.lastEventTime;
+            nodeStats.lastEventTime = stats.simulationTime;
 
-            var next = event.node.getChild(rng);
-            this.addArrivalIf(!event.node.shouldSinkDeparture(this.numDepartures), next, timeNow, fel);
+            if (!event.node.shouldSinkDeparture(nodeStats.numDepartures)) {
+                var next = event.node.getChild(stats.rng);
+                this.addEvent(next, Event.Type.ARRIVAL);
+            }
         }
 
         /**
-         * Adds an arrival event to the future event list if the given condition is
-         * true.
+         * Adds an event to the future event list.
+         * The event is created based on the given node and type, and the delay is
+         * determined by the node's distribution.
          * 
-         * @param condition The condition to check.
-         * @param node      The node to add the arrival event for.
-         * @param timeNow   The current time of the simulation.
-         * @param fel       The future event list to add the event to.
+         * @param node The node to create the event for.
+         * @param type The type of event to create.
          */
-        private void addArrivalIf(boolean condition, ServerNode node, double timeNow, PriorityQueue<Event> fel) {
-            if (condition && node != null) {
-                var delay = node.getPositiveSample(this.rng);
-                fel.add(Event.newArrival(node, timeNow + delay));
+        public void addEvent(ServerNode node, Event.Type type) {
+            if (node != null) {
+                var delay = node.getPositiveSample(stats.rng);
+                var event = Event.newType(node, stats.simulationTime + delay, type);
+                fel.add(event);
             }
+        }
+
+        /**
+         * Determines if the simulation has finshed based on the given criteria.
+         * 
+         * @return True if the simulation should end, false otherwise.
+         */
+        public boolean hasEnded() {
+            if (fel.isEmpty()) {
+                return true;
+            }
+            for (var c : this.criterias) {
+                if (c.shouldEnd(stats)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

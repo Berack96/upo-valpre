@@ -10,6 +10,7 @@ public class Event implements Comparable<Event> {
 
     /**
      * Create a new event.
+     * 
      * @param type The type of event.
      * @param node The node that the event is associated with.
      * @param time The time at which the event occurs.
@@ -30,7 +31,21 @@ public class Event implements Comparable<Event> {
     }
 
     /**
+     * Create a new event.
+     * 
+     * @param node The node that the event is associated with.
+     * @param time The time at which the event occurs.
+     * @param type The type of event.
+     * 
+     * @return The new event.
+     */
+    public static Event newType(ServerNode node, double time, Type type) {
+        return new Event(type, node, time);
+    }
+
+    /**
      * Create a new arrival event.
+     * 
      * @param node The node that the event is associated with.
      * @param time The time at which the event occurs.
      * @return The new event.
@@ -41,6 +56,7 @@ public class Event implements Comparable<Event> {
 
     /**
      * Create a new departure event.
+     * 
      * @param node The node that the event is associated with.
      * @param time The time at which the event occurs.
      * @return The new event.
