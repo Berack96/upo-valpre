@@ -1,13 +1,16 @@
 package net.berack.upo.valpre;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import net.berack.upo.valpre.NetStatistics.SingleRun;
+import net.berack.upo.valpre.NetStatistics.RunResult;
+import net.berack.upo.valpre.NetStatistics.Statistics;
 import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.rand.Rngs;
 
@@ -28,19 +31,6 @@ public class NetSimulation {
     }
 
     /**
-     * Runs the simulation with the given seed until a given criteria is met.
-     * 
-     * @param seed      The seed to use for the random number generator.
-     * @param criterias The criteria to determine when to end the simulation. If
-     *                  null then the simulation will run until there are no more
-     *                  events.
-     * @return The statistics the network.
-     */
-    public NetStatistics.SingleRun run(long seed, EndCriteria... criterias) {
-        return this.run(new Rng(seed), criterias);
-    }
-
-    /**
      * Run the simualtion multiple times with the given seed and number of runs.
      * The runs are calculated one after the other. For a parallel run see
      * {@link #runParallel(long, int, EndCriteria...)}.
@@ -54,7 +44,7 @@ public class NetSimulation {
      */
     public NetStatistics run(long seed, int runs, EndCriteria... criterias) {
         var rng = new Rng(seed);
-        var stats = new SingleRun[runs];
+        var stats = new RunResult[runs];
 
         for (int i = 0; i < runs; i++) {
             stats[i] = this.run(rng, criterias);
@@ -65,13 +55,14 @@ public class NetSimulation {
     /**
      * Runs the simulation multiple times with the given seed and number of runs.
      * The runs are calculated in parallel using the given number of threads.
+     * The maximum number of threads are determined by the available processors
+     * and the number of runs.
      * 
-     * @param seed       The seed to use for the random number generator.
-     * @param runs       The number of runs to perform.
-     * @param numThreads The number of threads to use for the simulation.
-     * @param criterias  The criteria to determine when to end the simulation. If
-     *                   null then the simulation will run until there are no more
-     *                   events.
+     * @param seed      The seed to use for the random number generator.
+     * @param runs      The number of runs to perform.
+     * @param criterias The criteria to determine when to end the simulation. If
+     *                  null then the simulation will run until there are no more
+     *                  events.
      * @return The statistics the network.
      * @throws InterruptedException If the threads are interrupted.
      * @throws ExecutionException   If the one of the threads has been aborted.
@@ -79,25 +70,24 @@ public class NetSimulation {
     public NetStatistics runParallel(long seed, int runs, EndCriteria... criterias)
             throws InterruptedException, ExecutionException {
         var rngs = new Rngs(seed);
-        var stats = new NetStatistics.SingleRun[runs];
+        var results = new NetStatistics.RunResult[runs];
         var futures = new Future[runs];
 
         var numThreads = Math.min(runs, Runtime.getRuntime().availableProcessors());
-        var threads = Executors.newFixedThreadPool(numThreads);
+        try (var threads = Executors.newFixedThreadPool(numThreads)) {
+            for (int i = 0; i < runs; i++) {
+                final var id = i;
+                futures[i] = threads.submit(() -> {
+                    results[id] = this.run(rngs.getRng(id), criterias);
+                });
+            }
 
-        for (int i = 0; i < runs; i++) {
-            final var id = i;
-            futures[i] = threads.submit(() -> {
-                stats[id] = this.run(rngs.getRng(id), criterias);
-            });
+            for (var i = 0; i < runs; i++) {
+                futures[i].get();
+            }
+
+            return new NetStatistics(results);
         }
-
-        for (var i = 0; i < runs; i++) {
-            futures[i].get();
-        }
-
-        threads.shutdownNow();
-        return new NetStatistics(stats);
     }
 
     /**
@@ -109,37 +99,45 @@ public class NetSimulation {
      *                  events.
      * @return The statistics the network.
      */
-    public NetStatistics.SingleRun run(Rng rng, EndCriteria... criterias) {
-        var run = new SimpleRun(this.servers, rng, criterias);
-        while (!run.hasEnded()) {
+    public NetStatistics.RunResult run(Rng rng, EndCriteria... criterias) {
+        var run = new SimulationRun(this.servers, rng, criterias);
+        while (!run.hasEnded())
             run.processNextEvent();
-        }
         return run.endSimulation();
     }
 
     /**
      * Process an entire run of the simulation.
      */
-    public static class SimpleRun {
-
-        private final NetStatistics.SingleRun stats;
+    public static class SimulationRun {
+        private final Map<String, NodeBehavior> nodes;
         private final PriorityQueue<Event> fel;
         private final EndCriteria[] criterias;
+        private final long timeStartedNano;
+        private final long seed;
+        private final Rng rng;
+        private double time;
 
         /**
          * Creates a new run of the simulation with the given nodes and random number
          * generator.
          * 
-         * @param nodes The nodes in the network.
-         * @param rng   The random number generator to use.
+         * @param nodes     The nodes in the network.
+         * @param rng       The random number generator to use.
+         * @param criterias when the simulation has to end.
          */
-        private SimpleRun(Collection<ServerNode> nodes, Rng rng, EndCriteria... criterias) {
+        private SimulationRun(Collection<ServerNode> nodes, Rng rng, EndCriteria... criterias) {
+            this.nodes = new HashMap<>();
             this.fel = new PriorityQueue<>();
-            this.stats = new NetStatistics.SingleRun(nodes, rng);
             this.criterias = criterias;
+            this.timeStartedNano = System.nanoTime();
+            this.seed = rng.getSeed();
+            this.rng = rng;
+            this.time = 0.0d;
 
             // Initial arrivals (if spawned)
             for (var node : nodes) {
+                this.nodes.put(node.name, new NodeBehavior());
                 if (node.shouldSpawnArrival(0))
                     this.addEvent(node, Event.Type.ARRIVAL);
             }
@@ -154,11 +152,27 @@ public class NetSimulation {
          */
         public void processNextEvent() {
             var event = fel.poll();
-            stats.simulationTime = event.time;
+            var node = this.nodes.get(event.node.name);
+            this.time = event.time;
 
             switch (event.type) {
-                case ARRIVAL -> this.processArrival(event);
-                case DEPARTURE -> this.processDeparture(event);
+                case ARRIVAL -> {
+                    if (node.updateArrival(event.time, event.node.maxServers))
+                        this.addEvent(event.node, Event.Type.DEPARTURE);
+
+                    if (event.node.shouldSpawnArrival(node.stats.numArrivals)) {
+                        this.addEvent(event.node, Event.Type.ARRIVAL);
+                    }
+                }
+                case DEPARTURE -> {
+                    if (node.updateDeparture(event.time))
+                        this.addEvent(event.node, Event.Type.DEPARTURE);
+
+                    if (!event.node.shouldSinkDeparture(node.stats.numDepartures)) {
+                        var next = event.node.getChild(this.rng);
+                        this.addEvent(next, Event.Type.ARRIVAL);
+                    }
+                }
             }
         }
 
@@ -167,72 +181,32 @@ public class NetSimulation {
          * 
          * @return The statistics of the network.
          */
-        public NetStatistics.SingleRun endSimulation() {
-            this.stats.endSimulation();
-            return this.stats;
+        private NetStatistics.RunResult endSimulation() {
+            var elapsed = System.nanoTime() - this.timeStartedNano;
+            var nodes = new HashMap<String, Statistics>();
+            for (var entry : this.nodes.entrySet())
+                nodes.put(entry.getKey(), entry.getValue().stats);
+
+            return new RunResult(this.seed, this.time, elapsed, nodes);
         }
 
         /**
-         * Processes an arrival event for the given node at the given time.
-         * The event is processed by adding the arrival time to the queue, updating the
-         * maximum queue length, and checking if a server is available to process the
-         * arrival. If a server is available, a departure event is created and added to
-         * the future event list.
+         * Get the current time.
          * 
-         * @param stats The statistics of the network.
-         * @param event The arrival event to process.
-         * @param fel   The future event list to add new events to.
+         * @return a double representing the current time of the simulation.
          */
-        private void processArrival(Event event) {
-            var nodeStats = stats.nodes.get(event.node.name);
-
-            nodeStats.numArrivals++;
-            nodeStats.enqueue(event.time);
-            if (event.node.maxServers > nodeStats.numServerBusy) {
-                nodeStats.numServerBusy++;
-                this.addEvent(event.node, Event.Type.DEPARTURE);
-            } else {
-                nodeStats.busyTime += stats.simulationTime - nodeStats.lastEventTime;
-            }
-
-            nodeStats.lastEventTime = stats.simulationTime;
-            if (event.node.shouldSpawnArrival(nodeStats.numArrivals)) {
-                this.addEvent(event.node, Event.Type.ARRIVAL);
-            }
+        public double getTime() {
+            return this.time;
         }
 
         /**
-         * Processes a departure event for the given node at the given time.
-         * The event is processed by removing the departure time from the queue,
-         * updating the busy time, and checking if there are any arrivals in the queue.
-         * If there are, a new departure event is created and added to the fel.
-         * At the end it will add an arrival to the next node if the current node has a
-         * child.
+         * Get the node requested by the name passed as a string.
          * 
-         * @param stats The statistics of the network.
-         * @param event The departure event to process.
-         * @param fel   The future event list to add new events to.
+         * @param node the name of the node
+         * @return the node
          */
-        private void processDeparture(Event event) {
-            var nodeStats = stats.nodes.get(event.node.name);
-            var startService = nodeStats.dequeue();
-            var response = stats.simulationTime - startService;
-
-            if (nodeStats.getQueueSize() < nodeStats.numServerBusy) {
-                nodeStats.numServerBusy--;
-            } else {
-                this.addEvent(event.node, Event.Type.DEPARTURE);
-            }
-
-            nodeStats.numDepartures++;
-            nodeStats.responseTime += response;
-            nodeStats.busyTime += stats.simulationTime - nodeStats.lastEventTime;
-            nodeStats.lastEventTime = stats.simulationTime;
-
-            if (!event.node.shouldSinkDeparture(nodeStats.numDepartures)) {
-                var next = event.node.getChild(stats.rng);
-                this.addEvent(next, Event.Type.ARRIVAL);
-            }
+        public NodeBehavior getNode(String node) {
+            return this.getNode(node);
         }
 
         /**
@@ -245,8 +219,8 @@ public class NetSimulation {
          */
         public void addEvent(ServerNode node, Event.Type type) {
             if (node != null) {
-                var delay = node.getPositiveSample(stats.rng);
-                var event = Event.newType(node, stats.simulationTime + delay, type);
+                var delay = node.getPositiveSample(this.rng);
+                var event = Event.newType(node, this.time + delay, type);
                 fel.add(event);
             }
         }
@@ -261,11 +235,68 @@ public class NetSimulation {
                 return true;
             }
             for (var c : this.criterias) {
-                if (c.shouldEnd(stats)) {
+                if (c.shouldEnd(this)) {
                     return true;
                 }
             }
             return false;
+        }
+    }
+
+    /**
+     * Represents a summary of the behavior of a server node in the network.
+     * It is used by the simulation to track the number of arrivals and departures,
+     * the maximum queue length, the busy time, and the response time.
+     */
+    public static class NodeBehavior {
+        public int numServerBusy = 0;
+        public final Statistics stats = new Statistics();
+        private final ArrayDeque<Double> queue = new ArrayDeque<>();
+
+        /**
+         * TODO
+         * @param time
+         * @param maxServers
+         * @return
+         */
+        public boolean updateArrival(double time, int maxServers) {
+            var total = this.stats.averageQueueLength * this.stats.numArrivals;
+
+            this.queue.add(time);
+            this.stats.numArrivals++;
+            this.stats.averageQueueLength = (total + this.queue.size()) / this.stats.numArrivals;
+            this.stats.maxQueueLength = Math.max(this.stats.maxQueueLength, this.queue.size());
+
+            var startDeparture = maxServers > this.numServerBusy;
+            if (startDeparture) {
+                this.numServerBusy++;
+            } else {
+                this.stats.busyTime += time - this.stats.lastEventTime;
+            }
+
+            this.stats.lastEventTime = time;
+            return startDeparture;
+        }
+
+        /**
+         * TODO
+         * @param time
+         * @return
+         */
+        public boolean updateDeparture(double time) {
+            var startService = this.queue.poll();
+            var response = time - startService;
+
+            var startDeparture = this.queue.size() >= this.numServerBusy;
+            if (!startDeparture) {
+                this.numServerBusy--;
+            }
+
+            this.stats.numDepartures++;
+            this.stats.responseTime += response;
+            this.stats.busyTime += time - this.stats.lastEventTime;
+            this.stats.lastEventTime = time;
+            return startDeparture;
         }
     }
 }

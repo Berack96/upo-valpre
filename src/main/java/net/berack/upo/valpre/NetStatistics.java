@@ -1,16 +1,21 @@
 package net.berack.upo.valpre;
 
-import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.berack.upo.valpre.rand.Rng;
-
+/**
+ * TODO
+ */
 public class NetStatistics {
-    public final SingleRun[] runs;
+    public final RunResult[] runs;
+    // public final Run average;
+    // public final Run variance;
 
-    public NetStatistics(SingleRun... runs) {
+    /**
+     * TODO
+     * @param runs
+     */
+    public NetStatistics(RunResult... runs) {
         this.runs = runs;
     }
 
@@ -20,12 +25,11 @@ public class NetStatistics {
      * nodes, including the number of arrivals and departures, the maximum queue
      * length, the busy time, and the response time.
      */
-    public static class SingleRun {
-        public final Map<String, Node> nodes;
+    public static class RunResult {
+        public final Map<String, Statistics> nodes;
         public final long seed;
-        public final Rng rng;
-        public double simulationTime;
-        public long timeElapsedNano;
+        public final double simulationTime;
+        public final long timeElapsedNano;
 
         /**
          * Creates a new statistics object for the given collection of server nodes and
@@ -34,25 +38,11 @@ public class NetStatistics {
          * @param nodes The collection of server nodes to track.
          * @param rng   The random number generator to use.
          */
-        public SingleRun(Collection<ServerNode> nodes, Rng rng) {
-            this.rng = rng;
-            this.seed = rng.getSeed();
-
-            this.simulationTime = 0.0d;
-            this.timeElapsedNano = System.nanoTime();
-            this.nodes = new HashMap<String, Node>();
-            for (var node : nodes) {
-                var s = new Node();
-                this.nodes.put(node.name, s);
-            }
-
-        }
-
-        /**
-         * Ends the simulation and calculates the elapsed time.
-         */
-        public void endSimulation() {
-            this.timeElapsedNano = System.nanoTime() - this.timeElapsedNano;
+        public RunResult(long seed, double time, long elapsed, HashMap<String, Statistics> nodes) {
+            this.seed = seed;
+            this.simulationTime = time;
+            this.timeElapsedNano = elapsed;
+            this.nodes = nodes;
         }
 
         /**
@@ -72,7 +62,7 @@ public class NetStatistics {
             for (var entry : this.nodes.entrySet()) {
                 var stats = entry.getValue();
                 var entrySize = (int) Math.max(size, (int) Math.ceil((Math.log10(stats.numArrivals))));
-                var iFormat = "%" + entrySize + "d";
+                var iFormat = "%" + entrySize + ".0f";
                 var fFormat = "%" + (entrySize + 4) + ".3f";
 
                 System.out.println("===== " + entry.getKey() + " =====");
@@ -87,22 +77,16 @@ public class NetStatistics {
     }
 
     /**
-     * Represents a statistical summary of the behavior of a server node in the
-     * network.
-     * It is used by the simulation to track the number of arrivals and departures,
-     * the maximum queue length, the busy time, and the response time.
+     * TODO
      */
-    public static class Node {
-        public int numArrivals = 0;
-        public int numDepartures = 0;
-        public int maxQueueLength = 0;
+    public static class Statistics {
+        public double numArrivals = 0;
+        public double numDepartures = 0;
+        public double maxQueueLength = 0;
         public double averageQueueLength = 0.0d;
         public double busyTime = 0.0d;
         public double responseTime = 0.0d;
         public double lastEventTime = 0.0d;
-
-        public int numServerBusy = 0;
-        private ArrayDeque<Double> queue = new ArrayDeque<>();
 
         /**
          * Resets the statistics to their initial values.
@@ -111,29 +95,10 @@ public class NetStatistics {
             this.numArrivals = 0;
             this.numDepartures = 0;
             this.maxQueueLength = 0;
-            this.averageQueueLength = 0.0;
-            this.busyTime = 0.0;
-            this.responseTime = 0.0;
-            this.lastEventTime = 0.0;
-            this.numServerBusy = 0;
-            this.queue.clear();
-        }
-
-        public double dequeue() {
-            return this.queue.poll();
-        }
-
-        public void enqueue(double time) {
-            var total = this.averageQueueLength * (this.numArrivals - 1);
-
-            this.queue.add(time);
-            this.averageQueueLength = (total + this.queue.size()) / this.numArrivals;
-            this.maxQueueLength = Math.max(this.maxQueueLength, this.queue.size());
-        }
-
-        public int getQueueSize() {
-            return this.queue.size();
+            this.averageQueueLength = 0.0d;
+            this.busyTime = 0.0d;
+            this.responseTime = 0.0d;
+            this.lastEventTime = 0.0d;
         }
     }
-
 }

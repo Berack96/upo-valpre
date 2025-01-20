@@ -7,10 +7,10 @@ public interface EndCriteria {
     /**
      * Determines if the simulation should end based on the statistics of the nodes.
      * 
-     * @param stats The statistics of the nodes in the network.
+     * @param run The current run of the network.
      * @return True if the simulation should end, false otherwise.
      */
-    public boolean shouldEnd(NetStatistics.SingleRun stats);
+    public boolean shouldEnd(NetSimulation.SimulationRun run);
 
     /**
      * Ends the simulation when the given node has reached the specified number of
@@ -33,8 +33,8 @@ public interface EndCriteria {
         }
 
         @Override
-        public boolean shouldEnd(NetStatistics.SingleRun stats) {
-            return stats.nodes.get(nodeName).numArrivals >= this.maxArrivals;
+        public boolean shouldEnd(NetSimulation.SimulationRun run) {
+            return run.getNode(nodeName).stats.numArrivals >= this.maxArrivals;
         }
     }
 
@@ -59,8 +59,8 @@ public interface EndCriteria {
         }
 
         @Override
-        public boolean shouldEnd(NetStatistics.SingleRun stats) {
-            return stats.nodes.get(nodeName).numDepartures >= this.maxDepartures;
+        public boolean shouldEnd(NetSimulation.SimulationRun run) {
+            return run.getNode(nodeName).stats.numDepartures >= this.maxDepartures;
         }
     }
 
@@ -82,8 +82,8 @@ public interface EndCriteria {
         }
 
         @Override
-        public boolean shouldEnd(NetStatistics.SingleRun stats) {
-            return stats.simulationTime >= this.maxTime;
+        public boolean shouldEnd(NetSimulation.SimulationRun run) {
+            return run.getTime() >= this.maxTime;
         }
     }
 }

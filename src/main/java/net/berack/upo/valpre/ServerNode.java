@@ -125,7 +125,7 @@ public class ServerNode {
      * @param numArrivals The number of arrivals to check against.
      * @return True if the node should spawn an arrival, false otherwise.
      */
-    public boolean shouldSpawnArrival(int numArrivals) {
+    public boolean shouldSpawnArrival(double numArrivals) {
         return this.spawnArrivals > numArrivals;
     }
 
@@ -136,7 +136,7 @@ public class ServerNode {
      * @param numDepartures The number of departures to check against.
      * @return True if the node should sink a departure, false otherwise.
      */
-    public boolean shouldSinkDeparture(int numDepartures) {
+    public boolean shouldSinkDeparture(double numDepartures) {
         return this.sinkDepartures > numDepartures;
     }
 
