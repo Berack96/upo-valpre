@@ -58,7 +58,6 @@ public interface Distribution {
     public static class NormalBoxMuller implements Distribution {
         private final double mean;
         private final double sigma;
-        private double next = Double.NaN;
 
         /**
          * Creates a new normal distribution with the given mean and standard deviation.
@@ -73,15 +72,10 @@ public interface Distribution {
 
         @Override
         public double sample(Rng rng) {
-            if (!Double.isNaN(next)) {
-                var sample = next;
-                next = Double.NaN;
-                return sample;
-            }
-
             var sample1 = rng.random();
             var sample2 = rng.random();
-            next = mean + sigma * Math.sqrt(-2 * Math.log(sample1)) * Math.sin(2 * Math.PI * sample2);
+            //remove the other value for thread safety
+            //next = mean + sigma * Math.sqrt(-2 * Math.log(sample1)) * Math.sin(2 * Math.PI * sample2);
             return mean + sigma * Math.sqrt(-2 * Math.log(sample1)) * Math.cos(2 * Math.PI * sample2);
         }
     }
