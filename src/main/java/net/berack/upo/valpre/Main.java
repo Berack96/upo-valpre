@@ -5,8 +5,8 @@ import net.berack.upo.valpre.rand.Distribution;
 public class Main {
     public static void main(String[] args) throws Exception {
         // Parameters for the simulation
-        var seed = System.nanoTime();
-        var total = 100000;
+        var seed = 2007539552;
+        var total = 10000;
         var lambda = 1.0 / 4.5;
         var mu = 3.2;
         var sigma = 0.6;
@@ -23,7 +23,12 @@ public class Main {
 
         // var maxDepartures = new EndSimulationCriteria.MaxDepartures("Queue", total);
         // var maxTime = new EndSimulationCriteria.MaxTime(1000.0);
-        var results = sim.runParallel(seed, 100);
-        results.runs[80].printSummary();
+        var nano = System.nanoTime();
+        var results = sim.runParallel(seed, 1000);
+        nano = System.nanoTime() - nano;
+
+        System.out.print(results.average.getHeader());
+        System.out.print(results.average.getSummaryAsTable());
+        System.out.println("Final time " + nano / 1e6 + "ms");
     }
 }
