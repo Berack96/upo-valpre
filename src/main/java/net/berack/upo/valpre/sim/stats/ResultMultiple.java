@@ -17,8 +17,8 @@ public class ResultMultiple {
      */
     public ResultMultiple(Result... runs) {
         this.runs = runs;
-        this.average = calcAvg(runs);
-        this.variance = calcVar(this.average, runs);
+        this.average = ResultMultiple.calcAvg(runs);
+        this.variance = ResultMultiple.calcVar(this.average, runs);
     }
 
     /**
@@ -37,28 +37,15 @@ public class ResultMultiple {
             avgElapsed += run.timeElapsedNano;
 
             for (var entry : run.nodes.entrySet()) {
-                var stat = nodes.computeIfAbsent(entry.getKey(), _ -> new Statistics());
-                var other = entry.getValue();
-                stat.numDepartures += other.numDepartures;
-                stat.numArrivals += other.numArrivals;
-                stat.busyTime += other.busyTime;
-                stat.responseTime += other.responseTime;
-                stat.lastEventTime += other.lastEventTime;
-                stat.averageQueueLength += other.averageQueueLength;
-                stat.maxQueueLength = Math.max(stat.maxQueueLength, other.maxQueueLength);
+                var stats = nodes.computeIfAbsent(entry.getKey(), _ -> new Statistics());
+                stats.merge(entry.getValue(), (val1, val2) -> val1 + val2);
             }
         }
 
         avgTime /= runs.length;
         avgElapsed /= runs.length;
-        for (var stat : nodes.values()) {
-            stat.numDepartures /= runs.length;
-            stat.numArrivals /= runs.length;
-            stat.busyTime /= runs.length;
-            stat.responseTime /= runs.length;
-            stat.lastEventTime /= runs.length;
-            stat.averageQueueLength /= runs.length;
-        }
+        for (var stat : nodes.values())
+            stat.apply(val -> val / runs.length);
         return new Result(runs[0].seed, avgTime, avgElapsed, nodes);
     }
 
@@ -82,25 +69,16 @@ public class ResultMultiple {
                 var stat = nodes.computeIfAbsent(entry.getKey(), _ -> new Statistics());
                 var average = avg.nodes.get(entry.getKey());
                 var other = entry.getValue();
-                stat.numDepartures += Math.pow(other.numDepartures - average.numDepartures, 2);
-                stat.numArrivals += Math.pow(other.numArrivals - average.numArrivals, 2);
-                stat.busyTime += Math.pow(other.busyTime - average.busyTime, 2);
-                stat.responseTime += Math.pow(other.responseTime - average.responseTime, 2);
-                stat.lastEventTime += Math.pow(other.lastEventTime - average.lastEventTime, 2);
-                stat.averageQueueLength += Math.pow(other.averageQueueLength - average.averageQueueLength, 2);
+                var temp = new Statistics();
+                Statistics.apply(temp, other, average, (o, a) -> Math.pow(o - a, 2));
+                stat.merge(temp, (var1, var2) -> var1 + var2);
             }
         }
 
         varTime /= runs.length - 1;
         varElapsed /= runs.length - 1;
-        for (var stat : nodes.values()) {
-            stat.numDepartures /= runs.length - 1;
-            stat.numArrivals /= runs.length - 1;
-            stat.busyTime /= runs.length - 1;
-            stat.responseTime /= runs.length - 1;
-            stat.lastEventTime /= runs.length - 1;
-            stat.averageQueueLength /= runs.length - 1;
-        }
+        for (var stat : nodes.values())
+            stat.apply(val -> val / (runs.length - 1));
 
         return new Result(runs[0].seed, varTime, varElapsed, nodes);
     }

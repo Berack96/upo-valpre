@@ -14,7 +14,7 @@ import net.berack.upo.valpre.sim.stats.Statistics;
  */
 public final class Simulation {
     private final Net net;
-    private final Map<String, NodeBehavior> nodes;
+    private final Map<String, NodeState> states;
     private final PriorityQueue<Event> fel;
     private final EndCriteria[] criterias;
     private final long timeStartedNano;
@@ -26,13 +26,13 @@ public final class Simulation {
      * Creates a new run of the simulation with the given nodes and random number
      * generator.
      * 
-     * @param nodes     The nodes in the network.
+     * @param states     The nodes in the network.
      * @param rng       The random number generator to use.
      * @param criterias when the simulation has to end.
      */
     public Simulation(Net net, Rng rng, EndCriteria... criterias) {
         this.net = net;
-        this.nodes = new HashMap<>();
+        this.states = new HashMap<>();
         this.fel = new PriorityQueue<>();
         this.criterias = criterias;
         this.timeStartedNano = System.nanoTime();
@@ -42,7 +42,7 @@ public final class Simulation {
 
         // Initial arrivals (if spawned)
         net.forEachNode(node -> {
-            this.nodes.put(node.name, new NodeBehavior());
+            this.states.put(node.name, new NodeState());
             if (node.shouldSpawnArrival(0))
                 this.addArrival(node);
         });
@@ -69,23 +69,34 @@ public final class Simulation {
     public void processNextEvent() {
         var event = fel.poll();
         var node = event.node;
-        var behaviour = this.nodes.get(node.name);
+        var state = this.states.get(node.name);
         this.time = event.time;
 
         switch (event.type) {
             case ARRIVAL -> {
-                if (behaviour.updateArrival(event.time, node.maxServers))
+                state.queue.add(this.time);
+                state.stats.updateArrival(this.time, state.queue.size(), state.numServerBusy != 0);
+
+                if (state.numServerBusy < node.maxServers) {
+                    state.numServerBusy++;
                     this.addDeparture(node);
+                }
             }
             case DEPARTURE -> {
-                if (behaviour.updateDeparture(event.time))
+                var startService = state.queue.poll();
+                state.stats.updateDeparture(this.time, this.time - startService);
+
+                if (state.numServerBusy > state.queue.size()) {
+                    state.numServerBusy--;
+                } else {
                     this.addDeparture(node);
+                }
 
                 var next = this.net.getChildOf(node, this.rng);
                 if (next != null) {
                     this.addArrival(next);
                 }
-                if (node.shouldSpawnArrival(behaviour.stats.numArrivals)) {
+                if (node.shouldSpawnArrival(state.stats.numArrivals)) {
                     this.addArrival(node);
                 }
             }
@@ -100,7 +111,7 @@ public final class Simulation {
     public Result endSimulation() {
         var elapsed = System.nanoTime() - this.timeStartedNano;
         var nodes = new HashMap<String, Statistics>();
-        for (var entry : this.nodes.entrySet())
+        for (var entry : this.states.entrySet())
             nodes.put(entry.getKey(), entry.getValue().stats);
 
         return new Result(this.seed, this.time, elapsed, nodes);
@@ -116,13 +127,13 @@ public final class Simulation {
     }
 
     /**
-     * Get the node requested by the name passed as a string.
+     * Get the node state requested by the name passed as a string.
      * 
      * @param node the name of the node
      * @return the node
      */
-    public NodeBehavior getNode(String node) {
-        return this.getNode(node);
+    public NodeState getNode(String node) {
+        return this.states.get(node);
     }
 
     /**
@@ -166,61 +177,13 @@ public final class Simulation {
     }
 
     /**
-     * Represents a summary of the behavior of a server node in the network.
+     * Represents a summary of the state of a server node in the network.
      * It is used by the simulation to track the number of arrivals and departures,
      * the maximum queue length, the busy time, and the response time.
      */
-    public static class NodeBehavior {
+    public static class NodeState {
         public int numServerBusy = 0;
         public final Statistics stats = new Statistics();
         private final ArrayDeque<Double> queue = new ArrayDeque<>();
-
-        /**
-         * TODO
-         * 
-         * @param time
-         * @param maxServers
-         * @return
-         */
-        public boolean updateArrival(double time, int maxServers) {
-            var total = this.stats.averageQueueLength * this.stats.numArrivals;
-
-            this.queue.add(time);
-            this.stats.numArrivals++;
-            this.stats.averageQueueLength = (total + this.queue.size()) / this.stats.numArrivals;
-            this.stats.maxQueueLength = Math.max(this.stats.maxQueueLength, this.queue.size());
-
-            var startDeparture = maxServers > this.numServerBusy;
-            if (startDeparture) {
-                this.numServerBusy++;
-            } else {
-                this.stats.busyTime += time - this.stats.lastEventTime;
-            }
-
-            this.stats.lastEventTime = time;
-            return startDeparture;
-        }
-
-        /**
-         * TODO
-         * 
-         * @param time
-         * @return
-         */
-        public boolean updateDeparture(double time) {
-            var startService = this.queue.poll();
-            var response = time - startService;
-
-            var startDeparture = this.queue.size() >= this.numServerBusy;
-            if (!startDeparture) {
-                this.numServerBusy--;
-            }
-
-            this.stats.numDepartures++;
-            this.stats.responseTime += response;
-            this.stats.busyTime += time - this.stats.lastEventTime;
-            this.stats.lastEventTime = time;
-            return startDeparture;
-        }
     }
 }

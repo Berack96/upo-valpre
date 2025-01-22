@@ -32,7 +32,7 @@ public class Main {
         nano = System.nanoTime() - nano;
 
         System.out.print(results.average.getHeader());
-        System.out.print(results.average.getSummaryAsTable());
+        System.out.print(results.average.getSummary());
         System.out.println("Final time " + nano / 1e6 + "ms");
     }
 }
