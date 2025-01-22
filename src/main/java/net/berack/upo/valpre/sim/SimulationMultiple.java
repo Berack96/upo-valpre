@@ -6,8 +6,8 @@ import java.util.concurrent.Future;
 
 import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.rand.Rngs;
-import net.berack.upo.valpre.sim.stats.NetStatistics;
-import net.berack.upo.valpre.sim.stats.NetStatistics.RunResult;
+import net.berack.upo.valpre.sim.stats.ResultMultiple;
+import net.berack.upo.valpre.sim.stats.Result;
 
 /**
  * A network simulation that uses a discrete event simulation to model the
@@ -32,15 +32,15 @@ public class SimulationMultiple {
      *                  events.
      * @return The statistics the network.
      */
-    public NetStatistics run(long seed, int runs, EndCriteria... criterias) {
+    public ResultMultiple run(long seed, int runs, EndCriteria... criterias) {
         var rng = new Rng(seed);
-        var stats = new RunResult[runs];
+        var stats = new Result[runs];
 
         for (int i = 0; i < runs; i++) {
             var sim = new Simulation(this.net, rng, criterias);
             stats[i] = sim.run();
         }
-        return new NetStatistics(stats);
+        return new ResultMultiple(stats);
     }
 
     /**
@@ -58,10 +58,10 @@ public class SimulationMultiple {
      * @throws InterruptedException If the threads are interrupted.
      * @throws ExecutionException   If the one of the threads has been aborted.
      */
-    public NetStatistics runParallel(long seed, int runs, EndCriteria... criterias)
+    public ResultMultiple runParallel(long seed, int runs, EndCriteria... criterias)
             throws InterruptedException, ExecutionException {
         var rngs = new Rngs(seed);
-        var results = new NetStatistics.RunResult[runs];
+        var results = new Result[runs];
         var futures = new Future[runs];
 
         var numThreads = Math.min(runs, Runtime.getRuntime().availableProcessors());
@@ -78,7 +78,7 @@ public class SimulationMultiple {
                 futures[i].get();
             }
 
-            return new NetStatistics(results);
+            return new ResultMultiple(results);
         }
     }
 

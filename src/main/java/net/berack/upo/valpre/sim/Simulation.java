@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 import net.berack.upo.valpre.rand.Rng;
-import net.berack.upo.valpre.sim.stats.NetStatistics;
-import net.berack.upo.valpre.sim.stats.NetStatistics.Statistics;
+import net.berack.upo.valpre.sim.stats.Result;
+import net.berack.upo.valpre.sim.stats.Statistics;
 
 /**
  * Process an entire run of the simulation.
@@ -53,7 +53,7 @@ public final class Simulation {
      * 
      * @return The final statistics the network.
      */
-    public NetStatistics.RunResult run() {
+    public Result run() {
         while (!this.hasEnded())
             this.processNextEvent();
         return this.endSimulation();
@@ -97,13 +97,13 @@ public final class Simulation {
      * 
      * @return The statistics of the network.
      */
-    public NetStatistics.RunResult endSimulation() {
+    public Result endSimulation() {
         var elapsed = System.nanoTime() - this.timeStartedNano;
         var nodes = new HashMap<String, Statistics>();
         for (var entry : this.nodes.entrySet())
             nodes.put(entry.getKey(), entry.getValue().stats);
 
-        return new NetStatistics.RunResult(this.seed, this.time, elapsed, nodes);
+        return new Result(this.seed, this.time, elapsed, nodes);
     }
 
     /**
