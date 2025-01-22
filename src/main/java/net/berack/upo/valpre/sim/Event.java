@@ -1,4 +1,4 @@
-package net.berack.upo.valpre;
+package net.berack.upo.valpre.sim;
 
 /**
  * Represents an event in the simulation.

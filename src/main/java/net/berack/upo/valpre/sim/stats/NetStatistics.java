@@ -1,4 +1,4 @@
-package net.berack.upo.valpre;
+package net.berack.upo.valpre.sim.stats;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -125,7 +125,7 @@ public class NetStatistics {
          * @param nodes The collection of server nodes to track.
          * @param rng   The random number generator to use.
          */
-        public RunResult(long seed, double time, long elapsed, HashMap<String, Statistics> nodes) {
+        public RunResult(long seed, double time, long elapsed, Map<String, Statistics> nodes) {
             this.seed = seed;
             this.simulationTime = time;
             this.timeElapsedNano = elapsed;
@@ -225,44 +225,6 @@ public class NetStatistics {
             this.busyTime = 0.0d;
             this.responseTime = 0.0d;
             this.lastEventTime = 0.0d;
-        }
-    }
-
-    /**
-     * TODO
-     */
-    private static class ConsoleTable {
-        private StringBuilder builder = new StringBuilder();
-        private final int maxLen;
-        private final String border;
-
-        public ConsoleTable(String... header) {
-            var max = 0;
-            for (var name : header)
-                max = Math.max(max, name.length());
-            this.maxLen = max + 2;
-            this.border = ("+" + "═".repeat(maxLen)).repeat(header.length) + "+\n";
-            this.builder.append(border);
-            this.addRow(header);
-        }
-
-        public void addRow(String... values) {
-            for (var val : values) {
-                var diff = maxLen - val.length();
-                var first = (int) Math.ceil(diff / 2.0);
-                builder.append('║');
-                builder.append(" ".repeat(first));
-                builder.append(val);
-                builder.append(" ".repeat(diff - first));
-            }
-
-            builder.append("║\n");
-            builder.append(border);
-        }
-
-        @Override
-        public String toString() {
-            return builder.toString();
         }
     }
 }

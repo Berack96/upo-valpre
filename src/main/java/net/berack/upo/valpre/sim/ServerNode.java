@@ -1,7 +1,5 @@
-package net.berack.upo.valpre;
+package net.berack.upo.valpre.sim;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.berack.upo.valpre.rand.Distribution;
 import net.berack.upo.valpre.rand.Rng;
 
@@ -14,8 +12,6 @@ public class ServerNode {
     public final int maxServers;
     public final int spawnArrivals;
     public final Distribution distribution;
-    private final List<NodeChild> children = new ArrayList<>();
-    private double sumProbabilities = 0.0;
 
     /**
      * Creates a source node with the given name and distribution.
@@ -72,34 +68,6 @@ public class ServerNode {
     }
 
     /**
-     * Adds a child node with the given probability to select it.
-     * 
-     * @param node        The child node to add.
-     * @param probability The probability of the child node.
-     */
-    public void addChild(ServerNode node, double probability) {
-        this.children.add(new NodeChild(node, probability));
-        this.sumProbabilities += probability;
-    }
-
-    /**
-     * Gets a child node based on the given random number generator.
-     * 
-     * @param rng The random number generator to use.
-     * @return The child node selected based on the probabilities.
-     */
-    public ServerNode getChild(Rng rng) {
-        var random = rng.random();
-        for (var child : this.children) {
-            random -= child.probability / this.sumProbabilities;
-            if (random <= 0) {
-                return child.node;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Gets a positive sample from the distribution.
      * This is useful if you need to generate a positive value from a distribution
      * that can generate negative values. For example, the normal distribution.
@@ -124,18 +92,5 @@ public class ServerNode {
      */
     public boolean shouldSpawnArrival(double numArrivals) {
         return this.spawnArrivals > numArrivals;
-    }
-
-    /**
-     * Represents a child node with a probability to select it.
-     */
-    public static class NodeChild {
-        public final ServerNode node;
-        public final double probability;
-
-        public NodeChild(ServerNode node, double probability) {
-            this.node = node;
-            this.probability = probability;
-        }
     }
 }

@@ -1,4 +1,4 @@
-package net.berack.upo.valpre;
+package net.berack.upo.valpre.sim;
 
 /**
  * Criteria to determine when to end the simulation.
@@ -10,7 +10,7 @@ public interface EndCriteria {
      * @param run The current run of the network.
      * @return True if the simulation should end, false otherwise.
      */
-    public boolean shouldEnd(NetSimulation.SimulationRun run);
+    public boolean shouldEnd(Simulation run);
 
     /**
      * Ends the simulation when the given node has reached the specified number of
@@ -33,7 +33,7 @@ public interface EndCriteria {
         }
 
         @Override
-        public boolean shouldEnd(NetSimulation.SimulationRun run) {
+        public boolean shouldEnd(Simulation run) {
             return run.getNode(nodeName).stats.numArrivals >= this.maxArrivals;
         }
     }
@@ -59,7 +59,7 @@ public interface EndCriteria {
         }
 
         @Override
-        public boolean shouldEnd(NetSimulation.SimulationRun run) {
+        public boolean shouldEnd(Simulation run) {
             return run.getNode(nodeName).stats.numDepartures >= this.maxDepartures;
         }
     }
@@ -82,7 +82,7 @@ public interface EndCriteria {
         }
 
         @Override
-        public boolean shouldEnd(NetSimulation.SimulationRun run) {
+        public boolean shouldEnd(Simulation run) {
             return run.getTime() >= this.maxTime;
         }
     }
