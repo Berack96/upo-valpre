@@ -12,7 +12,6 @@ import net.berack.upo.valpre.rand.Rng;
 public class ServerNode {
     public final String name;
     public final int maxServers;
-    public final int sinkDepartures;
     public final int spawnArrivals;
     public final Distribution distribution;
     private final List<NodeChild> children = new ArrayList<>();
@@ -28,7 +27,7 @@ public class ServerNode {
      * @return The created source node.
      */
     public static ServerNode createSource(String name, Distribution distribution) {
-        return new ServerNode(name, Integer.MAX_VALUE, distribution, Integer.MAX_VALUE, 0);
+        return new ServerNode(name, Integer.MAX_VALUE, distribution, Integer.MAX_VALUE);
     }
 
     /**
@@ -41,7 +40,7 @@ public class ServerNode {
      * @return The created source node.
      */
     public static ServerNode createLimitedSource(String name, Distribution distribution, int spawnArrivals) {
-        return new ServerNode(name, Integer.MAX_VALUE, distribution, spawnArrivals, 0);
+        return new ServerNode(name, Integer.MAX_VALUE, distribution, spawnArrivals);
     }
 
     /**
@@ -54,7 +53,7 @@ public class ServerNode {
      * @return The created queue node.
      */
     public static ServerNode createQueue(String name, int maxServers, Distribution distribution) {
-        return new ServerNode(name, maxServers, distribution, 0, 0);
+        return new ServerNode(name, maxServers, distribution, 0);
     }
 
     /**
@@ -64,14 +63,12 @@ public class ServerNode {
      * @param maxServers     The maximum number of servers in the queue.
      * @param distribution   The distribution of the service times.
      * @param spawnArrivals  The number of arrivals to spawn.
-     * @param sinkDepartures The number of departures to sink.
      */
-    public ServerNode(String name, int maxServers, Distribution distribution, int spawnArrivals, int sinkDepartures) {
+    public ServerNode(String name, int maxServers, Distribution distribution, int spawnArrivals) {
         this.name = name;
         this.maxServers = maxServers;
         this.distribution = distribution;
         this.spawnArrivals = spawnArrivals;
-        this.sinkDepartures = sinkDepartures;
     }
 
     /**
@@ -127,17 +124,6 @@ public class ServerNode {
      */
     public boolean shouldSpawnArrival(double numArrivals) {
         return this.spawnArrivals > numArrivals;
-    }
-
-    /**
-     * Determines if the node should sink a departure based on the number of
-     * departures.
-     * 
-     * @param numDepartures The number of departures to check against.
-     * @return True if the node should sink a departure, false otherwise.
-     */
-    public boolean shouldSinkDeparture(double numDepartures) {
-        return this.sinkDepartures > numDepartures;
     }
 
     /**

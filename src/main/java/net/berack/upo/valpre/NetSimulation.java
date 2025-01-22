@@ -139,7 +139,7 @@ public class NetSimulation {
             for (var node : nodes) {
                 this.nodes.put(node.name, new NodeBehavior());
                 if (node.shouldSpawnArrival(0))
-                    this.addEvent(node, Event.Type.ARRIVAL);
+                    this.addArrival(node);
             }
         }
 
@@ -158,19 +158,18 @@ public class NetSimulation {
             switch (event.type) {
                 case ARRIVAL -> {
                     if (node.updateArrival(event.time, event.node.maxServers))
-                        this.addEvent(event.node, Event.Type.DEPARTURE);
-
-                    if (event.node.shouldSpawnArrival(node.stats.numArrivals)) {
-                        this.addEvent(event.node, Event.Type.ARRIVAL);
-                    }
+                        this.addDeparture(event.node);
                 }
                 case DEPARTURE -> {
                     if (node.updateDeparture(event.time))
-                        this.addEvent(event.node, Event.Type.DEPARTURE);
+                        this.addDeparture(event.node);
 
-                    if (!event.node.shouldSinkDeparture(node.stats.numDepartures)) {
-                        var next = event.node.getChild(this.rng);
-                        this.addEvent(next, Event.Type.ARRIVAL);
+                    var next = event.node.getChild(this.rng);
+                    if (next != null) {
+                        this.addArrival(next);
+                    }
+                    if (event.node.shouldSpawnArrival(node.stats.numArrivals)) {
+                        this.addArrival(event.node);
                     }
                 }
             }
@@ -210,19 +209,26 @@ public class NetSimulation {
         }
 
         /**
-         * Adds an event to the future event list.
-         * The event is created based on the given node and type, and the delay is
-         * determined by the node's distribution.
+         * Adds an arrival event to the future event list. The event is created based
+         * on the given node, and no delay is added.
          * 
          * @param node The node to create the event for.
-         * @param type The type of event to create.
          */
-        public void addEvent(ServerNode node, Event.Type type) {
-            if (node != null) {
-                var delay = node.getPositiveSample(this.rng);
-                var event = Event.newType(node, this.time + delay, type);
-                fel.add(event);
-            }
+        public void addArrival(ServerNode node) {
+            var event = Event.newArrival(node, this.time);
+            fel.add(event);
+        }
+
+        /**
+         * Adds a departure event to the future event list. The event is created based
+         * on the given node, and the delay is determined by the node's distribution.
+         * 
+         * @param node The node to create the event for.
+         */
+        public void addDeparture(ServerNode node) {
+            var delay = node.getPositiveSample(this.rng);
+            var event = Event.newDeparture(node, this.time + delay);
+            fel.add(event);
         }
 
         /**
@@ -255,6 +261,7 @@ public class NetSimulation {
 
         /**
          * TODO
+         * 
          * @param time
          * @param maxServers
          * @return
@@ -280,6 +287,7 @@ public class NetSimulation {
 
         /**
          * TODO
+         * 
          * @param time
          * @return
          */
