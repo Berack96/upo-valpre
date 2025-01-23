@@ -8,7 +8,10 @@ import java.util.function.Consumer;
 import net.berack.upo.valpre.rand.Rng;
 
 /**
- * TODO
+ * A class that represents a network of queues, each with its own servers.
+ * The network in question is created by adding a node and then establishing
+ * connections between nodes. In order to start a simulation, at least one node
+ * must be a Source or must generate at least one event to be processed.
  */
 public final class Net {
     private final HashMap<String, Integer> indices = new HashMap<>();
@@ -119,6 +122,9 @@ public final class Net {
         this.servers.stream().forEach(consumer);
     }
 
+    /**
+     * A static inner class used to represent the connection between two nodes
+     */
     public static class Connection {
         public final int index;
         public double weight;

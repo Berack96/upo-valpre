@@ -4,7 +4,7 @@ import java.util.Map;
 
 /**
  * Represents the statistics of a network simulation.
- * It is used by the simulation to track the behavior of the network and its
+ * It is used by the simulation to save the final results of the network and its
  * nodes, including the number of arrivals and departures, the maximum queue
  * length, the busy time, and the response time.
  */
@@ -15,11 +15,13 @@ public class Result {
     public final long timeElapsedNano;
 
     /**
-     * Creates a new statistics object for the given collection of server nodes and
-     * random number generator.
+     * Creates a new result object for the given parameters obtained by the
+     * simulation.
      * 
-     * @param nodes The collection of server nodes to track.
-     * @param rng   The random number generator to use.
+     * @param seed    the initial seed used by the simulation
+     * @param time    the final time of the simulation
+     * @param elapsed the real time elapsed while running the simulation in ns
+     * @param nodes   all the stats collected by the simulation saved per node
      */
     public Result(long seed, double time, long elapsed, Map<String, Statistics> nodes) {
         this.seed = seed;
@@ -56,7 +58,9 @@ public class Result {
     }
 
     /**
-     * TODO
+     * Get the global information of the simulation. In particular this method build
+     * a string that contains the seed and the time elapsed in the simulation and in
+     * real time
      */
     public String getHeader() {
         var size = (int) Math.ceil(Math.log10(this.simulationTime));
