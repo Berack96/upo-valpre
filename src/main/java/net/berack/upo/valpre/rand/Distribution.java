@@ -10,7 +10,7 @@ public interface Distribution {
      * Represents an exponential distribution.
      */
     public static class Exponential implements Distribution {
-        private final double lambda;
+        public final double lambda;
 
         /**
          * Creates a new exponential distribution with the given rate.
@@ -31,8 +31,8 @@ public interface Distribution {
      * Represents a normal distribution.
      */
     public static class Normal implements Distribution {
-        private final double mean;
-        private final double sigma;
+        public final double mean;
+        public final double sigma;
 
         /**
          * Creates a new normal distribution with the given mean and standard deviation.
@@ -56,8 +56,8 @@ public interface Distribution {
      * Represents a normal distribution using the Box-Muller transform.
      */
     public static class NormalBoxMuller implements Distribution {
-        private final double mean;
-        private final double sigma;
+        public final double mean;
+        public final double sigma;
 
         /**
          * Creates a new normal distribution with the given mean and standard deviation.
@@ -74,9 +74,102 @@ public interface Distribution {
         public double sample(Rng rng) {
             var sample1 = rng.random();
             var sample2 = rng.random();
-            //remove the other value for thread safety
-            //next = mean + sigma * Math.sqrt(-2 * Math.log(sample1)) * Math.sin(2 * Math.PI * sample2);
+            // remove the other value for thread safety
+            // next = mean + sigma * Math.sqrt(-2 * Math.log(sample1)) * Math.sin(2 *
+            // Math.PI * sample2);
             return mean + sigma * Math.sqrt(-2 * Math.log(sample1)) * Math.cos(2 * Math.PI * sample2);
+        }
+    }
+
+    /**
+     * Represent a uniform distribution.
+     */
+    public static class Uniform implements Distribution {
+        public final double min;
+        public final double max;
+
+        /**
+         * Creates a new uniform distribution with the given min value and max value.
+         * 
+         * @param min the minimum value possible
+         * @param max the maximum value possible
+         */
+        public Uniform(double min, double max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        @Override
+        public double sample(Rng rng) {
+            return min + rng.random() * (max - min);
+        }
+    }
+
+    /**
+     * Represent an Erlang distribution.
+     */
+    public static class Erlang implements Distribution {
+        public final int k;
+        public final double lambda;
+
+        /**
+         * Creates a new erlang distribution with the given K exponentials, all with the
+         * same lambda.
+         * 
+         * @param k      the number of exponentials
+         * @param lambda the lambda of the exponentials
+         */
+        public Erlang(int k, double lambda) {
+            this.k = k;
+            this.lambda = lambda;
+        }
+
+        @Override
+        public double sample(Rng rng) {
+            var product = 1.0;
+            for (int i = 0; i < this.k; i++) {
+                product *= rng.random();
+            }
+            return -Math.log(product) / this.lambda;
+        }
+    }
+
+    /**
+     * Represent a HyperExponential distribution.
+     */
+    public static class HyperExponential implements Distribution {
+        private final double[] lambdas;
+        private final double[] probabilities;
+
+        /**
+         * Creates a new hyperexponential distribution with the given lambdas and their
+         * corresponding probabilities.
+         * 
+         * @param lambdas       the array of lambda values for the exponential
+         *                      distributions
+         * @param probabilities the array of probabilities for each lambda
+         */
+        public HyperExponential(double[] lambdas, double[] probabilities) {
+            if (lambdas.length != probabilities.length) {
+                throw new IllegalArgumentException("Lambdas and probabilities must have the same length");
+            }
+            this.lambdas = lambdas;
+            this.probabilities = probabilities;
+        }
+
+        @Override
+        public double sample(Rng rng) {
+            var randomValue = rng.random();
+            var i = 0;
+
+            while (i < probabilities.length) {
+                randomValue -= probabilities[i];
+                if (randomValue <= 0.0d)
+                    break;
+                i += 1;
+            }
+
+            return -Math.log(rng.random()) / lambdas[i];
         }
     }
 }
