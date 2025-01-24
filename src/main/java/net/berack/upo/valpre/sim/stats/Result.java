@@ -12,7 +12,7 @@ public class Result {
     public final Map<String, Statistics> nodes;
     public final long seed;
     public final double simulationTime;
-    public final long timeElapsedNano;
+    public final double timeElapsedMS;
 
     /**
      * Creates a new result object for the given parameters obtained by the
@@ -20,14 +20,30 @@ public class Result {
      * 
      * @param seed    the initial seed used by the simulation
      * @param time    the final time of the simulation
-     * @param elapsed the real time elapsed while running the simulation in ns
+     * @param elapsed the real time elapsed while running the simulation in ms
      * @param nodes   all the stats collected by the simulation saved per node
      */
-    public Result(long seed, double time, long elapsed, Map<String, Statistics> nodes) {
+    public Result(long seed, double time, double elapsed, Map<String, Statistics> nodes) {
         this.seed = seed;
         this.simulationTime = time;
-        this.timeElapsedNano = elapsed;
+        this.timeElapsedMS = elapsed;
         this.nodes = nodes;
+    }
+
+    /**
+     * Get the global information of the simulation. In particular this method build
+     * a string that contains the seed and the time elapsed in the simulation and in
+     * real time
+     */
+    public String getHeader() {
+        var size = (int) Math.ceil(Math.log10(this.simulationTime));
+        var format = "%" + (size + 4) + ".3f";
+        var builder = new StringBuilder();
+        builder.append("===== Net Stats =====\n");
+        builder.append(String.format("Seed:       \t%d\n", this.seed));
+        builder.append(String.format("Simulation: \t" + format + "\n", this.simulationTime));
+        builder.append(String.format("Elapsed:    \t" + format + "ms\n", this.timeElapsedMS / 1e6));
+        return builder.toString();
     }
 
     /**
@@ -55,21 +71,5 @@ public class Result {
                     String.format(fFormat, stats.lastEventTime));
         }
         return table.toString();
-    }
-
-    /**
-     * Get the global information of the simulation. In particular this method build
-     * a string that contains the seed and the time elapsed in the simulation and in
-     * real time
-     */
-    public String getHeader() {
-        var size = (int) Math.ceil(Math.log10(this.simulationTime));
-        var format = "%" + (size + 4) + ".3f";
-        var builder = new StringBuilder();
-        builder.append("===== Net Stats =====\n");
-        builder.append(String.format("Seed:       \t%d\n", this.seed));
-        builder.append(String.format("Simulation: \t" + format + "\n", this.simulationTime));
-        builder.append(String.format("Elapsed:    \t" + format + "ms\n", this.timeElapsedNano / 1e6));
-        return builder.toString();
     }
 }

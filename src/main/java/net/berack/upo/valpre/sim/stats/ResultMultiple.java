@@ -9,6 +9,8 @@ public class ResultMultiple {
     public final Result[] runs;
     public final Result average;
     public final Result variance;
+    public final Result lowerBound;
+    public final Result upperBound;
 
     /**
      * TODO
@@ -19,6 +21,10 @@ public class ResultMultiple {
         this.runs = runs;
         this.average = ResultMultiple.calcAvg(runs);
         this.variance = ResultMultiple.calcVar(this.average, runs);
+
+        var temp = calcInterval(this.average, this.variance, runs.length, 0.95);
+        this.lowerBound = temp[0];
+        this.upperBound = temp[1];
     }
 
     /**
@@ -34,7 +40,7 @@ public class ResultMultiple {
 
         for (var run : runs) {
             avgTime += run.simulationTime;
-            avgElapsed += run.timeElapsedNano;
+            avgElapsed += run.timeElapsedMS;
 
             for (var entry : run.nodes.entrySet()) {
                 var stats = nodes.computeIfAbsent(entry.getKey(), _ -> new Statistics());
@@ -63,7 +69,7 @@ public class ResultMultiple {
 
         for (var run : runs) {
             varTime += Math.pow(run.simulationTime - avg.simulationTime, 2);
-            varElapsed += Math.pow(run.timeElapsedNano - avg.simulationTime, 2);
+            varElapsed += Math.pow(run.timeElapsedMS - avg.simulationTime, 2);
 
             for (var entry : run.nodes.entrySet()) {
                 var stat = nodes.computeIfAbsent(entry.getKey(), _ -> new Statistics());
@@ -81,5 +87,61 @@ public class ResultMultiple {
             stat.apply(val -> val / (runs.length - 1));
 
         return new Result(runs[0].seed, varTime, varElapsed, nodes);
+    }
+
+    /**
+     * TODO
+     * 
+     * @param avg
+     * @param stdDev
+     * @param sampleSize
+     * @param alpha
+     * @return
+     */
+    public static Result[] calcInterval(Result avg, Result stdDev, int sampleSize, double alpha) {
+        if (sampleSize <= 1)
+            throw new IllegalArgumentException("Il numero di campioni deve essere maggiore di 1.");
+
+        // Getting the correct values for the percentile
+        var distr = new org.apache.commons.math3.distribution.TDistribution(sampleSize - 1);
+        var percentile = distr.inverseCumulativeProbability(alpha);
+
+        // Calculating the error
+        var sqrtSample = Math.sqrt(sampleSize);
+        var error = new Result(avg.seed,
+                percentile * (stdDev.simulationTime / sqrtSample),
+                percentile * (stdDev.timeElapsedMS / sqrtSample),
+                new HashMap<>());
+        for (var entry : stdDev.nodes.entrySet()) {
+            var stat = new Statistics();
+            stat.merge(entry.getValue(), (_, val) -> percentile * (val / sqrtSample));
+            error.nodes.put(entry.getKey(), stat);
+        }
+
+        // Calculating the lower and the upper bound
+        var lowerBound = new Result(avg.seed,
+                avg.simulationTime - error.simulationTime,
+                avg.timeElapsedMS - error.timeElapsedMS,
+                new HashMap<>());
+        var upperBound = new Result(avg.seed,
+                avg.simulationTime + error.simulationTime,
+                avg.timeElapsedMS + error.timeElapsedMS,
+                new HashMap<>());
+        error.nodes.entrySet().forEach(entry -> {
+            var key = entry.getKey();
+            var errStat = entry.getValue();
+
+            var avgStat = avg.nodes.get(key);
+            var lower = new Statistics();
+            var upper = new Statistics();
+
+            Statistics.apply(lower, avgStat, errStat, (a, e) -> a - e);
+            Statistics.apply(upper, avgStat, errStat, (a, e) -> a + e);
+
+            lowerBound.nodes.put(key, lower);
+            upperBound.nodes.put(key, lower);
+        });
+
+        return new Result[] { lowerBound, upperBound };
     }
 }
