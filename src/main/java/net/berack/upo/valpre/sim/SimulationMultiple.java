@@ -5,7 +5,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import net.berack.upo.valpre.rand.Rng;
-import net.berack.upo.valpre.rand.Rngs;
 import net.berack.upo.valpre.sim.stats.ResultMultiple;
 import net.berack.upo.valpre.sim.stats.Result;
 
@@ -33,11 +32,11 @@ public class SimulationMultiple {
      * @return The statistics the network.
      */
     public ResultMultiple run(long seed, int runs, EndCriteria... criterias) {
-        var rng = new Rng(seed);
+        var rngs = Rng.getMultipleStreams(seed, runs);
         var stats = new Result[runs];
 
         for (int i = 0; i < runs; i++) {
-            var sim = new Simulation(this.net, rng, criterias);
+            var sim = new Simulation(this.net, rngs[i], criterias);
             stats[i] = sim.run();
         }
         return new ResultMultiple(stats);
@@ -60,7 +59,7 @@ public class SimulationMultiple {
      */
     public ResultMultiple runParallel(long seed, int runs, EndCriteria... criterias)
             throws InterruptedException, ExecutionException {
-        var rngs = new Rngs(seed);
+        var rngs = Rng.getMultipleStreams(seed, runs);
         var results = new Result[runs];
         var futures = new Future[runs];
 
@@ -69,7 +68,7 @@ public class SimulationMultiple {
             for (int i = 0; i < runs; i++) {
                 final var id = i;
                 futures[i] = threads.submit(() -> {
-                    var sim = new Simulation(this.net, rngs.getRng(id), criterias);
+                    var sim = new Simulation(this.net, rngs[id], criterias);
                     results[id] = sim.run();
                 });
             }

@@ -1,5 +1,7 @@
 package net.berack.upo.valpre.rand;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -7,8 +9,35 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 public class TestRandom {
+
     @Test
     public void testRng() {
+        Rng rng = new Rng(1);
+        for (var i = 0; i < 10000; i++)
+            rng.random();
+        assertEquals(399268537L, rng.getSeed());
+    }
+
+    @Test
+    public void testRngs() {
+        var rngs = Rng.getMultipleStreams(1, 200);
+        assertEquals(256, rngs.length);
+
+        var rng0 = rngs[0];
+        var rng1 = rngs[1];
+
+        for (int i = 0; i < 8367781; i++) {
+            rng0.random();
+            assertNotEquals(rng1.getSeed(), rng0.getSeed());
+        }
+        assertEquals(Rng.MULT_256, rng1.getSeed());
+
+        rng0.random();
+        assertEquals(rng0.getSeed(), rng1.getSeed());
+    }
+
+    @Test
+    public void testRngVariance() {
         var numbers = new int[5000];
         var rng = new Rng(4656);
 
