@@ -54,13 +54,24 @@ public class ServerNode {
 
     /**
      * Creates a generic node with the given name and distribution.
+     * The servers number must be 1 or higher; if lower will be put to 1.
+     * The spawn number must be 0 or higher; if lower will be put to 0.
+     * The distribution can't be null, otherwise an exception is thrown.
      * 
-     * @param name           The name of the node.
-     * @param maxServers     The maximum number of servers in the queue.
-     * @param distribution   The distribution of the service times.
-     * @param spawnArrivals  The number of arrivals to spawn.
+     * @param name          The name of the node.
+     * @param maxServers    The maximum number of servers in the queue.
+     * @param distribution  The distribution of the service times.
+     * @param spawnArrivals The number of arrivals to spawn.
+     * @throws NullPointerException if the distribution is null
      */
     public ServerNode(String name, int maxServers, Distribution distribution, int spawnArrivals) {
+        if (distribution == null)
+            throw new NullPointerException("Distribution can't be null");
+        if (maxServers <= 0)
+            maxServers = 1;
+        if (spawnArrivals < 0)
+            spawnArrivals = 0;
+
         this.name = name;
         this.maxServers = maxServers;
         this.distribution = distribution;
@@ -91,6 +102,6 @@ public class ServerNode {
      * @return True if the node should spawn an arrival, false otherwise.
      */
     public boolean shouldSpawnArrival(double numArrivals) {
-        return this.spawnArrivals > numArrivals;
+        return this.spawnArrivals > Math.max(0, numArrivals);
     }
 }

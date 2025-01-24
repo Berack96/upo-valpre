@@ -15,6 +15,10 @@ import net.berack.upo.valpre.sim.stats.Result;
 public class SimulationMultiple {
     private final Net net;
 
+    /**
+     * TODO
+     * @param net
+     */
     public SimulationMultiple(Net net) {
         this.net = net;
     }
