@@ -14,10 +14,9 @@ import net.berack.upo.valpre.rand.Rng;
  * must be a Source or must generate at least one event to be processed.
  */
 public final class Net {
-    private final HashMap<String, Integer> indices = new HashMap<>();
     private final List<ServerNode> servers = new ArrayList<>();
+    private final HashMap<ServerNode, Integer> indices = new HashMap<>();
     private final List<List<Connection>> connections = new ArrayList<>();
-    private final List<Double> sum = new ArrayList<>();
 
     /**
      * Adds a new server node to the network.
@@ -28,13 +27,12 @@ public final class Net {
      * @throws IllegalArgumentException if the node already exist
      */
     public void addNode(ServerNode node) {
-        if (this.indices.containsKey(node.name))
+        if (this.indices.containsKey(node))
             throw new IllegalArgumentException("Node already exist");
 
         this.servers.add(node);
-        this.indices.put(node.name, this.servers.size() - 1);
+        this.indices.put(node, this.servers.size() - 1);
         this.connections.add(new ArrayList<>());
-        this.sum.add(0.0);
     }
 
     /**
@@ -48,7 +46,7 @@ public final class Net {
      * @throws NullPointerException     if one of the two nodes are not in the net
      * @throws IllegalArgumentException if the weight is negative or zero
      */
-    public void addConnection(String parent, String child, double weight) {
+    public void addConnection(ServerNode parent, ServerNode child, double weight) {
         var nodeP = this.indices.get(parent);
         var nodeC = this.indices.get(child);
 
@@ -86,10 +84,10 @@ public final class Net {
      * @return the resultig node
      */
     public ServerNode getChildOf(ServerNode parent, Rng rng) {
-        var index = this.indices.get(parent.name);
+        var index = this.indices.get(parent);
         var random = rng.random();
         for (var conn : this.connections.get(index)) {
-            random -= conn.weight / 1.0;
+            random -= conn.weight;
             if (random <= 0) {
                 return this.servers.get(conn.index);
             }

@@ -104,4 +104,9 @@ public class ServerNode {
     public boolean shouldSpawnArrival(double numArrivals) {
         return this.spawnArrivals > Math.max(0, numArrivals);
     }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
 }

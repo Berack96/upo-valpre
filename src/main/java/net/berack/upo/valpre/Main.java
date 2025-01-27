@@ -35,7 +35,7 @@ public class Main {
         var node2 = ServerNode.createQueue("Queue", 1, new Distribution.NormalBoxMuller(mu, sigma));
         net.addNode(node1);
         net.addNode(node2);
-        net.addConnection(node1.name, node2.name, 1.0);
+        net.addConnection(node1, node2, 1.0);
         net.normalizeWeights();
 
         /// Run multiple simulations
