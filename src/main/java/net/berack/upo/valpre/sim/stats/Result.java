@@ -13,6 +13,9 @@ public class Result {
     public final long seed;
     public final double simulationTime;
     public final double timeElapsedMS;
+    private int size;
+    private String iFormat;
+    private String fFormat;
 
     /**
      * Creates a new result object for the given parameters obtained by the
@@ -28,6 +31,9 @@ public class Result {
         this.simulationTime = time;
         this.timeElapsedMS = elapsed;
         this.nodes = nodes;
+        this.size = (int) Math.ceil(Math.log10(this.simulationTime));
+        this.iFormat = "%" + this.size + ".0f";
+        this.fFormat = "%" + (this.size + 4) + ".3f";
     }
 
     /**
@@ -36,13 +42,11 @@ public class Result {
      * real time
      */
     public String getHeader() {
-        var size = (int) Math.ceil(Math.log10(this.simulationTime));
-        var format = "%" + (size + 4) + ".3f";
         var builder = new StringBuilder();
         builder.append("===== Net Stats =====\n");
         builder.append(String.format("Seed:       \t%d\n", this.seed));
-        builder.append(String.format("Simulation: \t" + format + "\n", this.simulationTime));
-        builder.append(String.format("Elapsed:    \t" + format + "ms\n", this.timeElapsedMS / 1e6));
+        builder.append(String.format("Simulation: \t" + fFormat + "\n", this.simulationTime));
+        builder.append(String.format("Elapsed:    \t" + fFormat + "ms\n", this.timeElapsedMS / 1e6));
         return builder.toString();
     }
 
@@ -52,24 +56,68 @@ public class Result {
      * the statistics for each node in the network.
      */
     public String getSummary() {
-        var size = (int) Math.ceil(Math.log10(this.simulationTime));
-        var iFormat = "%" + size + ".0f";
-        var fFormat = "%" + (size + 4) + ".3f";
-
-        String[] h = { "Node", "Departures", "Avg Queue", "Avg Response", "Throughput", "Utilization %", "Last Event" };
+        String[] h = { "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput", "Utilization %",
+                "Last Event" };
         var table = new ConsoleTable(h);
 
         for (var entry : this.nodes.entrySet()) {
             var stats = entry.getValue();
             table.addRow(
                     entry.getKey(),
-                    String.format(iFormat, stats.numDepartures),
-                    String.format(fFormat, stats.avgQueueLength),
-                    String.format(fFormat, stats.avgResponse),
-                    String.format(fFormat, stats.troughput),
-                    String.format(fFormat, stats.utilization * 100),
-                    String.format(fFormat, stats.lastEventTime));
+                    iFormat.formatted(stats.numDepartures),
+                    fFormat.formatted(stats.avgQueueLength),
+                    fFormat.formatted(stats.avgWaitTime),
+                    fFormat.formatted(stats.avgResponse),
+                    fFormat.formatted(stats.troughput),
+                    fFormat.formatted(stats.utilization * 100),
+                    fFormat.formatted(stats.lastEventTime));
         }
         return table.toString();
+    }
+
+    /**
+     * TODO
+     * 
+     * @param tableHeader
+     * @return
+     */
+    public String getSummaryCSV(boolean tableHeader) {
+        var builder = new StringBuilder();
+
+        if (tableHeader)
+            builder.append(
+                    "Seed,Node,Arrivals,Departures,MaxQueue,AvgQueue,AvgWait,AvgResponse,BusyTime,WaitTime,ResponseTime,LastEventTime,Throughput,Utilization\n");
+        for (var entry : this.nodes.entrySet()) {
+            var stats = entry.getValue();
+            builder.append(this.seed);
+            builder.append(',');
+            builder.append(entry.getKey().replace(',', ';').replace('"', '\''));
+            builder.append(',');
+            builder.append(stats.numArrivals);
+            builder.append(',');
+            builder.append(stats.numDepartures);
+            builder.append(',');
+            builder.append(stats.maxQueueLength);
+            builder.append(',');
+            builder.append(stats.avgQueueLength);
+            builder.append(',');
+            builder.append(stats.avgWaitTime);
+            builder.append(',');
+            builder.append(stats.avgResponse);
+            builder.append(',');
+            builder.append(stats.busyTime);
+            builder.append(',');
+            builder.append(stats.waitTime);
+            builder.append(',');
+            builder.append(stats.responseTime);
+            builder.append(',');
+            builder.append(stats.lastEventTime);
+            builder.append(',');
+            builder.append(stats.troughput);
+            builder.append(',');
+            builder.append(stats.utilization);
+            builder.append('\n');
+        }
+        return builder.toString();
     }
 }

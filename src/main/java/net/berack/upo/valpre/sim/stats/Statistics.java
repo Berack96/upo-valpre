@@ -12,10 +12,12 @@ public class Statistics {
     public double maxQueueLength = 0.0d;
     public double avgQueueLength = 0.0d;
     public double busyTime = 0.0d;
+    public double waitTime = 0.0d;
     public double responseTime = 0.0d;
     public double lastEventTime = 0.0d;
 
     // derived stats, you can calculate them even at the end
+    public double avgWaitTime = 0.0d;
     public double avgResponse = 0.0d;
     public double troughput = 0.0d;
     public double utilization = 0.0d;
@@ -50,7 +52,9 @@ public class Statistics {
         this.responseTime += response;
         this.busyTime += time - this.lastEventTime;
         this.lastEventTime = time;
+        this.waitTime = this.responseTime - this.busyTime;
 
+        this.avgWaitTime = this.waitTime / this.numDepartures;
         this.avgResponse = this.responseTime / this.numDepartures;
         this.troughput = this.numDepartures / this.lastEventTime;
         this.utilization = this.busyTime / this.lastEventTime;
@@ -102,10 +106,12 @@ public class Statistics {
         save.avgQueueLength = func.apply(val1.avgQueueLength, val2.avgQueueLength);
         save.busyTime = func.apply(val1.busyTime, val2.busyTime);
         save.responseTime = func.apply(val1.responseTime, val2.responseTime);
+        save.waitTime = func.apply(val1.waitTime, val2.waitTime);
         save.lastEventTime = func.apply(val1.lastEventTime, val2.lastEventTime);
         // derived stats
+        save.avgWaitTime = func.apply(val1.avgWaitTime, val2.avgWaitTime);
+        save.avgResponse = func.apply(val1.avgResponse, val2.avgResponse);
         save.troughput = func.apply(val1.troughput, val2.troughput);
         save.utilization = func.apply(val1.utilization, val2.utilization);
-        save.avgResponse = func.apply(val1.avgResponse, val2.avgResponse);
     }
 }

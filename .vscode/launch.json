@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run1k Rand",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "-runs 1000 -p -seed 0"
+        },
+        {
+            "type": "java",
+            "name": "Run1k save",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "-runs 1000 -p -csv result.csv"
+        },
+        {
+            "type": "java",
+            "name": "Run1k",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "-runs 1000 -p"
+        },
+        {
+            "type": "java",
+            "name": "Run10",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "-runs 10"
+        },
+    ]
+}

@@ -1,5 +1,7 @@
 package net.berack.upo.valpre.sim.stats;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 
 /**
@@ -9,8 +11,7 @@ public class ResultMultiple {
     public final Result[] runs;
     public final Result average;
     public final Result variance;
-    public final Result lowerBound;
-    public final Result upperBound;
+    public final Result error95;
 
     /**
      * TODO
@@ -18,13 +19,31 @@ public class ResultMultiple {
      * @param runs
      */
     public ResultMultiple(Result... runs) {
+        if (runs == null || runs.length <= 1)
+            throw new IllegalArgumentException("Sample size must be > 1");
+
         this.runs = runs;
         this.average = ResultMultiple.calcAvg(runs);
         this.variance = ResultMultiple.calcVar(this.average, runs);
+        this.error95 = calcError(this.average, this.variance, runs.length, 0.95);
+    }
 
-        var temp = calcInterval(this.average, this.variance, runs.length, 0.95);
-        this.lowerBound = temp[0];
-        this.upperBound = temp[1];
+    /**
+     * TODO
+     * 
+     * @param filename
+     * @throws IOException
+     */
+    public void saveCSV(String filename) throws IOException {
+        try (var file = new FileWriter(filename)) {
+            var first = true;
+            var builder = new StringBuilder();
+            for (var run : this.runs) {
+                builder.append(run.getSummaryCSV(first));
+                first = false;
+            }
+            file.write(builder.toString());
+        }
     }
 
     /**
@@ -98,10 +117,7 @@ public class ResultMultiple {
      * @param alpha
      * @return
      */
-    public static Result[] calcInterval(Result avg, Result stdDev, int sampleSize, double alpha) {
-        if (sampleSize <= 1)
-            throw new IllegalArgumentException("Il numero di campioni deve essere maggiore di 1.");
-
+    public static Result calcError(Result avg, Result stdDev, int sampleSize, double alpha) {
         // Getting the correct values for the percentile
         var distr = new org.apache.commons.math3.distribution.TDistribution(sampleSize - 1);
         var percentile = distr.inverseCumulativeProbability(alpha);
@@ -117,31 +133,6 @@ public class ResultMultiple {
             stat.merge(entry.getValue(), (_, val) -> percentile * (val / sqrtSample));
             error.nodes.put(entry.getKey(), stat);
         }
-
-        // Calculating the lower and the upper bound
-        var lowerBound = new Result(avg.seed,
-                avg.simulationTime - error.simulationTime,
-                avg.timeElapsedMS - error.timeElapsedMS,
-                new HashMap<>());
-        var upperBound = new Result(avg.seed,
-                avg.simulationTime + error.simulationTime,
-                avg.timeElapsedMS + error.timeElapsedMS,
-                new HashMap<>());
-        error.nodes.entrySet().forEach(entry -> {
-            var key = entry.getKey();
-            var errStat = entry.getValue();
-
-            var avgStat = avg.nodes.get(key);
-            var lower = new Statistics();
-            var upper = new Statistics();
-
-            Statistics.apply(lower, avgStat, errStat, (a, e) -> a - e);
-            Statistics.apply(upper, avgStat, errStat, (a, e) -> a + e);
-
-            lowerBound.nodes.put(key, lower);
-            upperBound.nodes.put(key, lower);
-        });
-
-        return new Result[] { lowerBound, upperBound };
+        return error;
     }
 }
