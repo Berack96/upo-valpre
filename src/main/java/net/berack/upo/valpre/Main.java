@@ -29,13 +29,21 @@ public class Main {
             csv = arguments.get("csv");
         var parallel = arguments.containsKey("p");
 
+        // varius distributions
+        var distrExp = new Distribution.Exponential(lambda);
+        var distrNorm = new Distribution.NormalBoxMuller(mu, sigma);
+        var distrUnav = new Distribution.UnavailableTime(0.2, distrNorm);
+
         // Build the network
         var net = new Net();
-        var node1 = ServerNode.createLimitedSource("Source", new Distribution.Exponential(lambda), total);
-        var node2 = ServerNode.createQueue("Queue", 1, new Distribution.NormalBoxMuller(mu, sigma));
+        var node1 = ServerNode.createLimitedSource("Source", distrExp, total);
+        var node2 = ServerNode.createQueue("Queue", 1, distrNorm);
+        var node3 = ServerNode.createQueue("Queue Wait", 1, distrNorm, distrUnav);
         net.addNode(node1);
         net.addNode(node2);
+        net.addNode(node3);
         net.addConnection(node1, node2, 1.0);
+        net.addConnection(node2, node3, 1.0);
         net.normalizeWeights();
 
         /// Run multiple simulations
