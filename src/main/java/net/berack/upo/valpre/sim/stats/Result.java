@@ -31,7 +31,7 @@ public class Result {
         this.simulationTime = time;
         this.timeElapsedMS = elapsed;
         this.nodes = nodes;
-        this.size = (int) Math.ceil(Math.log10(this.simulationTime));
+        this.size = (int) Math.ceil(Math.max(Math.log10(this.simulationTime), 1));
         this.iFormat = "%" + this.size + ".0f";
         this.fFormat = "%" + (this.size + 4) + ".3f";
     }
@@ -57,7 +57,7 @@ public class Result {
      */
     public String getSummary() {
         String[] h = { "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput", "Utilization %",
-                "Last Event" };
+                "Unavailable %", "Last Event" };
         var table = new ConsoleTable(h);
 
         for (var entry : this.nodes.entrySet()) {
@@ -70,6 +70,7 @@ public class Result {
                     fFormat.formatted(stats.avgResponse),
                     fFormat.formatted(stats.troughput),
                     fFormat.formatted(stats.utilization * 100),
+                    fFormat.formatted(stats.unavailable * 100),
                     fFormat.formatted(stats.lastEventTime));
         }
         return table.toString();
@@ -86,7 +87,7 @@ public class Result {
 
         if (tableHeader)
             builder.append(
-                    "Seed,Node,Arrivals,Departures,MaxQueue,AvgQueue,AvgWait,AvgResponse,BusyTime,WaitTime,ResponseTime,LastEventTime,Throughput,Utilization\n");
+                    "Seed,Node,Arrivals,Departures,MaxQueue,AvgQueue,AvgWait,AvgResponse,BusyTime,WaitTime,UnavailableTime,ResponseTime,LastEventTime,Throughput,Utilization,Unavailable\n");
         for (var entry : this.nodes.entrySet()) {
             var stats = entry.getValue();
             builder.append(this.seed);
@@ -109,6 +110,8 @@ public class Result {
             builder.append(',');
             builder.append(stats.waitTime);
             builder.append(',');
+            builder.append(stats.unavailableTime);
+            builder.append(',');
             builder.append(stats.responseTime);
             builder.append(',');
             builder.append(stats.lastEventTime);
@@ -116,6 +119,8 @@ public class Result {
             builder.append(stats.troughput);
             builder.append(',');
             builder.append(stats.utilization);
+            builder.append(',');
+            builder.append(stats.unavailable);
             builder.append('\n');
         }
         return builder.toString();

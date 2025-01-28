@@ -11,6 +11,7 @@ public class Statistics {
     public double numDepartures = 0.0d;
     public double maxQueueLength = 0.0d;
     public double avgQueueLength = 0.0d;
+    public double unavailableTime = 0.0d;
     public double busyTime = 0.0d;
     public double waitTime = 0.0d;
     public double responseTime = 0.0d;
@@ -21,6 +22,7 @@ public class Statistics {
     public double avgResponse = 0.0d;
     public double troughput = 0.0d;
     public double utilization = 0.0d;
+    public double unavailable = 0.0d;
 
     /**
      * TODO
@@ -29,16 +31,12 @@ public class Statistics {
      * @param newQueueSize
      * @param updateBusy
      */
-    public void updateArrival(double time, double newQueueSize, boolean updateBusy) {
+    public void updateArrival(double time, double newQueueSize) {
         var total = this.avgQueueLength * this.numArrivals;
 
         this.numArrivals++;
         this.avgQueueLength = (total + newQueueSize) / this.numArrivals;
         this.maxQueueLength = Math.max(this.maxQueueLength, newQueueSize);
-        if (updateBusy)
-            this.busyTime += time - this.lastEventTime;
-
-        this.lastEventTime = time;
     }
 
     /**
@@ -49,15 +47,30 @@ public class Statistics {
      */
     public void updateDeparture(double time, double response) {
         this.numDepartures++;
-        this.responseTime += response;
-        this.busyTime += time - this.lastEventTime;
-        this.lastEventTime = time;
-        this.waitTime = this.responseTime - this.busyTime;
+        this.responseTime += time - response;
+    }
 
+    /**
+     * TODO
+     * 
+     * @param time
+     * @param serverBusy
+     * @param serverUnavailable
+     */
+    public void updateTimes(double time, int serverBusy, int serverUnavailable, int maxServers) {
+        if (serverBusy > 0)
+            this.busyTime += time - this.lastEventTime;
+        else if (serverUnavailable == maxServers)
+            this.unavailableTime += time - this.lastEventTime;
+
+        this.waitTime = this.responseTime - this.busyTime;
         this.avgWaitTime = this.waitTime / this.numDepartures;
         this.avgResponse = this.responseTime / this.numDepartures;
-        this.troughput = this.numDepartures / this.lastEventTime;
-        this.utilization = this.busyTime / this.lastEventTime;
+        this.troughput = this.numDepartures / time;
+        this.utilization = this.busyTime / time;
+        this.unavailable = this.unavailableTime / time;
+
+        this.lastEventTime = time;
     }
 
     /**
@@ -106,11 +119,13 @@ public class Statistics {
         save.avgQueueLength = func.apply(val1.avgQueueLength, val2.avgQueueLength);
         save.busyTime = func.apply(val1.busyTime, val2.busyTime);
         save.responseTime = func.apply(val1.responseTime, val2.responseTime);
+        save.unavailableTime = func.apply(val1.unavailableTime, val2.unavailableTime);
         save.waitTime = func.apply(val1.waitTime, val2.waitTime);
         save.lastEventTime = func.apply(val1.lastEventTime, val2.lastEventTime);
         // derived stats
         save.avgWaitTime = func.apply(val1.avgWaitTime, val2.avgWaitTime);
         save.avgResponse = func.apply(val1.avgResponse, val2.avgResponse);
+        save.unavailable = func.apply(val1.unavailable, val2.unavailable);
         save.troughput = func.apply(val1.troughput, val2.troughput);
         save.utilization = func.apply(val1.utilization, val2.utilization);
     }

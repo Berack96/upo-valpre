@@ -26,7 +26,7 @@ public final class Simulation {
      * Creates a new run of the simulation with the given nodes and random number
      * generator.
      * 
-     * @param states     The nodes in the network.
+     * @param states    The nodes in the network.
      * @param rng       The random number generator to use.
      * @param criterias when the simulation has to end.
      */
@@ -73,32 +73,32 @@ public final class Simulation {
         this.time = event.time;
 
         switch (event.type) {
+            case AVAILABLE -> {
+                state.stats.updateTimes(this.time, state.numServerBusy, state.numServerUnavailable, node.maxServers);
+                state.numServerUnavailable--;
+                this.addDepartureIfPossible(node, state);
+            }
             case ARRIVAL -> {
                 state.queue.add(this.time);
-                state.stats.updateArrival(this.time, state.queue.size(), state.numServerBusy != 0);
-
-                if (state.numServerBusy < node.maxServers) {
-                    state.numServerBusy++;
-                    this.addDeparture(node);
-                }
+                state.stats.updateArrival(this.time, state.queue.size());
+                state.stats.updateTimes(this.time, state.numServerBusy, state.numServerUnavailable, node.maxServers);
+                this.addDepartureIfPossible(node, state);
             }
             case DEPARTURE -> {
-                var startService = state.queue.poll();
-                state.stats.updateDeparture(this.time, this.time - startService);
+                var arrivalTime = state.queue.poll();
+                state.stats.updateDeparture(this.time, arrivalTime);
+                state.stats.updateTimes(this.time, state.numServerBusy, state.numServerUnavailable, node.maxServers);
+                state.numServerBusy--;
 
-                if (state.numServerBusy > state.queue.size()) {
-                    state.numServerBusy--;
-                } else {
-                    this.addDeparture(node);
-                }
+                this.addUnavailableIfPossible(node, state);
+                this.addDepartureIfPossible(node, state);
 
                 var next = this.net.getChildOf(node, this.rng);
-                if (next != null) {
+                if (next != null)
                     this.addArrival(next);
-                }
-                if (node.shouldSpawnArrival(state.stats.numArrivals)) {
+
+                if (node.shouldSpawnArrival(state.stats.numArrivals))
                     this.addArrival(node);
-                }
             }
         }
     }
@@ -149,14 +149,36 @@ public final class Simulation {
 
     /**
      * Adds a departure event to the future event list. The event is created based
-     * on the given node, and the delay is determined by the node's distribution.
+     * on the given node, and the delay is determined by the node's service
+     * distribution.
      * 
      * @param node The node to create the event for.
      */
-    public void addDeparture(ServerNode node) {
-        var delay = node.getPositiveSample(this.rng);
-        var event = Event.newDeparture(node, this.time + delay);
-        fel.add(event);
+    public void addDepartureIfPossible(ServerNode node, NodeState state) {
+        var canServe = node.maxServers > state.numServerBusy + state.numServerUnavailable;
+        var hasRequests = state.queue.size() > state.numServerBusy;
+
+        if (canServe && hasRequests) {
+            state.numServerBusy++;
+            var delay = node.getServiceTime(this.rng);
+            var event = Event.newDeparture(node, this.time + delay);
+            fel.add(event);
+        }
+    }
+
+    /**
+     * TODO
+     * 
+     * @param node
+     * @param state
+     */
+    public void addUnavailableIfPossible(ServerNode node, NodeState state) {
+        var delay = node.getUnavailableTime(rng);
+        if (delay > 0) {
+            state.numServerUnavailable++;
+            var event = Event.newAvailable(node, time + delay);
+            this.fel.add(event);
+        }
     }
 
     /**
@@ -183,7 +205,8 @@ public final class Simulation {
      */
     public static class NodeState {
         public int numServerBusy = 0;
+        public int numServerUnavailable = 0;
         public final Statistics stats = new Statistics();
-        private final ArrayDeque<Double> queue = new ArrayDeque<>();
+        public final ArrayDeque<Double> queue = new ArrayDeque<>();
     }
 }
