@@ -3,8 +3,6 @@ package net.berack.upo.valpre.sim.stats;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import net.berack.upo.valpre.sim.Event;
-
 /**
  * TODO
  */
@@ -13,14 +11,12 @@ public class Statistics {
     public double numDepartures = 0.0d;
     public double maxQueueLength = 0.0d;
     public double avgQueueLength = 0.0d;
-    public double unavailableTime = 0.0d;
     public double busyTime = 0.0d;
     public double waitTime = 0.0d;
     public double responseTime = 0.0d;
     public double lastEventTime = 0.0d;
 
     // derived stats, you can calculate them even at the end
-    public double avgUnavailableTime = 0.0d;
     public double avgWaitTime = 0.0d;
     public double avgResponse = 0.0d;
     public double troughput = 0.0d;
@@ -29,49 +25,39 @@ public class Statistics {
     /**
      * TODO
      * 
-     * @param event
+     * @param time
      * @param newQueueSize
+     * @param updateBusy
      */
-    public void updateArrival(Event event, double newQueueSize) {
+    public void updateArrival(double time, double newQueueSize, boolean updateBusy) {
         var total = this.avgQueueLength * this.numArrivals;
 
         this.numArrivals++;
         this.avgQueueLength = (total + newQueueSize) / this.numArrivals;
         this.maxQueueLength = Math.max(this.maxQueueLength, newQueueSize);
+        if (updateBusy)
+            this.busyTime += time - this.lastEventTime;
 
-        this.lastEventTime = event.time;
+        this.lastEventTime = time;
     }
 
     /**
      * TODO
      * 
-     * @param event
+     * @param time
      * @param response
      */
-    public void updateDeparture(Event event, double arrivalTime) {
+    public void updateDeparture(double time, double response) {
         this.numDepartures++;
-        this.responseTime += event.time - arrivalTime;
-        this.busyTime += event.time - event.started;
+        this.responseTime += response;
+        this.busyTime += time - this.lastEventTime;
+        this.lastEventTime = time;
         this.waitTime = this.responseTime - this.busyTime;
 
         this.avgWaitTime = this.waitTime / this.numDepartures;
         this.avgResponse = this.responseTime / this.numDepartures;
-        this.troughput = this.numDepartures / event.time;
-        this.utilization = this.busyTime / event.time;
-
-        this.lastEventTime = event.time;
-    }
-
-    /**
-     * TODO
-     * 
-     * @param event
-     */
-    public void updateUnavailable(Event event) {
-        this.unavailableTime += event.time - event.started;
-        this.avgUnavailableTime = this.unavailableTime / event.time;
-
-        this.lastEventTime = event.time;
+        this.troughput = this.numDepartures / this.lastEventTime;
+        this.utilization = this.busyTime / this.lastEventTime;
     }
 
     /**
@@ -120,13 +106,11 @@ public class Statistics {
         save.avgQueueLength = func.apply(val1.avgQueueLength, val2.avgQueueLength);
         save.busyTime = func.apply(val1.busyTime, val2.busyTime);
         save.responseTime = func.apply(val1.responseTime, val2.responseTime);
-        save.unavailableTime = func.apply(val1.unavailableTime, val2.unavailableTime);
         save.waitTime = func.apply(val1.waitTime, val2.waitTime);
         save.lastEventTime = func.apply(val1.lastEventTime, val2.lastEventTime);
         // derived stats
         save.avgWaitTime = func.apply(val1.avgWaitTime, val2.avgWaitTime);
         save.avgResponse = func.apply(val1.avgResponse, val2.avgResponse);
-        save.avgUnavailableTime = func.apply(val1.avgUnavailableTime, val2.avgUnavailableTime);
         save.troughput = func.apply(val1.troughput, val2.troughput);
         save.utilization = func.apply(val1.utilization, val2.utilization);
     }

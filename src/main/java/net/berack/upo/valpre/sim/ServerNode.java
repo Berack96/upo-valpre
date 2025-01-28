@@ -11,8 +11,7 @@ public class ServerNode {
     public final String name;
     public final int maxServers;
     public final int spawnArrivals;
-    public final Distribution service;
-    public final Distribution unavailable;
+    public final Distribution distribution;
 
     /**
      * Creates a source node with the given name and distribution.
@@ -24,7 +23,7 @@ public class ServerNode {
      * @return The created source node.
      */
     public static ServerNode createSource(String name, Distribution distribution) {
-        return new ServerNode(name, Integer.MAX_VALUE, distribution, null, Integer.MAX_VALUE);
+        return new ServerNode(name, Integer.MAX_VALUE, distribution, Integer.MAX_VALUE);
     }
 
     /**
@@ -32,39 +31,25 @@ public class ServerNode {
      * arrivals to spawn that are served by infinite servers (Integer.MAX_VALUE).
      * 
      * @param name          The name of the node.
-     * @param service       The distribution of the inter-arrival times.
+     * @param distribution  The distribution of the inter-arrival times.
      * @param spawnArrivals The number of arrivals to spawn.
      * @return The created source node.
      */
-    public static ServerNode createLimitedSource(String name, Distribution service, int spawnArrivals) {
-        return new ServerNode(name, Integer.MAX_VALUE, service, null, spawnArrivals);
+    public static ServerNode createLimitedSource(String name, Distribution distribution, int spawnArrivals) {
+        return new ServerNode(name, Integer.MAX_VALUE, distribution, spawnArrivals);
     }
 
     /**
      * Creates a queue node with the given name, maximum number of servers, and
      * distribution.
      * 
-     * @param name       The name of the node.
-     * @param maxServers The maximum number of servers in the queue.
-     * @param service    The distribution of the service times.
+     * @param name         The name of the node.
+     * @param maxServers   The maximum number of servers in the queue.
+     * @param distribution The distribution of the service times.
      * @return The created queue node.
      */
-    public static ServerNode createQueue(String name, int maxServers, Distribution service) {
-        return new ServerNode(name, maxServers, service, null, 0);
-    }
-
-    /**
-     * Creates a queue node with the given name, maximum number of servers, and
-     * distribution.
-     * 
-     * @param name        The name of the node.
-     * @param maxServers  The maximum number of servers in the queue.
-     * @param service     The distribution of the service times.
-     * @param unavailable The distribution of the unavailable times after service.
-     * @return The created queue node.
-     */
-    public static ServerNode createQueue(String name, int maxServers, Distribution service, Distribution unavailable) {
-        return new ServerNode(name, maxServers, service, unavailable, 0);
+    public static ServerNode createQueue(String name, int maxServers, Distribution distribution) {
+        return new ServerNode(name, maxServers, distribution, 0);
     }
 
     /**
@@ -75,14 +60,13 @@ public class ServerNode {
      * 
      * @param name          The name of the node.
      * @param maxServers    The maximum number of servers in the queue.
-     * @param service       The distribution of the service times.
-     * @param unavailable   The distribution of the unavailable times after service.
+     * @param distribution  The distribution of the service times.
      * @param spawnArrivals The number of arrivals to spawn.
      * @throws NullPointerException if the distribution is null
      */
-    private ServerNode(String name, int maxServers, Distribution service, Distribution unavailable, int spawnArrivals) {
-        if (service == null)
-            throw new NullPointerException("Service distribution can't be null");
+    public ServerNode(String name, int maxServers, Distribution distribution, int spawnArrivals) {
+        if (distribution == null)
+            throw new NullPointerException("Distribution can't be null");
         if (maxServers <= 0)
             maxServers = 1;
         if (spawnArrivals < 0)
@@ -90,9 +74,8 @@ public class ServerNode {
 
         this.name = name;
         this.maxServers = maxServers;
+        this.distribution = distribution;
         this.spawnArrivals = spawnArrivals;
-        this.service = service;
-        this.unavailable = unavailable;
     }
 
     /**
@@ -103,18 +86,12 @@ public class ServerNode {
      * @param rng The random number generator to use.
      * @return A positive sample from the distribution.
      */
-    public double getServiceTime(Rng rng) {
-        return Distribution.getPositiveSample(this.service, rng);
-    }
-
-    /**
-     * Return the unavailable time after a service
-     * 
-     * @param rng The random number generator to use.
-     * @return A positive or 0 value from the distribution.
-     */
-    public double getUnavailableTime(Rng rng) {
-        return Distribution.getPositiveSample(this.unavailable, rng);
+    public double getPositiveSample(Rng rng) {
+        double sample;
+        do {
+            sample = this.distribution.sample(rng);
+        } while (sample < 0);
+        return sample;
     }
 
     /**
@@ -126,14 +103,6 @@ public class ServerNode {
      */
     public boolean shouldSpawnArrival(double numArrivals) {
         return this.spawnArrivals > Math.max(0, numArrivals);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ServerNode))
-            return false;
-        var other = (ServerNode) obj;
-        return obj.hashCode() == other.hashCode();
     }
 
     @Override

@@ -5,7 +5,6 @@ package net.berack.upo.valpre.sim;
  */
 public class Event implements Comparable<Event> {
     public final double time;
-    public final double started;
     public final Type type;
     public final ServerNode node;
 
@@ -16,11 +15,10 @@ public class Event implements Comparable<Event> {
      * @param node The node that the event is associated with.
      * @param time The time at which the event occurs.
      */
-    private Event(Type type, ServerNode node, double now, double time) {
+    private Event(Type type, ServerNode node, double time) {
         this.type = type;
         this.time = time;
         this.node = node;
-        this.started = now;
     }
 
     @Override
@@ -33,39 +31,38 @@ public class Event implements Comparable<Event> {
     }
 
     /**
+     * Create a new event.
+     * 
+     * @param node The node that the event is associated with.
+     * @param time The time at which the event occurs.
+     * @param type The type of event.
+     * 
+     * @return The new event.
+     */
+    public static Event newType(ServerNode node, double time, Type type) {
+        return new Event(type, node, time);
+    }
+
+    /**
      * Create a new arrival event.
      * 
      * @param node The node that the event is associated with.
-     * @param now  The time at which the event has been created.
      * @param time The time at which the event occurs.
      * @return The new event.
      */
-    public static Event newArrival(ServerNode node, double now, double time) {
-        return new Event(Type.ARRIVAL, node, now, time);
+    public static Event newArrival(ServerNode node, double time) {
+        return new Event(Type.ARRIVAL, node, time);
     }
 
     /**
      * Create a new departure event.
      * 
      * @param node The node that the event is associated with.
-     * @param now  The time at which the event has been created.
      * @param time The time at which the event occurs.
      * @return The new event.
      */
-    public static Event newDeparture(ServerNode node, double now, double time) {
-        return new Event(Type.DEPARTURE, node, now, time);
-    }
-
-    /**
-     * Create a new unavailable event.
-     * 
-     * @param node The node that the event is associated with.
-     * @param now  The time at which the event has been created.
-     * @param time The time at which the event occurs.
-     * @return The new event.
-     */
-    public static Event newUnavailable(ServerNode node, double now, double time) {
-        return new Event(Type.UNAVAILABLE, node, now, time);
+    public static Event newDeparture(ServerNode node, double time) {
+        return new Event(Type.DEPARTURE, node, time);
     }
 
     /**
@@ -74,6 +71,5 @@ public class Event implements Comparable<Event> {
     public static enum Type {
         ARRIVAL,
         DEPARTURE,
-        UNAVAILABLE,
     }
 }

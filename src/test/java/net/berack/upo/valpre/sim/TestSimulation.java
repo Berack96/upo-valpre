@@ -14,7 +14,7 @@ public class TestSimulation {
     private static double DELTA = 0.0000001;
     private static Rng rigged = new RiggedRng();
     private static Distribution const0 = new Constant(0.0);
-    private static Distribution const1 = new Constant(1.0);
+    private static Distribution const1 = new Constant(0.0);
 
     private final static class RiggedRng extends Rng {
         @Override
@@ -38,7 +38,7 @@ public class TestSimulation {
 
     @Test
     public void serverNode() {
-        var node = ServerNode.createQueue("Nodo", 0, const1);
+        var node = new ServerNode("Nodo", 0, const1, 0);
         assertEquals("Nodo", node.name);
         assertEquals(1, node.maxServers);
         assertFalse(node.shouldSpawnArrival(0));
@@ -46,7 +46,7 @@ public class TestSimulation {
         assertFalse(node.shouldSpawnArrival(1000));
         assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
         assertFalse(node.shouldSpawnArrival(-1));
-        assertEquals(1.0, node.getServiceTime(null), DELTA);
+        assertEquals(1.0, node.getPositiveSample(null), DELTA);
 
         node = ServerNode.createQueue("Queue", 50, const1);
         assertEquals("Queue", node.name);
@@ -56,7 +56,7 @@ public class TestSimulation {
         assertFalse(node.shouldSpawnArrival(1000));
         assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
         assertFalse(node.shouldSpawnArrival(-1));
-        assertEquals(1.0, node.getServiceTime(null), DELTA);
+        assertEquals(1.0, node.getPositiveSample(null), DELTA);
 
         node = ServerNode.createSource("Source", const1);
         assertEquals("Source", node.name);
@@ -67,7 +67,7 @@ public class TestSimulation {
         assertTrue(node.shouldSpawnArrival(Integer.MAX_VALUE - 1));
         assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
         assertTrue(node.shouldSpawnArrival(-1));
-        assertEquals(1.0, node.getServiceTime(null), DELTA);
+        assertEquals(1.0, node.getPositiveSample(null), DELTA);
 
         node = ServerNode.createLimitedSource("Source", const1, 50);
         assertEquals("Source", node.name);
@@ -78,28 +78,25 @@ public class TestSimulation {
         assertFalse(node.shouldSpawnArrival(1000));
         assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
         assertTrue(node.shouldSpawnArrival(-1));
-        assertEquals(1.0, node.getServiceTime(null), DELTA);
+        assertEquals(1.0, node.getPositiveSample(null), DELTA);
     }
 
     @Test
     public void event() {
         var node = ServerNode.createSource("Source", const0);
-        var event = Event.newUnavailable(node, 0, 1);
+        var event = Event.newType(node, 0, Event.Type.ARRIVAL);
         assertEquals(node, event.node);
-        assertEquals(0.0, event.started, 0.000000000001);
-        assertEquals(1.0, event.time, 0.000000000001);
-        assertEquals(Event.Type.UNAVAILABLE, event.type);
+        assertEquals(0.0, event.time, 0.000000000001);
+        assertEquals(Event.Type.ARRIVAL, event.type);
 
-        var event2 = Event.newArrival(node, 1.0, 5.0);
+        var event2 = Event.newArrival(node, 1.0);
         assertEquals(node, event2.node);
-        assertEquals(1.0, event2.started, 0.000000000001);
-        assertEquals(5.0, event2.time, 0.000000000001);
+        assertEquals(1.0, event2.time, 0.000000000001);
         assertEquals(Event.Type.ARRIVAL, event2.type);
 
-        var event3 = Event.newDeparture(node, 7.0, 8.0);
+        var event3 = Event.newDeparture(node, 5.0);
         assertEquals(node, event3.node);
-        assertEquals(7.0, event3.started, 0.000000000001);
-        assertEquals(8.0, event3.time, 0.000000000001);
+        assertEquals(5.0, event3.time, 0.000000000001);
         assertEquals(Event.Type.DEPARTURE, event3.type);
 
         assertEquals(0, event2.compareTo(event2));
