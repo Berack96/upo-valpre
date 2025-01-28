@@ -4,7 +4,33 @@ package net.berack.upo.valpre.rand;
  * Represents a probability distribution.
  */
 public interface Distribution {
+    /**
+     * Return a sample from the distribution.
+     * 
+     * @param rng The random number generator to use.
+     * @return A number given from the distribution.
+     */
     public double sample(Rng rng);
+
+    /**
+     * Gets a positive sample from the distribution.
+     * This is useful if you need to generate a positive value from a distribution
+     * that can generate negative values. For example, the normal distribution.
+     * 
+     * @param distribution The distribution to sample
+     * @param rng          The random number generator to use.
+     * @return A positive or 0 value from the distribution.
+     */
+    public static double getPositiveSample(Distribution distribution, Rng rng) {
+        if (distribution == null)
+            return 0;
+
+        double sample;
+        do {
+            sample = distribution.sample(rng);
+        } while (sample < 0);
+        return sample;
+    }
 
     /**
      * Represents an exponential distribution.
@@ -170,6 +196,32 @@ public interface Distribution {
             }
 
             return -Math.log(rng.random()) / lambdas[i];
+        }
+    }
+
+    /**
+     * TODO
+     */
+    public static class UnavailableTime implements Distribution {
+        public final double probability;
+        public final Distribution distribution;
+
+        /**
+         * TODO
+         * 
+         * @param probability
+         * @param distribution
+         */
+        public UnavailableTime(double probability, Distribution distribution) {
+            this.probability = probability;
+            this.distribution = distribution;
+        }
+
+        @Override
+        public double sample(Rng rng) {
+            if (rng.random() < this.probability)
+                return Distribution.getPositiveSample(this.distribution, rng);
+            return 0.0;
         }
     }
 }

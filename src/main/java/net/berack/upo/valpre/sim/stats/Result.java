@@ -31,7 +31,7 @@ public class Result {
         this.simulationTime = time;
         this.timeElapsedMS = elapsed;
         this.nodes = nodes;
-        this.size = (int) Math.ceil(Math.log10(this.simulationTime));
+        this.size = (int) Math.ceil(Math.max(Math.log10(this.simulationTime), 1));
         this.iFormat = "%" + this.size + ".0f";
         this.fFormat = "%" + (this.size + 4) + ".3f";
     }
@@ -56,8 +56,8 @@ public class Result {
      * the statistics for each node in the network.
      */
     public String getSummary() {
-        String[] h = { "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput", "Utilization %",
-                "Last Event" };
+        String[] h = { "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Unavailable", "Avg Response", "Throughput",
+                "Utilization %", "Last Event" };
         var table = new ConsoleTable(h);
 
         for (var entry : this.nodes.entrySet()) {
@@ -67,6 +67,7 @@ public class Result {
                     iFormat.formatted(stats.numDepartures),
                     fFormat.formatted(stats.avgQueueLength),
                     fFormat.formatted(stats.avgWaitTime),
+                    fFormat.formatted(stats.avgUnavailableTime),
                     fFormat.formatted(stats.avgResponse),
                     fFormat.formatted(stats.troughput),
                     fFormat.formatted(stats.utilization * 100),
@@ -86,7 +87,7 @@ public class Result {
 
         if (tableHeader)
             builder.append(
-                    "Seed,Node,Arrivals,Departures,MaxQueue,AvgQueue,AvgWait,AvgResponse,BusyTime,WaitTime,ResponseTime,LastEventTime,Throughput,Utilization\n");
+                    "Seed,Node,Arrivals,Departures,MaxQueue,AvgQueue,AvgWait,AvgUnavailable,AvgResponse,BusyTime,WaitTime,UnavailableTime,ResponseTime,LastEventTime,Throughput,Utilization\n");
         for (var entry : this.nodes.entrySet()) {
             var stats = entry.getValue();
             builder.append(this.seed);
@@ -103,11 +104,15 @@ public class Result {
             builder.append(',');
             builder.append(stats.avgWaitTime);
             builder.append(',');
+            builder.append(stats.avgUnavailableTime);
+            builder.append(',');
             builder.append(stats.avgResponse);
             builder.append(',');
             builder.append(stats.busyTime);
             builder.append(',');
             builder.append(stats.waitTime);
+            builder.append(',');
+            builder.append(stats.unavailableTime);
             builder.append(',');
             builder.append(stats.responseTime);
             builder.append(',');
