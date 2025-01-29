@@ -200,17 +200,20 @@ public interface Distribution {
     }
 
     /**
-     * TODO
+     * Distribution of the UnavailableTime that has a probability of happening.
+     * In case the node is unavailable then a value of the second distribution is
+     * returned.
      */
     public static class UnavailableTime implements Distribution {
         public final double probability;
         public final Distribution distribution;
 
         /**
-         * TODO
+         * Create a new distribution with a probability of happening.
+         * In case it happens then a value of the second distribution is returned.
          * 
-         * @param probability
-         * @param distribution
+         * @param probability  the probability of returning a value > 0.0
+         * @param distribution the distribution where to get the samples
          */
         public UnavailableTime(double probability, Distribution distribution) {
             this.probability = probability;

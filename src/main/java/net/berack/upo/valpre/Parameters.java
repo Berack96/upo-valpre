@@ -4,16 +4,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO
+ * Class that helps with parsing the parameters passed as input in the console.
  */
 public class Parameters {
     private final Map<String, Boolean> arguments;
     private final String prefix;
 
     /**
-     * TODO
-     * 
-     * @param arguments
+     * Constructs a new Parameters object with the specified prefix and arguments.
+     * The arguments can be with value, in that case in the map the boolean should
+     * be true, otherwise it is only an argument that is a flag
+     *
+     * @param prefix    the prefix to be used
+     * @param arguments a map of arguments where the key is a string and if the
+     *                  boolean is true then the argument expect a value
+     * @throws IllegalArgumentException if the arguments map is null or empty
      */
     public Parameters(String prefix, Map<String, Boolean> arguments) {
         if (arguments == null || arguments.size() == 0)
@@ -23,10 +28,11 @@ public class Parameters {
     }
 
     /**
-     * TODO
+     * Return a string with the standard <arggument> <description> spaced enough
      * 
-     * @param eventualDescription
-     * @return
+     * @param eventualDescription the description for the argument, if not present
+     *                            the argument will be shown anyway/
+     * @return a string of arguments
      */
     public String helper(Map<String, String> eventualDescription) {
         var size = 0;
@@ -62,10 +68,14 @@ public class Parameters {
     }
 
     /**
-     * TODO
+     * Parse the arguments passed and returns a map of Argument --> Value that can
+     * be used to retrieve the information. In the case that the arguments are not
+     * in the correct format then an exception is thrown.
      * 
-     * @param args
-     * @return
+     * @param args the arguments in input
+     * @throws IllegalArgumentException if the arguments are not formatted correctly
+     *                                  or if there is an unknown argument
+     * @return a map of the values
      */
     public Map<String, String> parse(String[] args) {
         var result = new HashMap<String, String>();
@@ -85,12 +95,14 @@ public class Parameters {
     }
 
     /**
-     * TODO
+     * Parse one single argument and put it into the map.
      * 
-     * @param current
-     * @param next
-     * @param result
-     * @return
+     * @param current the current argument
+     * @param next    the next argument if present
+     * @param result  the map where to insert the value
+     * @throws IllegalArgumentException if the arguments are not formatted correctly
+     *                                  or if there is an unknown argument
+     * @return true if the next argument is used
      */
     private boolean parseSingle(String current, String next, Map<String, String> result) {
         if (!current.startsWith(this.prefix))
