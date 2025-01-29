@@ -3,10 +3,8 @@ package net.berack.upo.valpre;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.berack.upo.valpre.rand.Distribution;
-import net.berack.upo.valpre.sim.SimulationMultiple;
 import net.berack.upo.valpre.sim.Net;
-import net.berack.upo.valpre.sim.ServerNode;
+import net.berack.upo.valpre.sim.SimulationMultiple;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -25,11 +23,17 @@ public class Main {
             csv = arguments.get("csv");
         var parallel = arguments.containsKey("p");
 
-        var net = moreComplexNet();
+        var file = arguments.get("net");
+        if (file == null)
+            throw new IllegalArgumentException("Net file needed! Use -net <file>");
+        if (file.startsWith("example"))
+            file = Main.class.getClassLoader().getResource(file).getPath();
+
         // var maxDepartures = new EndSimulationCriteria.MaxDepartures("Queue", total);
         // var maxTime = new EndSimulationCriteria.MaxTime(1000.0);
 
         /// Run multiple simulations
+        var net = Net.load(file);
         var nano = System.nanoTime();
         var sim = new SimulationMultiple(net);
         var results = parallel ? sim.runParallel(seed, runs) : sim.run(seed, runs);
@@ -45,44 +49,12 @@ public class Main {
         }
     }
 
-    public static Net simpleNet() {
-        var lambda = 1.0 / 4.5;
-        var mu = 3.2;
-        var sigma = 0.6;
-        var total = 10000;
-
-        var distrExp = new Distribution.Exponential(lambda);
-        var distrNorm = new Distribution.NormalBoxMuller(mu, sigma);
-
-        // Build the network
-        var net = new Net();
-        net.addNode(ServerNode.createLimitedSource("Source", distrExp, total));
-        net.addNode(ServerNode.createQueue("Queue", 1, distrNorm));
-        net.addConnection(0, 1, 1.0);
-        net.normalizeWeights();
-
-        return net;
-    }
-
-    public static Net moreComplexNet() {
-        var net = simpleNet();
-        var distrNorm = new Distribution.NormalBoxMuller(3.2, 0.6);
-        var distrNorm2 = new Distribution.NormalBoxMuller(4.2, 0.6);
-        var distrUnav = new Distribution.UnavailableTime(0.2, distrNorm2);
-
-        // Build the network
-        net.addNode(ServerNode.createQueue("Queue Wait", 1, distrNorm, distrUnav));
-        net.addConnection(1, 2, 1.0);
-        net.normalizeWeights();
-
-        return net;
-    }
-
     public static Map<String, String> parseParameters(String[] args) {
         var arguments = new HashMap<String, Boolean>();
         arguments.put("p", false);
         arguments.put("seed", true);
         arguments.put("runs", true);
+        arguments.put("net", true);
         arguments.put("csv", true);
 
         var param = new Parameters("-", arguments);
@@ -90,10 +62,12 @@ public class Main {
             return param.parse(args);
         } catch (IllegalArgumentException e) {
             var descriptions = new HashMap<String, String>();
-            descriptions.put("p", "Add this if you want the simulation to use threads (one each run)");
-            descriptions.put("seed", "The seed of the simulation");
-            descriptions.put("runs", "How many runs the simulator should run");
-            descriptions.put("csv", "The filename for saving every run statistics");
+            descriptions.put("p", "Add this if you want the simulation to use threads (one each run).");
+            descriptions.put("seed", "The seed of the simulation.");
+            descriptions.put("runs", "How many runs the simulator should run.");
+            descriptions.put("net",
+                    "The net to use. It should be a file. Use example1.net or example2.net for the provided ones.");
+            descriptions.put("csv", "The filename for saving every run statistics.");
 
             System.out.println(e.getMessage());
             System.out.println(param.helper(descriptions));

@@ -1,9 +1,19 @@
 package net.berack.upo.valpre.sim;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
+
+import org.objenesis.strategy.StdInstantiatorStrategy;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import net.berack.upo.valpre.rand.Rng;
 
@@ -216,6 +226,41 @@ public final class Net {
      */
     public void forEachNode(Consumer<ServerNode> consumer) {
         this.servers.stream().forEach(consumer);
+    }
+
+    /**
+     * Save the current net to a file.
+     * The resulting file is saved with Kryo.
+     * 
+     * @param file the name of the file
+     * @throws FileNotFoundException if the path doesn't exist
+     */
+    public void save(String file) throws FileNotFoundException {
+        var kryo = new Kryo();
+        kryo.setRegistrationRequired(false);
+
+        try (var out = new Output(new FileOutputStream(file))) {
+            kryo.writeClassAndObject(out, this);
+        }
+    }
+
+    /**
+     * Load the net from the file passed as input.
+     * The net will be the same as the one saved.
+     * 
+     * @param file the file to load
+     * @return a new Net object
+     * @throws KryoException         if the file saved is not a net
+     * @throws FileNotFoundException if the file is not found
+     */
+    public static Net load(String file) throws KryoException, FileNotFoundException {
+        var kryo = new Kryo();
+        kryo.setRegistrationRequired(false);
+        kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
+
+        try (var in = new Input(new FileInputStream(file))) {
+            return (Net) kryo.readClassAndObject(in);
+        }
     }
 
     /**

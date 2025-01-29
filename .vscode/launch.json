@@ -6,31 +6,24 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Run1k Rand",
+            "name": "Run1k Simple",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-runs 1000 -p -seed 0"
+            "args": "-net example1.net -runs 1000 -p -seed 0"
         },
         {
             "type": "java",
-            "name": "Run1k save",
+            "name": "Run1k Complex",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-runs 1000 -p -csv result.csv"
-        },
-        {
-            "type": "java",
-            "name": "Run1k",
-            "request": "launch",
-            "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-runs 1000 -p"
+            "args": "-net example2.net -runs 1000 -p -seed 0"
         },
         {
             "type": "java",
             "name": "Run10",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-runs 10"
+            "args": "-net example1.net -runs 10"
         },
     ]
 }
