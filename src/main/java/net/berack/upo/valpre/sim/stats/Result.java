@@ -40,6 +40,8 @@ public class Result {
      * Get the global information of the simulation. In particular this method build
      * a string that contains the seed and the time elapsed in the simulation and in
      * real time
+     * 
+     * @return a string with the info
      */
     public String getHeader() {
         var builder = new StringBuilder();
@@ -52,8 +54,11 @@ public class Result {
 
     /**
      * Print a summary of the statistics to the console.
-     * The summary includes the seed, the simulation time, the elapsed time, and
-     * the statistics for each node in the network.
+     * The summary includes all the statistics of nodes and for each it displays the
+     * departures, queue, wait, response, throughput, utilization, unavailability
+     * and the last event time.
+     * 
+     * @return a string with all the stats
      */
     public String getSummary() {
         String[] h = { "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput", "Utilization %",
@@ -77,10 +82,14 @@ public class Result {
     }
 
     /**
-     * TODO
+     * Return a summary formatted for CSV.
+     * This meaning that all the stats will be separated by a comma (,) and each row
+     * is a single statistic of the node.
+     * Each row it will have all the statistic from the class {@link Statistics},
+     * the seed used for obtaining them.
      * 
      * @param tableHeader
-     * @return
+     * @return a string with all the stats formatted
      */
     public String getSummaryCSV(boolean tableHeader) {
         var builder = new StringBuilder();

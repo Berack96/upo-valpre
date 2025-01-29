@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashSet;
+
 import org.junit.jupiter.api.Test;
 
 import net.berack.upo.valpre.rand.Distribution;
@@ -19,7 +21,7 @@ public class TestSimulation {
     private final static class RiggedRng extends Rng {
         @Override
         public double random() {
-            return 0.5;
+            return 0.1;
         }
     }
 
@@ -106,9 +108,72 @@ public class TestSimulation {
 
     @Test
     public void net() {
-        // TODO
         var net = new Net();
-        net.addNode(null);
+        assertEquals(0, net.size());
+
+        var node = ServerNode.createSource("First", const0);
+        var index = net.addNode(node);
+        assertEquals(1, net.size());
+        assertEquals(0, index);
+        assertEquals(node, net.getNode(0));
+        assertEquals(node, net.getNode("First"));
+        assertEquals(index, net.getNodeIndex("First"));
+
+        var node1 = ServerNode.createQueue("Second", 1, const0);
+        var index1 = net.addNode(node1);
+        assertEquals(2, net.size());
+        assertEquals(0, index);
+        assertEquals(node, net.getNode(0));
+        assertEquals(node, net.getNode("First"));
+        assertEquals(index, net.getNodeIndex("First"));
+        assertEquals(1, index1);
+        assertEquals(node1, net.getNode(1));
+        assertEquals(node1, net.getNode("Second"));
+        assertEquals(index1, net.getNodeIndex("Second"));
+
+        var nodes = new HashSet<ServerNode>();
+        nodes.add(node);
+        nodes.add(node1);
+        net.forEachNode(n -> assertTrue(nodes.contains(n)));
+
+        net.addConnection(0, 1, 1.0);
+        var conn = net.getChildren(0);
+        assertEquals(1, conn.size());
+        assertEquals(node1, conn.get(0).child);
+        assertEquals(1.0, conn.get(0).weight, DELTA);
+        conn = net.getChildren(1);
+        assertEquals(0, conn.size());
+
+        var node2 = ServerNode.createQueue("Third", 1, const0);
+        net.addNode(node2);
+        net.addConnection(0, 2, 1.0);
+        conn = net.getChildren(0);
+        assertEquals(2, conn.size());
+        assertEquals(node1, conn.get(0).child);
+        assertEquals(node2, conn.get(1).child);
+        assertEquals(1.0, conn.get(0).weight, DELTA);
+        assertEquals(1.0, conn.get(1).weight, DELTA);
+        conn = net.getChildren(1);
+        assertEquals(0, conn.size());
+        conn = net.getChildren(2);
+        assertEquals(0, conn.size());
+
+        net.normalizeWeights();
+        conn = net.getChildren(0);
+        assertEquals(2, conn.size());
+        assertEquals(node1, conn.get(0).child);
+        assertEquals(node2, conn.get(1).child);
+        assertEquals(0.5, conn.get(0).weight, DELTA);
+        assertEquals(0.5, conn.get(1).weight, DELTA);
+        conn = net.getChildren(1);
+        assertEquals(0, conn.size());
+        conn = net.getChildren(2);
+        assertEquals(0, conn.size());
+
+        var sample = net.getChildOf(0, rigged);
+        assertEquals(node1, sample);
+        sample = net.getChildOf(node, rigged);
+        assertEquals(node1, sample);
     }
 
     @Test

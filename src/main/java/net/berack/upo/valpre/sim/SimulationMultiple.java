@@ -16,8 +16,9 @@ public class SimulationMultiple {
     private final Net net;
 
     /**
-     * TODO
-     * @param net
+     * Create a new object that can simulate the net in input multiple times
+     * 
+     * @param net the net that sould be simulated
      */
     public SimulationMultiple(Net net) {
         this.net = net;

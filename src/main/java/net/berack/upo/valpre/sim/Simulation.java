@@ -153,6 +153,7 @@ public final class Simulation {
      * distribution.
      * 
      * @param node The node to create the event for.
+     * @param state The current state of the node
      */
     public void addDepartureIfPossible(ServerNode node, NodeState state) {
         var canServe = node.maxServers > state.numServerBusy + state.numServerUnavailable;
@@ -167,10 +168,10 @@ public final class Simulation {
     }
 
     /**
-     * TODO
+     * Add an AVAILABLE event in the case that the node has an unavailability time.
      * 
-     * @param node
-     * @param state
+     * @param node  The node to create the event for
+     * @param state The current state of the node
      */
     public void addUnavailableIfPossible(ServerNode node, NodeState state) {
         var delay = node.getUnavailableTime(rng);
