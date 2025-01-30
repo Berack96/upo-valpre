@@ -114,6 +114,17 @@ public class Statistics {
     }
 
     /**
+     * Get the order of update of the stats in the apply function.
+     * 
+     * @return the order of the stats
+     */
+    public static String[] getOrderOfApply() {
+        return new String[] { "numArrivals", "numDepartures", "avgQueueLength", "avgWaitTime", "avgResponse",
+                "busyTime", "waitTime", "unavailableTime", "responseTime", "lastEventTime", "troughput", "utilization",
+                "unavailable" };
+    }
+
+    /**
      * Applies a binary function to merge two sets of statistics into a third one.
      * This method combines the statistics from two `Statistics` objects (`val1` and
      * `val2`) and stores the result in the `save` object. The provided function is
@@ -134,16 +145,15 @@ public class Statistics {
         save.numArrivals = func.apply(val1.numArrivals, val2.numArrivals);
         save.numDepartures = func.apply(val1.numDepartures, val2.numDepartures);
         save.avgQueueLength = func.apply(val1.avgQueueLength, val2.avgQueueLength);
-        save.busyTime = func.apply(val1.busyTime, val2.busyTime);
-        save.responseTime = func.apply(val1.responseTime, val2.responseTime);
-        save.unavailableTime = func.apply(val1.unavailableTime, val2.unavailableTime);
-        save.waitTime = func.apply(val1.waitTime, val2.waitTime);
-        save.lastEventTime = func.apply(val1.lastEventTime, val2.lastEventTime);
-        // derived stats
         save.avgWaitTime = func.apply(val1.avgWaitTime, val2.avgWaitTime);
         save.avgResponse = func.apply(val1.avgResponse, val2.avgResponse);
-        save.unavailable = func.apply(val1.unavailable, val2.unavailable);
+        save.busyTime = func.apply(val1.busyTime, val2.busyTime);
+        save.waitTime = func.apply(val1.waitTime, val2.waitTime);
+        save.unavailableTime = func.apply(val1.unavailableTime, val2.unavailableTime);
+        save.responseTime = func.apply(val1.responseTime, val2.responseTime);
+        save.lastEventTime = func.apply(val1.lastEventTime, val2.lastEventTime);
         save.troughput = func.apply(val1.troughput, val2.troughput);
         save.utilization = func.apply(val1.utilization, val2.utilization);
+        save.unavailable = func.apply(val1.unavailable, val2.unavailable);
     }
 }

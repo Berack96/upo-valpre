@@ -124,4 +124,31 @@ public class Parameters {
             throw new IllegalArgumentException("Argument unknown");
         return false;
     }
+
+    /**
+     * Parse the arguments passed and returns a map of Argument --> Value that can
+     * be used to retrieve the information. In the case that the arguments are not
+     * in the correct format then an exception is thrown and the helper is printed.
+     * 
+     * @param args         the arguments in input
+     * @param prefix       the prefix to be used
+     * @param arguments    a map of arguments where the key is a string and if the
+     *                     boolean is true then the argument expect a value
+     * @param descriptions a map of descriptions for the arguments
+     * @throws IllegalArgumentException if the arguments are not formatted correctly
+     *                                  or if there is an unknown argument
+     * @return a map of the values
+     */
+    public static Map<String, String> getArgsOrHelper(String[] args, String prefix, Map<String, Boolean> arguments,
+            Map<String, String> descriptions) {
+
+        var param = new Parameters(prefix, arguments);
+        try {
+            return param.parse(args);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            System.out.println(param.helper(descriptions));
+            throw new IllegalArgumentException("Invalid arguments");
+        }
+    }
 }

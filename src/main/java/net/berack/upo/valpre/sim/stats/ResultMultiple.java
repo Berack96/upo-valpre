@@ -1,7 +1,5 @@
 package net.berack.upo.valpre.sim.stats;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.HashMap;
 
 /**
@@ -30,27 +28,6 @@ public class ResultMultiple {
         this.average = ResultMultiple.calcAvg(runs);
         this.variance = ResultMultiple.calcStdDev(this.average, runs);
         this.error95 = calcError(this.average, this.variance, runs.length, 0.95);
-    }
-
-    /**
-     * Save all the runs to a csv file.
-     * 
-     * @param filename the name of the file
-     * @throws IOException if anything happens wile wriiting to the file
-     */
-    public void saveCSV(String filename) throws IOException {
-        if (!filename.endsWith(".csv"))
-            filename = filename + ".csv";
-
-        try (var file = new FileWriter(filename)) {
-            var first = true;
-            var builder = new StringBuilder();
-            for (var run : this.runs) {
-                builder.append(run.getSummaryCSV(first));
-                first = false;
-            }
-            file.write(builder.toString());
-        }
     }
 
     /**

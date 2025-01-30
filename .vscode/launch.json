@@ -9,21 +9,21 @@
             "name": "Run1k Simple",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-net example1.net -runs 1000 -p -seed 0"
+            "args": "simulation -net example1.net -runs 1000 -p -seed 0"
         },
         {
             "type": "java",
             "name": "Run1k Complex",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-net example2.net -runs 1000 -p -seed 0"
+            "args": "simulation -net example2.net -runs 1000 -p -seed 0"
         },
         {
             "type": "java",
             "name": "Run10",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "-net example1.net -runs 10"
+            "args": "simulation -net example1.net -runs 10"
         },
     ]
 }
