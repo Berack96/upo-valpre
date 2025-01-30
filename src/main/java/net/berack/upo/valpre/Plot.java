@@ -22,11 +22,11 @@ public class Plot {
      */
     public Plot(String[] args) throws IOException {
         var arguments = Plot.parseParameters(args);
-        var csv = arguments.get("csv");
-        if (csv == null)
+        var file = Parameters.getFileOrExample(arguments.get("csv"));
+        if (file == null)
             throw new IllegalArgumentException("CSV file needed! Use -csv <file>");
 
-        var results = new CsvResult(csv).loadResults();
+        var results = new CsvResult(file).loadResults();
         this.results = new ResultMultiple(results);
     }
 

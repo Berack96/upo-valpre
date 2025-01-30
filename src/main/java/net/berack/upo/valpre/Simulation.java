@@ -36,12 +36,9 @@ public class Simulation {
         this.csv = arguments.getOrDefault("csv", null);
         this.parallel = arguments.containsKey("p");
 
-        var file = arguments.get("net");
-        if (file == null)
+        this.file = Parameters.getFileOrExample(arguments.get("net"));
+        if (this.file == null)
             throw new IllegalArgumentException("Net file needed! Use -net <file>");
-        if (file.startsWith("example"))
-            file = Main.class.getClassLoader().getResource(file).getPath();
-        this.file = file;
     }
 
     /**

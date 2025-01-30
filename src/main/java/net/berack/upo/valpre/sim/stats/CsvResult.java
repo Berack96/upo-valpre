@@ -36,7 +36,9 @@ public class CsvResult {
      */
     public void saveResults(Result[] results) throws IOException {
         var builder = new StringBuilder();
+        builder.append("seed,node,");
         builder.append(String.join(",", Statistics.getOrderOfApply()));
+        builder.append('\n');
 
         try (var writer = new FileWriter(this.file)) {
             for (var result : results) {
@@ -97,6 +99,8 @@ public class CsvResult {
             builder.append(val).append(",");
             return val;
         });
+
+        builder.deleteCharAt(builder.length() - 1); // remove the last comma
         return builder.toString();
     }
 

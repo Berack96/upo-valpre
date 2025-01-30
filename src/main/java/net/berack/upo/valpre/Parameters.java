@@ -151,4 +151,16 @@ public class Parameters {
             throw new IllegalArgumentException("Invalid arguments");
         }
     }
+
+    /**
+     * Get the file or the example file if it is present.
+     * 
+     * @param file the file to get
+     * @return the file or the example file
+     */
+    public static String getFileOrExample(String file) {
+        if (file.startsWith("example"))
+            file = Main.class.getClassLoader().getResource(file).getPath();
+        return file;
+    }
 }

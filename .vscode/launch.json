@@ -25,5 +25,26 @@
             "mainClass": "net.berack.upo.valpre.Main",
             "args": "simulation -net example1.net -runs 10"
         },
+        {
+            "type": "java",
+            "name": "Run10",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "simulation -net example1.net -runs 10"
+        },
+        {
+            "type": "java",
+            "name": "Plot Simple",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "plot -csv example1.csv"
+        },
+        {
+            "type": "java",
+            "name": "Plot Complex",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "plot -csv example2.csv"
+        },
     ]
 }
