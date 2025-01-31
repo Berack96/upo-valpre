@@ -13,9 +13,6 @@ public class Result {
     public final long seed;
     public final double simulationTime;
     public final double timeElapsedMS;
-    private int size;
-    private String iFormat;
-    private String fFormat;
 
     /**
      * Creates a new result object for the given parameters obtained by the
@@ -31,53 +28,5 @@ public class Result {
         this.simulationTime = time;
         this.timeElapsedMS = elapsed;
         this.nodes = nodes;
-        this.size = (int) Math.ceil(Math.max(Math.log10(this.simulationTime), 1));
-        this.iFormat = "%" + this.size + ".0f";
-        this.fFormat = "%" + (this.size + 4) + ".3f";
-    }
-
-    /**
-     * Get the global information of the simulation. In particular this method build
-     * a string that contains the seed and the time elapsed in the simulation and in
-     * real time
-     * 
-     * @return a string with the info
-     */
-    public String getHeader() {
-        var builder = new StringBuilder();
-        builder.append("===== Net Stats =====\n");
-        builder.append(String.format("Seed:       \t%d\n", this.seed));
-        builder.append(String.format("Simulation: \t" + fFormat + "\n", this.simulationTime));
-        builder.append(String.format("Elapsed:    \t" + fFormat + "ms\n", this.timeElapsedMS / 1e6));
-        return builder.toString();
-    }
-
-    /**
-     * Print a summary of the statistics to the console.
-     * The summary includes all the statistics of nodes and for each it displays the
-     * departures, queue, wait, response, throughput, utilization, unavailability
-     * and the last event time.
-     * 
-     * @return a string with all the stats
-     */
-    public String getSummary() {
-        String[] h = { "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput", "Utilization %",
-                "Unavailable %", "Last Event" };
-        var table = new ConsoleTable(h);
-
-        for (var entry : this.nodes.entrySet()) {
-            var stats = entry.getValue();
-            table.addRow(
-                    entry.getKey(),
-                    iFormat.formatted(stats.numDepartures),
-                    fFormat.formatted(stats.avgQueueLength),
-                    fFormat.formatted(stats.avgWaitTime),
-                    fFormat.formatted(stats.avgResponse),
-                    fFormat.formatted(stats.troughput),
-                    fFormat.formatted(stats.utilization * 100),
-                    fFormat.formatted(stats.unavailable * 100),
-                    fFormat.formatted(stats.lastEventTime));
-        }
-        return table.toString();
     }
 }

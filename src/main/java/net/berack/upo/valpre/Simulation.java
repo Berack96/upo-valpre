@@ -54,15 +54,14 @@ public class Simulation {
         var net = Net.load(this.file);
         var nano = System.nanoTime();
         var sim = new SimulationMultiple(net);
-        var results = this.parallel ? sim.runParallel(this.seed, this.runs) : sim.run(this.seed, this.runs);
+        var summary = this.parallel ? sim.runParallel(this.seed, this.runs) : sim.run(this.seed, this.runs);
         nano = System.nanoTime() - nano;
 
-        System.out.print(results.average.getHeader());
-        System.out.print(results.average.getSummary());
+        System.out.print(summary);
         System.out.println("Final time " + nano / 1e6 + "ms");
 
         if (csv != null) {
-            new CsvResult(this.csv).saveResults(results.runs);
+            new CsvResult(this.csv).saveResults(summary.runs);
             System.out.println("Data saved to " + this.csv);
         }
     }

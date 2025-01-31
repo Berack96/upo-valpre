@@ -5,8 +5,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import net.berack.upo.valpre.rand.Rng;
-import net.berack.upo.valpre.sim.stats.ResultMultiple;
 import net.berack.upo.valpre.sim.stats.Result;
+import net.berack.upo.valpre.sim.stats.ResultSummary;
 
 /**
  * A network simulation that uses a discrete event simulation to model the
@@ -36,7 +36,7 @@ public class SimulationMultiple {
      *                  events.
      * @return The statistics the network.
      */
-    public ResultMultiple run(long seed, int runs, EndCriteria... criterias) {
+    public ResultSummary run(long seed, int runs, EndCriteria... criterias) {
         var rngs = Rng.getMultipleStreams(seed, runs);
         var stats = new Result[runs];
 
@@ -44,7 +44,7 @@ public class SimulationMultiple {
             var sim = new Simulation(this.net, rngs[i], criterias);
             stats[i] = sim.run();
         }
-        return new ResultMultiple(stats);
+        return new ResultSummary(stats);
     }
 
     /**
@@ -62,7 +62,7 @@ public class SimulationMultiple {
      * @throws InterruptedException If the threads are interrupted.
      * @throws ExecutionException   If the one of the threads has been aborted.
      */
-    public ResultMultiple runParallel(long seed, int runs, EndCriteria... criterias)
+    public ResultSummary runParallel(long seed, int runs, EndCriteria... criterias)
             throws InterruptedException, ExecutionException {
         var rngs = Rng.getMultipleStreams(seed, runs);
         var results = new Result[runs];
@@ -82,7 +82,7 @@ public class SimulationMultiple {
                 futures[i].get();
             }
 
-            return new ResultMultiple(results);
+            return new ResultSummary(results);
         }
     }
 
