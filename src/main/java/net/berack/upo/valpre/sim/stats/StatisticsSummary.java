@@ -32,14 +32,13 @@ public class StatisticsSummary {
         Arrays.sort(values);
         var sum = Arrays.stream(values).sum();
         var avg = sum / values.length;
-        var median = values.length / 2;
         var varianceSum = Arrays.stream(values).map(value -> Math.pow(value - avg, 2)).sum();
 
         this.name = name;
         this.values = values;
         this.average = avg;
         this.stdDev = Math.sqrt(varianceSum / values.length);
-        this.median = values.length % 2 == 0 ? (values[median - 1] + values[median]) / 2.0 : values[median];
+        this.median = this.getPercentile(0.50);
         this.min = values[0];
         this.max = values[values.length - 1];
         this.error95 = this.calcError(0.95);
@@ -80,6 +79,17 @@ public class StatisticsSummary {
             buckets[index] += 1;
         }
         return buckets;
+    }
+
+    /**
+     * Get the percentile of the values in the array.
+     * 
+     * @param percentile the percentile to calculate
+     * @return the value at the selected percentile
+     */
+    public double getPercentile(double percentile) {
+        var index = (int) Math.floor(percentile * (this.values.length - 1));
+        return this.values[index];
     }
 
     /**
