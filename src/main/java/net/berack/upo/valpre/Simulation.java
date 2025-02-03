@@ -1,11 +1,8 @@
 package net.berack.upo.valpre;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-
 import com.esotericsoftware.kryo.KryoException;
 
 import net.berack.upo.valpre.sim.Net;
@@ -21,24 +18,32 @@ public class Simulation {
     public final int runs;
     public final long seed;
     public final boolean parallel;
-    public final String file;
+    public final Net net;
 
     /**
      * Create a new simulation with the given arguments.
      * 
      * @param args The arguments for the simulation.
+     * @throws IOException if the file is has a problem
      */
-    public Simulation(String[] args) {
-        // Evantually change the parameters
-        var arguments = Simulation.parseParameters(args);
-        this.runs = Simulation.getFromArguments(arguments, "runs", Integer::parseInt, 100);
-        this.seed = Simulation.getFromArguments(arguments, "seed", Long::parseLong, 2007539552L);
-        this.csv = arguments.getOrDefault("csv", null);
-        this.parallel = arguments.containsKey("p");
+    public Simulation(String netFile, long seed, int runs, boolean parallel, String csv) throws IOException {
+        if (runs <= 0)
+            throw new IllegalArgumentException("Runs must be greater than 0!");
 
-        this.file = Parameters.getFileOrExample(arguments.get("net"));
-        if (this.file == null)
-            throw new IllegalArgumentException("Net file needed! Use -net <file>");
+        this.runs = runs;
+        this.seed = seed;
+        this.csv = csv;
+        this.parallel = parallel;
+
+        try {
+            var file = Parameters.getFileOrExample(netFile);
+            this.net = Net.load(file);
+            file.close();
+        } catch (FileNotFoundException e) {
+            throw new IllegalArgumentException("Net file needed!");
+        } catch (KryoException e) {
+            throw new IllegalArgumentException("Net file is not valid or corrupted!");
+        }
     }
 
     /**
@@ -51,9 +56,8 @@ public class Simulation {
      * @throws IOException          If the simulation fails.
      */
     public void run() throws InterruptedException, ExecutionException, KryoException, IOException {
-        var net = Net.load(this.file);
         var nano = System.nanoTime();
-        var sim = new SimulationMultiple(net);
+        var sim = new SimulationMultiple(this.net);
         var summary = this.parallel ? sim.runParallel(this.seed, this.runs) : sim.run(this.seed, this.runs);
         nano = System.nanoTime() - nano;
 
@@ -64,46 +68,5 @@ public class Simulation {
             new CsvResult(this.csv).saveResults(summary.runs);
             System.out.println("Data saved to " + this.csv);
         }
-    }
-
-    /**
-     * Get the value from the arguments or the default value if it is not present.
-     * 
-     * @param args  The arguments for the simulation.
-     * @param key   The key to get the value from.
-     * @param parse The function to parse the value.
-     * @param value The default value if the key is not present.
-     * @return The value from the arguments or the default value if it is not
-     *         present.
-     */
-    private static <T> T getFromArguments(Map<String, String> args, String key, Function<String, T> parse, T value) {
-        if (args.containsKey(key))
-            return parse.apply(args.get(key));
-        return value;
-    }
-
-    /**
-     * Parse the arguments for the simulation.
-     * 
-     * @param args The arguments for the simulation.
-     * @return The parsed arguments for the simulation.
-     */
-    private static Map<String, String> parseParameters(String[] args) {
-        var arguments = new HashMap<String, Boolean>();
-        arguments.put("p", false);
-        arguments.put("seed", true);
-        arguments.put("runs", true);
-        arguments.put("net", true);
-        arguments.put("csv", true);
-
-        var descriptions = new HashMap<String, String>();
-        descriptions.put("p", "Add this if you want the simulation to use threads (one each run).");
-        descriptions.put("seed", "The seed of the simulation.");
-        descriptions.put("runs", "How many runs the simulator should run.");
-        descriptions.put("net",
-                "The net to use. It should be a file. Use example1.net or example2.net for the provided ones.");
-        descriptions.put("csv", "The filename for saving every run statistics.");
-
-        return Parameters.getArgsOrHelper(args, "-", arguments, descriptions);
     }
 }

@@ -1,7 +1,11 @@
 package net.berack.upo.valpre;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Class that helps with parsing the parameters passed as input in the console.
@@ -9,6 +13,7 @@ import java.util.Map;
 public class Parameters {
     private final Map<String, Boolean> arguments;
     private final String prefix;
+    private Map<String, String> parameters;
 
     /**
      * Constructs a new Parameters object with the specified prefix and arguments.
@@ -25,6 +30,41 @@ public class Parameters {
             throw new IllegalArgumentException();
         this.arguments = arguments;
         this.prefix = prefix;
+    }
+
+    /**
+     * Get the size of the parameters.
+     * 
+     * @return the size of the parameters
+     */
+    public int size() {
+        return this.parameters.size();
+    }
+
+    /**
+     * Get the value of the argument passed as input.
+     * 
+     * @param key the key of the argument
+     * @return the value of the argument
+     */
+    public String get(String key) {
+        if (this.parameters == null)
+            return null;
+        return this.parameters.get(key);
+    }
+
+    /**
+     * Get the value from the arguments or the default value if it is not present.
+     * 
+     * @param key   The key to get the value from.
+     * @param parse The function to parse the value.
+     * @param value The default value if the key is not present.
+     * @return The value from the arguments or the default value if it is not
+     *         present.
+     */
+    public <T> T getOrDefault(String key, Function<String, T> parse, T value) {
+        var arg = this.get(key);
+        return arg != null ? parse.apply(arg) : value;
     }
 
     /**
@@ -68,20 +108,21 @@ public class Parameters {
     }
 
     /**
-     * Parse the arguments passed and returns a map of Argument --> Value that can
+     * Parse the arguments passed and build a map of Argument --> Value that can
      * be used to retrieve the information. In the case that the arguments are not
      * in the correct format then an exception is thrown.
+     * To get the arguments use the {@link #get(String)} method.
      * 
      * @param args the arguments in input
      * @throws IllegalArgumentException if the arguments are not formatted correctly
-     *                                  or if there is an unknown argument
-     * @return a map of the values
+     *                                  or if there is an unknown argument or there
+     *                                  are not arguments in the input
      */
-    public Map<String, String> parse(String[] args) {
-        var result = new HashMap<String, String>();
+    public void parse(String[] args) {
         if (args == null || args.length == 0)
-            return result;
+            throw new IllegalArgumentException("No arguments passed");
 
+        var result = new HashMap<String, String>();
         for (var i = 0; i < args.length; i += 1) {
             var current = args[i];
             var next = i + 1 < args.length ? args[i + 1] : null;
@@ -91,7 +132,7 @@ public class Parameters {
                 i += 1;
         }
 
-        return result;
+        this.parameters = result;
     }
 
     /**
@@ -121,7 +162,7 @@ public class Parameters {
                 result.put(current, "");
 
         if (finalSize != result.size())
-            throw new IllegalArgumentException("Argument unknown");
+            throw new IllegalArgumentException("Unknown argument [" + current +  "]");
         return false;
     }
 
@@ -129,6 +170,7 @@ public class Parameters {
      * Parse the arguments passed and returns a map of Argument --> Value that can
      * be used to retrieve the information. In the case that the arguments are not
      * in the correct format then an exception is thrown and the helper is printed.
+     * If the arguments passed are 0 then the helper is printed.
      * 
      * @param args         the arguments in input
      * @param prefix       the prefix to be used
@@ -139,12 +181,13 @@ public class Parameters {
      *                                  or if there is an unknown argument
      * @return a map of the values
      */
-    public static Map<String, String> getArgsOrHelper(String[] args, String prefix, Map<String, Boolean> arguments,
+    public static Parameters getArgsOrHelper(String[] args, String prefix, Map<String, Boolean> arguments,
             Map<String, String> descriptions) {
 
         var param = new Parameters(prefix, arguments);
         try {
-            return param.parse(args);
+            param.parse(args);
+            return param;
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             System.out.println(param.helper(descriptions));
@@ -157,10 +200,17 @@ public class Parameters {
      * 
      * @param file the file to get
      * @return the file or the example file
+     * @throws FileNotFoundException if the file is not found
      */
-    public static String getFileOrExample(String file) {
-        if (file.startsWith("example"))
-            file = Main.class.getClassLoader().getResource(file).getPath();
-        return file;
+    public static InputStream getFileOrExample(String file) throws FileNotFoundException {
+        if (file == null)
+            return null;
+
+        if (file.startsWith("example")) {
+            var resource = Parameters.class.getClassLoader().getResourceAsStream(file);
+            if (resource != null)
+                return resource;
+        }
+        return new FileInputStream(file);
     }
 }

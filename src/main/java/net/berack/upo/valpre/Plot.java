@@ -3,8 +3,6 @@ package net.berack.upo.valpre;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -42,13 +40,13 @@ public class Plot {
      * @param args the arguments to create the plot
      * @throws IOException if anything happens while reading the file
      */
-    public Plot(String[] args) throws IOException {
-        var arguments = Plot.parseParameters(args);
-        var file = Parameters.getFileOrExample(arguments.get("csv"));
-        if (file == null)
-            throw new IllegalArgumentException("CSV file needed! Use -csv <file>");
+    public Plot(String csv) throws IOException {
+        var stream = Parameters.getFileOrExample(csv);
+        if (stream == null)
+            throw new IllegalArgumentException("CSV file needed!");
+        var results = CsvResult.loadResults(stream);
+        stream.close();
 
-        var results = new CsvResult(file).loadResults();
         this.summary = new ResultSummary(results);
 
         var nodes = this.summary.getNodes().toArray(new String[0]);
@@ -155,22 +153,6 @@ public class Plot {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Parse the arguments to get the CSV file.
-     * 
-     * @param args the arguments to parse
-     * @return a map with the arguments
-     */
-    private static Map<String, String> parseParameters(String[] args) {
-        var arguments = new HashMap<String, Boolean>();
-        arguments.put("csv", true);
-
-        var descriptions = new HashMap<String, String>();
-        descriptions.put("csv", "The filename that contains the previous saved runs.");
-
-        return Parameters.getArgsOrHelper(args, "-", arguments, descriptions);
     }
 
     /**

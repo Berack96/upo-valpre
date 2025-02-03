@@ -3,6 +3,8 @@ package net.berack.upo.valpre.sim;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -250,15 +252,29 @@ public final class Net {
      * 
      * @param file the file to load
      * @return a new Net object
-     * @throws KryoException         if the file saved is not a net
-     * @throws FileNotFoundException if the file is not found
+     * @throws KryoException if the file saved is not a net
+     * @throws IOException   if the file is not found
      */
-    public static Net load(String file) throws KryoException, FileNotFoundException {
+    public static Net load(String file) throws KryoException, IOException {
+        try (var stream = new FileInputStream(file)) {
+            return Net.load(stream);
+        }
+    }
+
+    /**
+     * Load the net from the stream passed as input.
+     * The net will be the same as the one saved.
+     * 
+     * @param stream the input stream to read
+     * @return a new Net object
+     * @throws KryoException if the file saved is not a net
+     */
+    public static Net load(InputStream stream) throws KryoException {
         var kryo = new Kryo();
         kryo.setRegistrationRequired(false);
         kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
 
-        try (var in = new Input(new FileInputStream(file))) {
+        try (var in = new Input(stream)) {
             return (Net) kryo.readClassAndObject(in);
         }
     }

@@ -1,8 +1,9 @@
 package net.berack.upo.valpre.sim.stats;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,8 +60,20 @@ public class CsvResult {
      * @throws IOException if anything happens while reading the file
      */
     public Result[] loadResults() throws IOException {
+        try (var stream = new FileInputStream(this.file)) {
+            return CsvResult.loadResults(stream);
+        }
+    }
+
+    /**
+     * Load the results from the CSV stream.
+     * 
+     * @param input the input stream to read
+     * @return the results loaded from the stream
+     */
+    public static Result[] loadResults(InputStream input) {
         var results = new ArrayList<Result>();
-        try (var scan = new Scanner(new File(this.file))) {
+        try (var scan = new Scanner(input)) {
             var _ = scan.nextLine();
 
             var nodes = new HashMap<String, Statistics>();
