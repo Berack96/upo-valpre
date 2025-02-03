@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
@@ -25,7 +25,7 @@ import net.berack.upo.valpre.rand.Rng;
  * connections between nodes. In order to start a simulation, at least one node
  * must be a Source or must generate at least one event to be processed.
  */
-public final class Net {
+public final class Net implements Iterable<ServerNode> {
     private final List<ServerNode> servers = new ArrayList<>();
     private final HashMap<ServerNode, Integer> indices = new HashMap<>();
     private final List<List<Connection>> connections = new ArrayList<>();
@@ -221,16 +221,6 @@ public final class Net {
     }
 
     /**
-     * Apply a consumer to all the nodes. The implementation uses a stream and for
-     * this reason you should consider to make thread safe the consumer.
-     * 
-     * @param consumer a function that takes in input a ServerNode
-     */
-    public void forEachNode(Consumer<ServerNode> consumer) {
-        this.servers.stream().forEach(consumer);
-    }
-
-    /**
      * Save the current net to a file.
      * The resulting file is saved with Kryo.
      * 
@@ -303,5 +293,10 @@ public final class Net {
             this.child = child;
             this.weight = weight;
         }
+    }
+
+    @Override
+    public Iterator<ServerNode> iterator() {
+        return this.servers.iterator();
     }
 }

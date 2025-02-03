@@ -40,8 +40,17 @@ public final class Simulation {
         this.rng = rng;
         this.time = 0.0d;
 
+        // check for ending criteria in simulation
+        boolean hasLimit = false;
+        for (var node : net)
+            if (node.spawnArrivals != Integer.MAX_VALUE)
+                hasLimit = true;
+
+        if (!hasLimit && (criterias == null || criterias.length == 0))
+            throw new IllegalArgumentException("At least one end criteria is needed!");
+
         // Initial arrivals (if spawned)
-        net.forEachNode(node -> {
+        net.forEach(node -> {
             this.states.put(node.name, new NodeState());
             if (node.shouldSpawnArrival(0))
                 this.addArrival(node);
@@ -152,7 +161,7 @@ public final class Simulation {
      * on the given node, and the delay is determined by the node's service
      * distribution.
      * 
-     * @param node The node to create the event for.
+     * @param node  The node to create the event for.
      * @param state The current state of the node
      */
     public void addDepartureIfPossible(ServerNode node, NodeState state) {

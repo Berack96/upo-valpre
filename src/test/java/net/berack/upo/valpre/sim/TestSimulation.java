@@ -134,7 +134,7 @@ public class TestSimulation {
         var nodes = new HashSet<ServerNode>();
         nodes.add(node);
         nodes.add(node1);
-        net.forEachNode(n -> assertTrue(nodes.contains(n)));
+        net.forEach(n -> assertTrue(nodes.contains(n)));
 
         net.addConnection(0, 1, 1.0);
         var conn = net.getChildren(0);

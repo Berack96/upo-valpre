@@ -14,7 +14,7 @@ import net.berack.upo.valpre.sim.stats.CsvResult;
  * This class is responsible for running the simulation. It parses the arguments
  * and runs the simulation with the given parameters.
  */
-public class Simulation {
+public class SimulationBuilder {
     private String csv;
     private int runs;
     private long seed;
@@ -28,7 +28,7 @@ public class Simulation {
      * @param netFile the net file to load
      * @throws IOException if the file has a problem
      */
-    public Simulation(String netFile) throws IOException {
+    public SimulationBuilder(String netFile) throws IOException {
         try {
             var file = Parameters.getFileOrExample(netFile);
             this.net = Net.load(file);
@@ -46,7 +46,7 @@ public class Simulation {
      * @param net the net
      * @throws IllegalArgumentException if the net is null
      */
-    public Simulation(Net net) {
+    public SimulationBuilder(Net net) {
         if (net == null)
             throw new IllegalArgumentException("Net needed!");
         this.net = net;
@@ -59,7 +59,7 @@ public class Simulation {
      * @throws IllegalArgumentException if the runs are less than 1
      * @return this simulation
      */
-    public Simulation setRuns(int runs) {
+    public SimulationBuilder setRuns(int runs) {
         if (runs <= 0)
             throw new IllegalArgumentException("Runs must be greater than 0!");
 
@@ -73,7 +73,7 @@ public class Simulation {
      * @param seed the seed
      * @return this simulation
      */
-    public Simulation setSeed(long seed) {
+    public SimulationBuilder setSeed(long seed) {
         this.seed = seed;
         return this;
     }
@@ -85,7 +85,7 @@ public class Simulation {
      * @param parallel if the simulation should run in parallel
      * @return this simulation
      */
-    public Simulation setParallel(boolean parallel) {
+    public SimulationBuilder setParallel(boolean parallel) {
         this.parallel = parallel;
         return this;
     }
@@ -96,7 +96,7 @@ public class Simulation {
      * @param csv the CSV file
      * @return this simulation
      */
-    public Simulation setCsv(String csv) {
+    public SimulationBuilder setCsv(String csv) {
         this.csv = csv;
         return this;
     }
@@ -110,7 +110,7 @@ public class Simulation {
      * @return this simulation
      * @throws IllegalArgumentException if the criteria are null
      */
-    public Simulation setEndCriteria(EndCriteria... criterias) {
+    public SimulationBuilder setEndCriteria(EndCriteria... criterias) {
         if (criterias == null)
             throw new IllegalArgumentException("End criteria cannot be null!");
         this.endCriteria = criterias;

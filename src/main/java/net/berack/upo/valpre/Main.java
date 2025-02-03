@@ -18,7 +18,7 @@ public class Main {
             var param = Main.getParameters(program, subArgs);
             switch (program) {
                 case "simulation" -> {
-                    new Simulation(param.get("net"))
+                    new SimulationBuilder(param.get("net"))
                             .setCsv(param.get("csv"))
                             .setRuns(param.getOrDefault("runs", Integer::parseInt, 100))
                             .setSeed(param.getOrDefault("seed", Long::parseLong, 2007539552L))

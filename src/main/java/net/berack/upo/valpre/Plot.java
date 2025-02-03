@@ -142,7 +142,9 @@ public class Plot {
                 var columnKey = String.format("%.3f", columnVal);
                 dataset.addValue(frequency[i], "Frequency", columnKey);
             }
-            this.panelBarChart.getChart().getCategoryPlot().setDataset(dataset);
+            var chart = this.panelBarChart.getChart();
+            chart.getCategoryPlot().setDataset(dataset);
+            chart.setTitle(stat + " distribution");
 
             var model = this.statList.getModel();
             for (int i = 0; i < model.getSize(); i++) {
