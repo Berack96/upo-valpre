@@ -46,5 +46,12 @@
             "mainClass": "net.berack.upo.valpre.Main",
             "args": "plot -csv example2.csv"
         },
+        {
+            "type": "java",
+            "name": "Build Net",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "net"
+        },
     ]
 }

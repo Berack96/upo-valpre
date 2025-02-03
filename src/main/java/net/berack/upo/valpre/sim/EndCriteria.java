@@ -13,6 +13,45 @@ public interface EndCriteria {
     public boolean shouldEnd(Simulation run);
 
     /**
+     * Parses the given string to create an array of end criteria.
+     * The string passed must be in the following format:
+     * [criteria1];[criteria2];...;[criteriaN]
+     * 
+     * and each criteria must be in the following format:
+     * ClassName:param1,param2,...,paramN
+     * 
+     * If the string is empty or null, an empty array is returned.
+     * If one of the criteria is not valid, an exception is thrown.
+     * 
+     * @param criterias The string to parse.
+     * @return An array of end criteria.
+     * @throws IllegalArgumentException If one of the criteria is not valid.
+     */
+    public static EndCriteria[] parse(String criterias) {
+        if (criterias == null || criterias.isEmpty())
+            return new EndCriteria[0];
+
+        var criteria = criterias.split(";");
+        var endCriteria = new EndCriteria[criteria.length];
+        for (int i = 0; i < criteria.length; i++) {
+            var current = criteria[i].substring(1, criteria[i].length() - 1); // Remove the brackets
+            var parts = current.split(":");
+            if (parts.length != 2)
+                throw new IllegalArgumentException("Invalid criteria: " + current);
+
+            var className = parts[0];
+            var params = parts[1].split(",");
+            endCriteria[i] = switch (className) {
+                case "MaxArrivals" -> new MaxArrivals(params[0], Integer.parseInt(params[1]));
+                case "MaxDepartures" -> new MaxDepartures(params[0], Integer.parseInt(params[1]));
+                case "MaxTime" -> new MaxTime(Double.parseDouble(params[0]));
+                default -> throw new IllegalArgumentException("Invalid criteria: " + current);
+            };
+        }
+        return endCriteria;
+    }
+
+    /**
      * Ends the simulation when the given node has reached the specified number of
      * arrivals.
      */

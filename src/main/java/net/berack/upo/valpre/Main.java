@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import net.berack.upo.valpre.sim.EndCriteria;
+
 public class Main {
     public static void main(String[] args) {
         if (args.length == 0)
@@ -16,19 +18,22 @@ public class Main {
             var param = Main.getParameters(program, subArgs);
             switch (program) {
                 case "simulation" -> {
-                    var net = param.get("net");
-                    var csv = param.get("csv");
-                    var runs = param.getOrDefault("runs", Integer::parseInt, 100);
-                    var seed = param.getOrDefault("seed", Long::parseLong, 2007539552L);
-                    var p = param.getOrDefault("p", Boolean::parseBoolean, false);
-
-                    var sim = new Simulation(net, seed, runs, p, csv);
-                    sim.run();
+                    new Simulation(param.get("net"))
+                            .setCsv(param.get("csv"))
+                            .setRuns(param.getOrDefault("runs", Integer::parseInt, 100))
+                            .setSeed(param.getOrDefault("seed", Long::parseLong, 2007539552L))
+                            .setParallel(param.get("p") != null)
+                            .setEndCriteria(EndCriteria.parse(param.get("end")))
+                            .run();
                 }
                 case "plot" -> {
                     var csv = param.get("csv");
                     var plot = new Plot(csv);
                     plot.show();
+                }
+                case "net" -> {
+                    var net = new NetBuilderInteractive();
+                    net.run();
                 }
                 default -> exit("Invalid program!");
             }
@@ -50,12 +55,14 @@ public class Main {
         arguments.put("seed", true);
         arguments.put("runs", true);
         arguments.put("net", true);
+        arguments.put("end", true);
         arguments.put("csv", true);
 
         var descriptions = new HashMap<String, String>();
         descriptions.put("p", "Add this if you want the simulation to use threads (one each run).");
         descriptions.put("seed", "The seed of the simulation.");
         descriptions.put("runs", "How many runs the simulator should run.");
+        descriptions.put("end", "When the simulation should end. Format is [ClassName:param1,..,paramN];[..]");
         descriptions.put("net", "The file net to use. Use example1.net or example2.net for the provided ones.");
 
         var csvDesc = switch (program) {
@@ -65,6 +72,8 @@ public class Main {
         };
         descriptions.put("csv", csvDesc);
 
+        if (program.equals("net"))
+            return null;
         return Parameters.getArgsOrHelper(args, "-", arguments, descriptions);
     }
 
@@ -76,7 +85,10 @@ public class Main {
             var uri = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI();
             var name = new File(uri).getName();
             System.out.println(message);
-            System.out.println("Usage: java -jar " + name + ".jar [simulation|plot] [args]");
+            System.out.println("Usage: java -jar " + name + ".jar [simulation|plot|net] [args]");
+            System.out.println("simulation args: -net <net> -csv <csv> [-runs <runs>] [-seed <seed>] [-p]");
+            System.out.println("plot args: -csv <csv>");
+            System.out.println("net args: none");
             System.exit(1);
         } catch (URISyntaxException e) {
             e.printStackTrace();
