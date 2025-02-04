@@ -73,7 +73,7 @@ public interface EndCriteria {
 
         @Override
         public boolean shouldEnd(Simulation run) {
-            return run.getNode(nodeName).stats.numArrivals >= this.maxArrivals;
+            return run.getNodeState(nodeName).stats.numArrivals >= this.maxArrivals;
         }
     }
 
@@ -99,7 +99,7 @@ public interface EndCriteria {
 
         @Override
         public boolean shouldEnd(Simulation run) {
-            return run.getNode(nodeName).stats.numDepartures >= this.maxDepartures;
+            return run.getNodeState(nodeName).stats.numDepartures >= this.maxDepartures;
         }
     }
 

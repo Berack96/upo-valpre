@@ -1,7 +1,9 @@
 package net.berack.upo.valpre.sim;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
@@ -13,14 +15,16 @@ import net.berack.upo.valpre.sim.stats.Statistics;
  * Process an entire run of the simulation.
  */
 public final class Simulation {
+    public final Rng rng;
+    public final long timeStartedNano;
+    public final EndCriteria[] criterias;
+    public final long seed;
+
     private final Net net;
     private final Map<String, NodeState> states;
     private final PriorityQueue<Event> fel;
-    private final EndCriteria[] criterias;
-    private final long timeStartedNano;
-    private final long seed;
-    private final Rng rng;
-    private double time;
+    private double time = 0.0d;
+    private long eventProcessed = 0;
 
     /**
      * Creates a new run of the simulation with the given nodes and random number
@@ -31,30 +35,28 @@ public final class Simulation {
      * @param criterias when the simulation has to end.
      */
     public Simulation(Net net, Rng rng, EndCriteria... criterias) {
+        this.timeStartedNano = System.nanoTime();
         this.net = net;
         this.states = new HashMap<>();
         this.fel = new PriorityQueue<>();
         this.criterias = criterias;
-        this.timeStartedNano = System.nanoTime();
         this.seed = rng.getSeed();
         this.rng = rng;
-        this.time = 0.0d;
 
-        // check for ending criteria in simulation
         boolean hasLimit = false;
-        for (var node : net)
+        for (var node : net) {
+            // check for ending criteria in simulation
             if (node.spawnArrivals != Integer.MAX_VALUE)
                 hasLimit = true;
 
-        if (!hasLimit && (criterias == null || criterias.length == 0))
-            throw new IllegalArgumentException("At least one end criteria is needed!");
-
-        // Initial arrivals (if spawned)
-        net.forEach(node -> {
+            // Initial arrivals (if spawned)
             this.states.put(node.name, new NodeState());
             if (node.shouldSpawnArrival(0))
                 this.addArrival(node);
-        });
+        }
+
+        if (!hasLimit && (criterias == null || criterias.length == 0))
+            throw new IllegalArgumentException("At least one end criteria is needed!");
     }
 
     /**
@@ -74,12 +76,17 @@ public final class Simulation {
      * You should check if the simulation has ended before calling this method.
      * 
      * @see #hasEnded()
+     * @throws NullPointerException if there are no more events to process.
      */
     public void processNextEvent() {
         var event = fel.poll();
+        if (event == null)
+            throw new NullPointerException("No more events to process!");
+
         var node = event.node;
         var state = this.states.get(node.name);
         this.time = event.time;
+        this.eventProcessed += 1;
 
         switch (event.type) {
             case AVAILABLE -> {
@@ -136,12 +143,41 @@ public final class Simulation {
     }
 
     /**
-     * Get the node state requested by the name passed as a string.
+     * Get the number of events processed.
+     * 
+     * @return the number of events processed.
+     */
+    public long getEventsProcessed() {
+        return this.eventProcessed;
+    }
+
+    /**
+     * Get the list of future events.
+     * This method returns a copy of the list, so the original list is not modified.
+     * 
+     * @return a list of future events.
+     */
+    public List<Event> getFutureEventList() {
+        return new ArrayList<>(this.fel);
+    }
+
+    /**
+     * Get the node requested by the name passed as a string.
      * 
      * @param node the name of the node
      * @return the node
      */
-    public NodeState getNode(String node) {
+    public ServerNode getNode(String node) {
+        return this.net.getNode(node);
+    }
+
+    /**
+     * Get the node state requested by the name passed as a string.
+     * 
+     * @param node the name of the node
+     * @return the current state of the node
+     */
+    public NodeState getNodeState(String node) {
         return this.states.get(node);
     }
 

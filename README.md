@@ -21,6 +21,8 @@ Esistono vari tipi di argomenti per scegliere come fare la simulazione:
   * `-seed <value>` per dare un seed iniziale scelto
   * `-csv <file>` per salvare i risultati delle run in un file csv
   * `-p` per fare le simulazioni in parallelo (ovvero su più thread)
+  * `-end <criteria>` per scegliere quando la simulazione finisce nel caso non ci siano dei source limitati nella creazione di arrivi. La tipologia di fine simulazione la si può trovare dentro `EndCriteria` (ovvero MaxArrivals, MaxDepartures, MaxTime) e la formattazione da usare per passare il parametro è la seguente:\
+  `[Tipo1:param1,..,paramN];[..];[TipoN:param1,..,paramN]`
 * `java -jar upo-valpre.jar plot -csv <file>`\
 Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:
 ![1738603552417](image/README/1738603552417.png)
@@ -40,10 +42,10 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
   - **Net** che viene usato per rappresentare una rete da simulare.
   - **ServerNode** che viene usato per rappresentare un singolo nodo della rete.
   - **Event** che viene usato per rappresentare un evento della simulazione.
-  - **EndCriteria** interfaccia che viene implementata dalle classi interne usata per controllare se la simulazione debba finire.
-  - **Simulation** e **SimulationMultiple** che vengono usate per far partire la simulazione; la versione multiple serve ad organizzare molteplici simulazioni si più thread o su un singolo core.
+  - **EndCriteria** interfaccia che viene implementata dalle classi interne usata per controllare se e quando la simulazione debba finire.
+  - **Simulation** e **SimulationMultiple** che vengono usate per far partire la simulazione; la versione multiple serve ad organizzare molteplici simulazioni su più thread o su un singolo core.
 - [net.berack.upo.valpre.sim.stats](https://github.com/Berack96/upo-valpre/tree/main/src/main/java/net/berack/upo/valpre/sim/stats) Package che contiene tutte le classi utili per la raccolta e l'analisi statistica dei vari valori generati dalla simulazione:
-  - **Result** un singolo risultato e la sua controparte **ResultSummary** che contiene molteplici risultati già analizzati.
-  - **Statistics** un singolo valore di indici statistici di un nodo e la sua controparte **StatisticsSummary** che contiene molteplici risultati già analizzati.
+  - **Result** il risultato di una run e la sua controparte **ResultSummary** che contiene molteplici risultati di run già analizzati.
+  - **Statistics** contiene indici statistici di un nodo e la sua controparte **StatisticsSummary** che contiene molteplici indici statistici già analizzati.
   - **ConsoleTable** utile per mostrare i risultati in console sottoforma di tabella
-  - **CsvResult** utile per la lettura/scrittura di risultati in formato csv
+  - **CsvResult** utile per la lettura/scrittura dei risultati in formato csv
