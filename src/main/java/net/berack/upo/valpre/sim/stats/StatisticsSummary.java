@@ -37,7 +37,7 @@ public class StatisticsSummary {
         this.name = name;
         this.values = values;
         this.average = avg;
-        this.stdDev = Math.sqrt(varianceSum / values.length);
+        this.stdDev = Math.sqrt(varianceSum / (values.length - 1));
         this.median = this.getPercentile(0.50);
         this.min = values[0];
         this.max = values[values.length - 1];
