@@ -9,7 +9,7 @@ import java.util.PriorityQueue;
 
 import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.sim.stats.Result;
-import net.berack.upo.valpre.sim.stats.Statistics;
+import net.berack.upo.valpre.sim.stats.NodeStats;
 
 /**
  * Process an entire run of the simulation.
@@ -126,7 +126,7 @@ public final class Simulation {
      */
     public Result endSimulation() {
         var elapsed = System.nanoTime() - this.timeStartedNano;
-        var nodes = new HashMap<String, Statistics>();
+        var nodes = new HashMap<String, NodeStats>();
         for (var entry : this.states.entrySet())
             nodes.put(entry.getKey(), entry.getValue().stats);
 
@@ -252,7 +252,7 @@ public final class Simulation {
     public static class NodeState {
         public int numServerBusy = 0;
         public int numServerUnavailable = 0;
-        public final Statistics stats = new Statistics();
+        public final NodeStats stats = new NodeStats();
         public final ArrayDeque<Double> queue = new ArrayDeque<>();
     }
 }

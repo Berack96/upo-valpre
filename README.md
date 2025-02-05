@@ -46,6 +46,6 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
   - **Simulation** e **SimulationMultiple** che vengono usate per far partire la simulazione; la versione multiple serve ad organizzare molteplici simulazioni su più thread o su un singolo core.
 - [net.berack.upo.valpre.sim.stats](https://github.com/Berack96/upo-valpre/tree/main/src/main/java/net/berack/upo/valpre/sim/stats) Package che contiene tutte le classi utili per la raccolta e l'analisi statistica dei vari valori generati dalla simulazione:
   - **Result** il risultato di una run e la sua controparte **ResultSummary** che contiene molteplici risultati di run già analizzati.
-  - **Statistics** contiene indici statistici di un nodo e la sua controparte **StatisticsSummary** che contiene molteplici indici statistici già analizzati.
+  - **NodeStats** contiene indici statistici di un nodo e la sua controparte **StatisticsSummary** che contiene molteplici indici statistici già analizzati.
   - **ConsoleTable** utile per mostrare i risultati in console sottoforma di tabella
   - **CsvResult** utile per la lettura/scrittura dei risultati in formato csv

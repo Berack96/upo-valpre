@@ -115,11 +115,11 @@ public class StatisticsSummary {
      * @throws IllegalArgumentException if the fields of the statistics cannot be
      *                                  accessed
      */
-    public static Map<String, StatisticsSummary> getSummary(Statistics[] stats) throws IllegalArgumentException {
+    public static Map<String, StatisticsSummary> getSummary(NodeStats[] stats) throws IllegalArgumentException {
         try {
             var map = new HashMap<String, StatisticsSummary>();
 
-            for (var field : Statistics.class.getFields()) {
+            for (var field : NodeStats.class.getFields()) {
                 field.setAccessible(true);
 
                 var values = new double[stats.length];

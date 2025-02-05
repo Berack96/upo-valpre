@@ -38,7 +38,7 @@ public class CsvResult {
     public void saveResults(Result[] results) throws IOException {
         var builder = new StringBuilder();
         builder.append("seed,node,");
-        builder.append(String.join(",", Statistics.getOrderOfApply()));
+        builder.append(String.join(",", NodeStats.getOrderOfApply()));
         builder.append('\n');
 
         try (var writer = new FileWriter(this.file)) {
@@ -76,7 +76,7 @@ public class CsvResult {
         try (var scan = new Scanner(input)) {
             var _ = scan.nextLine();
 
-            var nodes = new HashMap<String, Statistics>();
+            var nodes = new HashMap<String, NodeStats>();
             var seed = 0L;
 
             while (scan.hasNextLine()) {
@@ -106,7 +106,7 @@ public class CsvResult {
      * @param stats the statistics to convert
      * @return the CSV string
      */
-    public static String statsToCSV(Statistics stats) {
+    public static String statsToCSV(NodeStats stats) {
         var builder = new StringBuilder();
         stats.apply(val -> {
             builder.append(val).append(",");
@@ -123,9 +123,9 @@ public class CsvResult {
      * @param values the values to convert
      * @return the statistics object
      */
-    public static Statistics statsFromCSV(String[] values) {
+    public static NodeStats statsFromCSV(String[] values) {
         var i = new AtomicInteger(0);
-        var stats = new Statistics();
+        var stats = new NodeStats();
         stats.apply(_ -> Double.parseDouble(values[i.getAndIncrement()]));
         return stats;
     }

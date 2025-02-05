@@ -9,7 +9,7 @@ import java.util.Map;
  * length, the busy time, and the response time.
  */
 public class Result {
-    public final Map<String, Statistics> nodes;
+    public final Map<String, NodeStats> nodes;
     public final long seed;
     public final double simulationTime;
     public final double timeElapsedMS;
@@ -23,7 +23,7 @@ public class Result {
      * @param elapsed the real time elapsed while running the simulation in ms
      * @param nodes   all the stats collected by the simulation saved per node
      */
-    public Result(long seed, double time, double elapsed, Map<String, Statistics> nodes) {
+    public Result(long seed, double time, double elapsed, Map<String, NodeStats> nodes) {
         this.seed = seed;
         this.simulationTime = time;
         this.timeElapsedMS = elapsed;

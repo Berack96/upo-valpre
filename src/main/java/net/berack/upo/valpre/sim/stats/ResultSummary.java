@@ -129,11 +129,11 @@ public class ResultSummary {
      */
     public static Map<String, Map<String, StatisticsSummary>> getSummary(Result[] runs) {
         // Get the statistics of the nodes
-        var nodeStats = new HashMap<String, Statistics[]>();
+        var nodeStats = new HashMap<String, NodeStats[]>();
         for (var i = 0; i < runs.length; i++) {
             for (var entry : runs[i].nodes.entrySet()) {
                 var node = entry.getKey();
-                var stats = nodeStats.computeIfAbsent(node, _ -> new Statistics[runs.length]);
+                var stats = nodeStats.computeIfAbsent(node, _ -> new NodeStats[runs.length]);
                 stats[i] = entry.getValue();
             }
         }

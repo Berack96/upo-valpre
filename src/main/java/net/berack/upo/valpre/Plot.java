@@ -22,7 +22,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import net.berack.upo.valpre.sim.stats.CsvResult;
 import net.berack.upo.valpre.sim.stats.ResultSummary;
-import net.berack.upo.valpre.sim.stats.Statistics;
+import net.berack.upo.valpre.sim.stats.NodeStats;
 
 /**
  * This class is used to plot the results of the simulation.
@@ -55,7 +55,7 @@ public class Plot {
         this.nodeComboBox = new JComboBox<>(nodes);
         this.nodeComboBox.addActionListener(_ -> update());
 
-        var order = Statistics.getOrderOfApply();
+        var order = NodeStats.getOrderOfApply();
         var panels = new JListEntry[order.length];
         for (int i = 0; i < order.length; i++)
             panels[i] = new JListEntry(order[i]);

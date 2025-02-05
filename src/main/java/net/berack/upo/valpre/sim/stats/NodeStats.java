@@ -10,7 +10,7 @@ import java.util.function.Function;
  * statistics are updated during simulation events, such as arrivals and
  * departures, and can be used to analyze the net's behavior and performance.
  */
-public class Statistics {
+public class NodeStats {
     public double numArrivals = 0.0d;
     public double numDepartures = 0.0d;
     public double maxQueueLength = 0.0d;
@@ -98,7 +98,7 @@ public class Statistics {
      * @param func a function to apply
      */
     public void apply(Function<Double, Double> func) {
-        Statistics.apply(this, this, this, (val1, _) -> func.apply(val1));
+        NodeStats.operation(this, this, this, (val1, _) -> func.apply(val1));
     }
 
     /**
@@ -109,8 +109,8 @@ public class Statistics {
      * @param other
      * @param func
      */
-    public void merge(Statistics other, BiFunction<Double, Double, Double> func) {
-        Statistics.apply(this, this, other, func);
+    public void merge(NodeStats other, BiFunction<Double, Double, Double> func) {
+        NodeStats.operation(this, this, other, func);
     }
 
     /**
@@ -122,6 +122,27 @@ public class Statistics {
         return new String[] { "numArrivals", "numDepartures", "avgQueueLength", "avgWaitTime", "avgResponse",
                 "busyTime", "waitTime", "unavailableTime", "responseTime", "lastEventTime", "throughput", "utilization",
                 "unavailable" };
+    }
+
+    /**
+     * Merges two sets of statistics into a new one.
+     * This method combines the statistics from two `Statistics` objects (`val1` and
+     * `val2`) and returns a new `Statistics` object with the merged results. The
+     * provided function is applied to each pair of corresponding statistics from
+     * `val1` and `val2` to compute the merged value. This is useful for merging or
+     * combining statistics from different sources (e.g., different simulation
+     * runs), allowing the creation of aggregated statistics.
+     * 
+     * @param val1 The first `Statistics` object to merge.
+     * @param val2 The second `Statistics` object to merge.
+     * @param func The binary function that defines how to merge each pair of values
+     *             from `val1` and `val2`. It takes two `Double` values (from `val1`
+     *             and `val2`) and returns a new `Double` value.
+     */
+    public static NodeStats merge(NodeStats val1, NodeStats val2, BiFunction<Double, Double, Double> func) {
+        var save = new NodeStats();
+        NodeStats.operation(save, val1, val2, func);
+        return save;
     }
 
     /**
@@ -140,7 +161,7 @@ public class Statistics {
      *             from `val1` and `val2`. It takes two `Double` values (from `val1`
      *             and `val2`) and returns a new `Double` value.
      */
-    public static void apply(Statistics save, Statistics val1, Statistics val2,
+    public static void operation(NodeStats save, NodeStats val1, NodeStats val2,
             BiFunction<Double, Double, Double> func) {
         save.numArrivals = func.apply(val1.numArrivals, val2.numArrivals);
         save.numDepartures = func.apply(val1.numDepartures, val2.numDepartures);
