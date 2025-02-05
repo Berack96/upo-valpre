@@ -110,7 +110,7 @@ public class Rng {
 		var streams = new Rng[total];
 		for (int i = 0; i < total; i++) {
 			streams[i] = new Rng(seed);
-			seed = (seed * mult) % MODULUS;
+			seed = (streams[i].seed * mult) % MODULUS;
 		}
 		return streams;
 	}

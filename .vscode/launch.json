@@ -20,6 +20,13 @@
         },
         {
             "type": "java",
+            "name": "Run1k Complex EXP",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.Main",
+            "args": "simulation -net example3.net -runs 1000 -p -seed 0"
+        },
+        {
+            "type": "java",
             "name": "Run10",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",

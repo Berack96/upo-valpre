@@ -15,9 +15,9 @@ public class Main {
         try {
             var program = args[0];
             var subArgs = Arrays.copyOfRange(args, 1, args.length);
-            var param = Main.getParameters(program, subArgs);
             switch (program) {
                 case "simulation" -> {
+                    var param = Main.getParameters(program, subArgs);
                     new SimulationBuilder(param.get("net"))
                             .setCsv(param.get("csv"))
                             .setRuns(param.getOrDefault("runs", Integer::parseInt, 100))
@@ -27,6 +27,7 @@ public class Main {
                             .run();
                 }
                 case "plot" -> {
+                    var param = Main.getParameters(program, subArgs);
                     var csv = param.get("csv");
                     var plot = new Plot(csv);
                     plot.show();
@@ -72,8 +73,6 @@ public class Main {
         };
         descriptions.put("csv", csvDesc);
 
-        if (program.equals("net"))
-            return null;
         return Parameters.getArgsOrHelper(args, "-", arguments, descriptions);
     }
 

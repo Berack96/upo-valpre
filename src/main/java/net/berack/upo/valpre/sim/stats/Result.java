@@ -29,4 +29,38 @@ public class Result {
         this.timeElapsedMS = elapsed;
         this.nodes = nodes;
     }
+
+    @Override
+    public String toString() {
+        var size = (int) Math.ceil(Math.max(Math.log10(this.simulationTime), 1));
+        var iFormat = "%" + size + ".0f";
+        var fFormat = "%" + (size + 4) + ".3f";
+
+        var builder = new StringBuilder();
+        builder.append("===== Net Stats =====\n");
+        builder.append(String.format("Seed:       \t%d\n", this.seed));
+        builder.append(String.format("Simulation: \t" + fFormat + "\n", this.simulationTime));
+        builder.append(String.format("Elapsed:    \t" + fFormat + "ms\n", this.timeElapsedMS / 1e6));
+        // return builder.toString();
+
+        var table = new ConsoleTable("Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput",
+                "Utilization %", "Unavailable %", "Last Event");
+
+        for (var entry : this.nodes.entrySet()) {
+            var stats = entry.getValue();
+            table.addRow(
+                    entry.getKey(),
+                    iFormat.formatted(stats.numDepartures),
+                    fFormat.formatted(stats.avgQueueLength),
+                    fFormat.formatted(stats.avgWaitTime),
+                    fFormat.formatted(stats.avgResponse),
+                    fFormat.formatted(stats.troughput),
+                    fFormat.formatted(stats.utilization * 100),
+                    fFormat.formatted(stats.unavailable * 100),
+                    fFormat.formatted(stats.lastEventTime));
+        }
+
+        builder.append(table);
+        return builder.toString();
+    }
 }

@@ -22,14 +22,14 @@ Esistono vari tipi di argomenti per scegliere come fare la simulazione:
   * `-csv <file>` per salvare i risultati delle run in un file csv
   * `-p` per fare le simulazioni in parallelo (ovvero su più thread)
   * `-end <criteria>` per scegliere quando la simulazione finisce nel caso non ci siano dei source limitati nella creazione di arrivi. La tipologia di fine simulazione la si può trovare dentro `EndCriteria` (ovvero MaxArrivals, MaxDepartures, MaxTime) e la formattazione da usare per passare il parametro è la seguente:\
-  `[Tipo1:param1,..,paramN];[..];[TipoN:param1,..,paramN]`
+  **\[Tipo1:param1,..,paramN\];\[..\];\[TipoN:param1,..,paramN\]**
 * `java -jar upo-valpre.jar plot -csv <file>`\
 Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:
 ![1738603552417](image/README/1738603552417.png)
 
-Esistono dei file prefatti per vedere eventuali simulazioni:
-* `example1.net` e `example2.net` per `simulation -net`
-* `example1.csv` e `example2.csv` per `plot -csv`
+Esistono dei file prefatti per vedere eventuali simulazioni che, nel caso vengano passati come parametri, automaticamente vengono usati:
+* `example1.net`, `example2.net` e `example3.net` per `simulation -net`
+* `example1.csv`, `example2.csv` e `example3.csv` per `plot -csv`
 
 ### Classi Interne
 

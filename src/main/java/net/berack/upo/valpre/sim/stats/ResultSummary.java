@@ -42,24 +42,7 @@ public class ResultSummary {
         this.seed = runs[0].seed;
         this.simulationTime = avgTime / runs.length;
         this.timeElapsedMS = avgElapsed / runs.length;
-
-        // Get the statistics of the nodes
-        var nodeStats = new HashMap<String, Statistics[]>();
-        for (var i = 0; i < runs.length; i++) {
-            for (var entry : runs[i].nodes.entrySet()) {
-                var node = entry.getKey();
-                var stats = nodeStats.computeIfAbsent(node, _ -> new Statistics[runs.length]);
-                stats[i] = entry.getValue();
-            }
-        }
-
-        // Get the summary of the statistics of the nodes
-        this.stats = new HashMap<>();
-        for (var entry : nodeStats.entrySet()) {
-            var node = entry.getKey();
-            var summary = StatisticsSummary.getSummary(entry.getValue());
-            this.stats.put(node, summary);
-        }
+        this.stats = ResultSummary.getSummary(runs);
     }
 
     /**
@@ -124,5 +107,34 @@ public class ResultSummary {
 
         builder.append(table);
         return builder.toString();
+    }
+
+    /**
+     * Get the summary of the statistics of the nodes.
+     * The first map is the node name, the second map is the statistic name.
+     * 
+     * @param runs the runs to get the summary
+     * @return the summary of the statistics of the nodes
+     */
+    public static Map<String, Map<String, StatisticsSummary>> getSummary(Result[] runs) {
+        // Get the statistics of the nodes
+        var nodeStats = new HashMap<String, Statistics[]>();
+        for (var i = 0; i < runs.length; i++) {
+            for (var entry : runs[i].nodes.entrySet()) {
+                var node = entry.getKey();
+                var stats = nodeStats.computeIfAbsent(node, _ -> new Statistics[runs.length]);
+                stats[i] = entry.getValue();
+            }
+        }
+
+        // Get the summary of the statistics of the nodes
+        var stats = new HashMap<String, Map<String, StatisticsSummary>>();
+        for (var entry : nodeStats.entrySet()) {
+            var node = entry.getKey();
+            var summary = StatisticsSummary.getSummary(entry.getValue());
+            stats.put(node, summary);
+        }
+
+        return stats;
     }
 }
