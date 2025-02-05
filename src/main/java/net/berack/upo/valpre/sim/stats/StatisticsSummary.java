@@ -46,21 +46,6 @@ public class StatisticsSummary {
     }
 
     /**
-     * Calculates the error at the selected alpha level.
-     * This method computes the error for the average and standard deviation values,
-     * considering the sample size and the confidence level (alpha).
-     * The result is adjusted using a t-distribution to account for the variability
-     * in smaller sample sizes.
-     * 
-     * @param alpha the alpha value
-     * @return the error of the values
-     */
-    public double calcError(double alpha) {
-        var percentile = this.distr.inverseCumulativeProbability(alpha);
-        return percentile * (this.stdDev / Math.sqrt(this.values.length));
-    }
-
-    /**
      * Get the frequency of the values in the array.
      * 
      * @param numBins the number of bins to use
@@ -88,6 +73,38 @@ public class StatisticsSummary {
     public double getPercentile(double percentile) {
         var index = (int) Math.floor(percentile * (this.values.length - 1));
         return this.values[index];
+    }
+
+    /**
+     * Calculates the error at the selected alpha level.
+     * This method computes the error for the average and standard deviation values,
+     * considering the sample size and the confidence level (alpha).
+     * The result is adjusted using a t-distribution to account for the variability
+     * in smaller sample sizes.
+     * 
+     * @param alpha the alpha value
+     * @return the error of the values
+     */
+    public double calcError(double alpha) {
+        return StatisticsSummary.calcError(this.distr, this.stdDev, alpha);
+    }
+
+    /**
+     * Calculates the error at the selected alpha level.
+     * This method computes the error for the average and standard deviation values,
+     * considering the sample size and the confidence level (alpha).
+     * The result is adjusted using a t-distribution to account for the variability
+     * in smaller sample sizes.
+     * 
+     * @param distribution the t-distribution to use
+     * @param stdDev       the standard deviation of the values
+     * @param alpha        the alpha value
+     * @return the error of the values
+     */
+    public static double calcError(TDistribution distribution, double stdDev, double alpha) {
+        var percentile = distribution.inverseCumulativeProbability(alpha);
+        var n = distribution.getDegreesOfFreedom() + 1;
+        return percentile * (stdDev / Math.sqrt(n));
     }
 
     /**

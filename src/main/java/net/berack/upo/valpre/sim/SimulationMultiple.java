@@ -18,7 +18,7 @@ public class SimulationMultiple {
     /**
      * Create a new object that can simulate the net in input multiple times
      * 
-     * @param net the net that sould be simulated
+     * @param net the net that should be simulated
      */
     public SimulationMultiple(Net net) {
         this.net = net;
@@ -85,5 +85,4 @@ public class SimulationMultiple {
             return new ResultSummary(results);
         }
     }
-
 }

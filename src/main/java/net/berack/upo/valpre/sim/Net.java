@@ -127,7 +127,8 @@ public final class Net implements Iterable<ServerNode> {
      * @return the node
      */
     public ServerNode getNode(String name) {
-        return this.servers.get(this.getNodeIndex(name));
+        var index = this.getNodeIndex(name);
+        return index < 0 ? null : this.servers.get(index);
     }
 
     /**
