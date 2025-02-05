@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,7 +36,7 @@ public class CsvResult {
      * 
      * @throws IOException if anything happens wile wriiting to the file
      */
-    public void saveResults(Result[] results) throws IOException {
+    public void saveResults(List<Result> results) throws IOException {
         var builder = new StringBuilder();
         builder.append("seed,node,");
         builder.append(String.join(",", NodeStats.getOrderOfApply()));
@@ -59,7 +60,7 @@ public class CsvResult {
      * @return the results loaded from the file
      * @throws IOException if anything happens while reading the file
      */
-    public Result[] loadResults() throws IOException {
+    public List<Result> loadResults() throws IOException {
         try (var stream = new FileInputStream(this.file)) {
             return CsvResult.loadResults(stream);
         }
@@ -71,7 +72,7 @@ public class CsvResult {
      * @param input the input stream to read
      * @return the results loaded from the stream
      */
-    public static Result[] loadResults(InputStream input) {
+    public static List<Result> loadResults(InputStream input) {
         var results = new ArrayList<Result>();
         try (var scan = new Scanner(input)) {
             var _ = scan.nextLine();
@@ -85,7 +86,7 @@ public class CsvResult {
                 var node = line[1];
 
                 if (currentSeed != seed && seed != 0) {
-                    results.add(new Result(seed, 0.0, 0L, nodes));
+                    results.add(new Result(seed, 0.0, 0.0, nodes));
                     nodes = new HashMap<>();
                 }
                 seed = currentSeed;
@@ -95,9 +96,9 @@ public class CsvResult {
                 nodes.put(node, stats);
             }
 
-            results.add(new Result(seed, 0.0, 0L, nodes));
+            results.add(new Result(seed, 0.0, 0.0, nodes));
         }
-        return results.toArray(new Result[0]);
+        return results;
     }
 
     /**

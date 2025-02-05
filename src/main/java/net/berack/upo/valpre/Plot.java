@@ -21,15 +21,15 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import net.berack.upo.valpre.sim.stats.CsvResult;
-import net.berack.upo.valpre.sim.stats.ResultSummary;
 import net.berack.upo.valpre.sim.stats.NodeStats;
+import net.berack.upo.valpre.sim.stats.Result;
 
 /**
  * This class is used to plot the results of the simulation.
  * The results are saved in a CSV file and then loaded to be plotted.
  */
 public class Plot {
-    public final ResultSummary summary;
+    public final Result.Summary summary;
     private final ChartPanel panelBarChart;
     private final JComboBox<String> nodeComboBox;
     private final JList<JListEntry> statList;
@@ -47,7 +47,7 @@ public class Plot {
         var results = CsvResult.loadResults(stream);
         stream.close();
 
-        this.summary = new ResultSummary(results);
+        this.summary = new Result.Summary(results);
 
         var nodes = this.summary.getNodes().toArray(new String[0]);
         this.panelBarChart = new ChartPanel(null);
@@ -132,13 +132,14 @@ public class Plot {
             var stat = this.statList.getSelectedValue().name.getText();
 
             var summary = this.summary.getSummaryOf(node);
-            var statSummary = summary.get(stat);
-            var frequency = statSummary.getFrequency(15);
+            var frequency = summary.getFrequency(15, n -> n.of(stat));
+            var min = summary.min.of(stat);
+            var max = summary.max.of(stat);
 
             var dataset = new DefaultCategoryDataset();
-            var bucket = (statSummary.max - statSummary.min) / frequency.length;
+            var bucket = (max - min) / frequency.length;
             for (int i = 0; i < frequency.length; i++) {
-                var columnVal = statSummary.min + i * bucket;
+                var columnVal = min + i * bucket;
                 var columnKey = String.format("%.3f", columnVal);
                 dataset.addValue(frequency[i], "Frequency", columnKey);
             }
@@ -147,10 +148,14 @@ public class Plot {
             chart.setTitle(stat + " distribution");
 
             var model = this.statList.getModel();
+            var avg = summary.average;
+            var err = summary.calcError(0.95);
+
             for (int i = 0; i < model.getSize(); i++) {
                 var entry = model.getElementAt(i);
-                var value = summary.get(entry.name.getText());
-                entry.value.setText(String.format("%8.3f ±% 9.3f", value.average, value.calcError(0.95)));
+                var value = entry.name.getText();
+
+                entry.value.setText(String.format("%8.3f ±% 9.3f", avg.of(value), err.of(value)));
             }
         } catch (Exception e) {
             e.printStackTrace();

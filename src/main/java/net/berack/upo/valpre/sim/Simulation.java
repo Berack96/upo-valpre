@@ -130,7 +130,7 @@ public final class Simulation {
         for (var entry : this.states.entrySet())
             nodes.put(entry.getKey(), entry.getValue().stats);
 
-        return new Result(this.seed, this.time, elapsed, nodes);
+        return new Result(this.seed, this.time, elapsed * 1e-6, nodes);
     }
 
     /**

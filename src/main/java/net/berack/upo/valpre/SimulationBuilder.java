@@ -138,7 +138,7 @@ public class SimulationBuilder {
         System.out.println("Final time " + nano / 1e6 + "ms");
 
         if (csv != null) {
-            new CsvResult(this.csv).saveResults(summary.runs);
+            new CsvResult(this.csv).saveResults(summary.getRuns());
             System.out.println("Data saved to " + this.csv);
         }
     }

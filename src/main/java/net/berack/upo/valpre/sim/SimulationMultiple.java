@@ -6,7 +6,6 @@ import java.util.concurrent.Future;
 
 import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.sim.stats.Result;
-import net.berack.upo.valpre.sim.stats.ResultSummary;
 
 /**
  * A network simulation that uses a discrete event simulation to model the
@@ -36,15 +35,16 @@ public class SimulationMultiple {
      *                  events.
      * @return The statistics the network.
      */
-    public ResultSummary run(long seed, int runs, EndCriteria... criterias) {
+    public Result.Summary run(long seed, int runs, EndCriteria... criterias) {
         var rngs = Rng.getMultipleStreams(seed, runs);
-        var stats = new Result[runs];
+        var result = new Result.Summary(rngs[0].getSeed());
 
         for (int i = 0; i < runs; i++) {
             var sim = new Simulation(this.net, rngs[i], criterias);
-            stats[i] = sim.run();
+            var res = sim.run();
+            result.add(res);
         }
-        return new ResultSummary(stats);
+        return result;
     }
 
     /**
@@ -62,27 +62,29 @@ public class SimulationMultiple {
      * @throws InterruptedException If the threads are interrupted.
      * @throws ExecutionException   If the one of the threads has been aborted.
      */
-    public ResultSummary runParallel(long seed, int runs, EndCriteria... criterias)
+    public Result.Summary runParallel(long seed, int runs, EndCriteria... criterias)
             throws InterruptedException, ExecutionException {
         var rngs = Rng.getMultipleStreams(seed, runs);
-        var results = new Result[runs];
         var futures = new Future[runs];
 
         var numThreads = Math.min(runs, Runtime.getRuntime().availableProcessors());
         try (var threads = Executors.newFixedThreadPool(numThreads)) {
+            var results = new Result.Summary(rngs[0].getSeed());
+
             for (int i = 0; i < runs; i++) {
                 final var id = i;
                 futures[i] = threads.submit(() -> {
                     var sim = new Simulation(this.net, rngs[id], criterias);
-                    results[id] = sim.run();
+                    return sim.run();
                 });
             }
 
             for (var i = 0; i < runs; i++) {
-                futures[i].get();
+                var res = (Result) futures[i].get();
+                results.add(res);
             }
 
-            return new ResultSummary(results);
+            return results;
         }
     }
 }
