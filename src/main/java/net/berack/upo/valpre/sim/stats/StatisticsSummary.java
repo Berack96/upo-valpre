@@ -3,6 +3,7 @@ package net.berack.upo.valpre.sim.stats;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.math3.distribution.TDistribution;
 
 /**
  * A summary of the values.
@@ -14,8 +15,8 @@ public class StatisticsSummary {
     public final double min;
     public final double max;
     public final double stdDev;
-    public final double error95;
     public final double[] values;
+    private final TDistribution distr;
 
     /**
      * Create a summary of the values.
@@ -41,7 +42,7 @@ public class StatisticsSummary {
         this.median = this.getPercentile(0.50);
         this.min = values[0];
         this.max = values[values.length - 1];
-        this.error95 = this.calcError(0.95);
+        this.distr = new TDistribution(null, values.length - 1);
     }
 
     /**
@@ -55,11 +56,8 @@ public class StatisticsSummary {
      * @return the error of the values
      */
     public double calcError(double alpha) {
-        var sampleSize = this.values.length;
-        var distr = new org.apache.commons.math3.distribution.TDistribution(sampleSize - 1);
-        var percentile = distr.inverseCumulativeProbability(alpha);
-
-        return percentile * (this.stdDev / Math.sqrt(sampleSize));
+        var percentile = this.distr.inverseCumulativeProbability(alpha);
+        return percentile * (this.stdDev / Math.sqrt(this.values.length));
     }
 
     /**

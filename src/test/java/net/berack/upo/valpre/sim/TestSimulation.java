@@ -450,7 +450,7 @@ public class TestSimulation {
         assertEquals(1.0, nodeStat.maxQueueLength, DELTA);
         assertEquals(50.0, nodeStat.busyTime, DELTA);
         assertEquals(result.simulationTime, nodeStat.lastEventTime, DELTA);
-        assertEquals(1.0, nodeStat.troughput, DELTA);
+        assertEquals(1.0, nodeStat.throughput, DELTA);
         assertEquals(1.0, nodeStat.utilization, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
 
@@ -468,7 +468,7 @@ public class TestSimulation {
         assertEquals(1.0, nodeStat.maxQueueLength, DELTA);
         assertEquals(50.0, nodeStat.busyTime, DELTA);
         assertEquals(result.simulationTime - 1, nodeStat.lastEventTime, DELTA);
-        assertEquals(1.0, nodeStat.troughput, DELTA);
+        assertEquals(1.0, nodeStat.throughput, DELTA);
         assertEquals(1.0, nodeStat.utilization, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
         nodeStat = result.nodes.get("Queue");
@@ -482,7 +482,7 @@ public class TestSimulation {
         assertEquals(result.simulationTime, nodeStat.lastEventTime, DELTA);
 
         assertEquals(nodeStat.busyTime / nodeStat.lastEventTime, nodeStat.utilization, DELTA);
-        assertEquals(nodeStat.numDepartures / nodeStat.lastEventTime, nodeStat.troughput, DELTA);
+        assertEquals(nodeStat.numDepartures / nodeStat.lastEventTime, nodeStat.throughput, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
     }
 }

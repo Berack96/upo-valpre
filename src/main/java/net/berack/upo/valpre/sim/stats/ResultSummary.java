@@ -51,9 +51,16 @@ public class ResultSummary {
      * @param node the node to get the summary
      * @param stat the statistic to get the summary
      * @return the summary of the statistics of the node
+     * @throws IllegalArgumentException if the node or the statistic is not found
      */
     public StatisticsSummary getSummaryOf(String node, String stat) {
-        return this.stats.get(node).get(stat);
+        var stats = this.getSummaryOf(node);
+        var value = stats.get(stat);
+        if (value == null) {
+            var arr = String.join(", ", stats.keySet().toArray(new String[0]));
+            throw new IllegalArgumentException("Statistic [" + stat + "] not found. Available: " + arr);
+        }
+        return value;
     }
 
     /**
@@ -61,9 +68,13 @@ public class ResultSummary {
      * 
      * @param node the node to get the summary
      * @return the summary of the statistics of the node
+     * @throws IllegalArgumentException if the node is not found
      */
     public Map<String, StatisticsSummary> getSummaryOf(String node) {
-        return this.stats.get(node);
+        var stat = this.stats.get(node);
+        if (stat == null)
+            throw new IllegalArgumentException("Node not found");
+        return stat;
     }
 
     /**
@@ -99,7 +110,7 @@ public class ResultSummary {
                     fFormat.formatted(stats.get("avgQueueLength").average),
                     fFormat.formatted(stats.get("avgWaitTime").average),
                     fFormat.formatted(stats.get("avgResponse").average),
-                    fFormat.formatted(stats.get("troughput").average),
+                    fFormat.formatted(stats.get("throughput").average),
                     fFormat.formatted(stats.get("utilization").average * 100),
                     fFormat.formatted(stats.get("unavailable").average * 100),
                     fFormat.formatted(stats.get("lastEventTime").average));

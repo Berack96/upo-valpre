@@ -150,7 +150,7 @@ public class Plot {
             for (int i = 0; i < model.getSize(); i++) {
                 var entry = model.getElementAt(i);
                 var value = summary.get(entry.name.getText());
-                entry.value.setText(String.format("%8.3f ±% 9.3f", value.average, value.error95));
+                entry.value.setText(String.format("%8.3f ±% 9.3f", value.average, value.calcError(0.95)));
             }
         } catch (Exception e) {
             e.printStackTrace();

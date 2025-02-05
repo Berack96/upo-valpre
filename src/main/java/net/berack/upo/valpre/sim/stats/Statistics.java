@@ -24,7 +24,7 @@ public class Statistics {
     // derived stats, you can calculate them even at the end
     public double avgWaitTime = 0.0d;
     public double avgResponse = 0.0d;
-    public double troughput = 0.0d;
+    public double throughput = 0.0d;
     public double utilization = 0.0d;
     public double unavailable = 0.0d;
 
@@ -75,7 +75,7 @@ public class Statistics {
         this.waitTime = this.responseTime - this.busyTime;
         this.avgWaitTime = this.waitTime / this.numDepartures;
         this.avgResponse = this.responseTime / this.numDepartures;
-        this.troughput = this.numDepartures / time;
+        this.throughput = this.numDepartures / time;
         this.utilization = this.busyTime / time;
         this.unavailable = this.unavailableTime / time;
 
@@ -120,7 +120,7 @@ public class Statistics {
      */
     public static String[] getOrderOfApply() {
         return new String[] { "numArrivals", "numDepartures", "avgQueueLength", "avgWaitTime", "avgResponse",
-                "busyTime", "waitTime", "unavailableTime", "responseTime", "lastEventTime", "troughput", "utilization",
+                "busyTime", "waitTime", "unavailableTime", "responseTime", "lastEventTime", "throughput", "utilization",
                 "unavailable" };
     }
 
@@ -152,7 +152,7 @@ public class Statistics {
         save.unavailableTime = func.apply(val1.unavailableTime, val2.unavailableTime);
         save.responseTime = func.apply(val1.responseTime, val2.responseTime);
         save.lastEventTime = func.apply(val1.lastEventTime, val2.lastEventTime);
-        save.troughput = func.apply(val1.troughput, val2.troughput);
+        save.throughput = func.apply(val1.throughput, val2.throughput);
         save.utilization = func.apply(val1.utilization, val2.utilization);
         save.unavailable = func.apply(val1.unavailable, val2.unavailable);
     }

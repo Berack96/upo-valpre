@@ -54,7 +54,7 @@ public class Result {
                     fFormat.formatted(stats.avgQueueLength),
                     fFormat.formatted(stats.avgWaitTime),
                     fFormat.formatted(stats.avgResponse),
-                    fFormat.formatted(stats.troughput),
+                    fFormat.formatted(stats.throughput),
                     fFormat.formatted(stats.utilization * 100),
                     fFormat.formatted(stats.unavailable * 100),
                     fFormat.formatted(stats.lastEventTime));
