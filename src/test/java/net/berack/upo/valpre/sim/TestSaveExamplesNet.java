@@ -25,7 +25,7 @@ public class TestSaveExamplesNet {
     @Test
     public void testSaveExample1() throws KryoException, IOException {
         var net = new Net();
-        net.addNode(ServerNode.createLimitedSource("Source", exp0_22, 1000));
+        net.addNode(ServerNode.createLimitedSource("Source", exp0_22, 10000));
         net.addNode(ServerNode.createQueue("Queue", 1, norm3_2));
         net.addConnection(0, 1, 1.0);
 
@@ -36,7 +36,7 @@ public class TestSaveExamplesNet {
     @Test
     public void testSaveExample2() throws KryoException, IOException {
         var net = new Net();
-        net.addNode(ServerNode.createLimitedSource("Source", exp0_22, 1000));
+        net.addNode(ServerNode.createLimitedSource("Source", exp0_22, 10000));
         net.addNode(ServerNode.createQueue("Queue", 1, norm3_2));
         net.addNode(ServerNode.createQueue("Queue Wait", 1, norm3_2, unNorm));
         net.addConnection(0, 1, 1.0);
@@ -49,7 +49,7 @@ public class TestSaveExamplesNet {
     @Test
     public void testSaveExample3() throws KryoException, IOException {
         var net = new Net();
-        net.addNode(ServerNode.createLimitedSource("Source", exp1_5, 1000));
+        net.addNode(ServerNode.createLimitedSource("Source", exp1_5, 10000));
         net.addNode(ServerNode.createQueue("Service1", 1, exp2));
         net.addNode(ServerNode.createQueue("Service2", 1, exp3_5, unExp));
         net.addConnection(0, 1, 1.0);
