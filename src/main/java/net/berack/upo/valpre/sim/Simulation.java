@@ -97,7 +97,7 @@ public final class Simulation {
 
                 this.addToFel(state.spawnUnavailableIfPossible(time, this.rng));
                 this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
-                this.addToFel(state.spawnArrivalToChild(time, rng));
+                this.addToFel(state.spawnArrivalToChild(time, this.rng));
                 this.addToFel(state.spawnArrivalIfPossilbe(time));
             }
         }
