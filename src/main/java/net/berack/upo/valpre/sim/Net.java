@@ -77,6 +77,7 @@ public final class Net implements Iterable<ServerNode> {
      * @param weight The probability of the child node.
      * @throws IndexOutOfBoundsException if one of the two nodes are not in the net
      * @throws IllegalArgumentException  if the weight is negative or zero
+     * @throws IllegalArgumentException  if the child is a source node
      */
     public void addConnection(int parent, int child, double weight) {
         if (weight <= 0)
@@ -85,6 +86,9 @@ public final class Net implements Iterable<ServerNode> {
         var max = this.servers.size() - 1;
         if (parent < 0 || child < 0 || parent > max || child > max)
             throw new IndexOutOfBoundsException("One of the nodes does not exist");
+
+        if (this.servers.get(child).spawnArrivals > 0)
+            throw new IllegalArgumentException("Can't connect to a source node");
 
         var list = this.connections.get(parent);
         for (var conn : list) {
@@ -136,6 +140,7 @@ public final class Net implements Iterable<ServerNode> {
      * 
      * @param index the index of the node
      * @return the node
+     * @throws IndexOutOfBoundsException if the index is not in the range
      */
     public ServerNode getNode(int index) {
         return this.servers.get(index);
@@ -151,28 +156,28 @@ public final class Net implements Iterable<ServerNode> {
      */
     public ServerNode getChildOf(ServerNode parent, Rng rng) {
         var index = this.indices.get(parent);
-        return this.getChildOf(index, rng);
+        index = this.getChildOf(index, rng);
+        return index < 0 ? null : this.servers.get(index);
     }
 
     /**
      * Get one of the child nodes from the parent specified. If the index is out of
-     * bounds then an exception is thrown. If the node has no child then null is
-     * returned;
+     * bounds then an exception is thrown. If the node has no child then -1 is
+     * returned.
      * 
      * @param parent the parent node
      * @param rng    the random number generator used for getting one of the child
      * @throws IndexOutOfBoundsException If the index is not in the range
      * @return the resultig node
      */
-    public ServerNode getChildOf(int parent, Rng rng) {
+    public int getChildOf(int parent, Rng rng) {
         var random = rng.random();
         for (var conn : this.connections.get(parent)) {
             random -= conn.weight;
-            if (random <= 0) {
-                return this.servers.get(conn.index);
-            }
+            if (random <= 0)
+                return conn.index;
         }
-        return null;
+        return -1;
     }
 
     /**
@@ -222,6 +227,20 @@ public final class Net implements Iterable<ServerNode> {
     }
 
     /**
+     * Build the node states for the simulation.
+     * This method is used to create the state of each node in the network.
+     * Note that each call to this method will create a new state for each node.
+     * 
+     * @return the array of node states
+     */
+    public ServerNodeState[] buildNodeStates() {
+        var states = new ServerNodeState[this.servers.size()];
+        for (var i = 0; i < states.length; i++)
+            states[i] = new ServerNodeState(i, this);
+        return states;
+    }
+
+    /**
      * Save the current net to a file.
      * The resulting file is saved with Kryo.
      * 
@@ -235,6 +254,11 @@ public final class Net implements Iterable<ServerNode> {
         try (var out = new Output(new FileOutputStream(file))) {
             kryo.writeClassAndObject(out, this);
         }
+    }
+
+    @Override
+    public Iterator<ServerNode> iterator() {
+        return this.servers.iterator();
     }
 
     /**
@@ -294,10 +318,5 @@ public final class Net implements Iterable<ServerNode> {
             this.child = child;
             this.weight = weight;
         }
-    }
-
-    @Override
-    public Iterator<ServerNode> iterator() {
-        return this.servers.iterator();
     }
 }

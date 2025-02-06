@@ -42,61 +42,42 @@ public class TestSimulation {
         var node = ServerNode.createQueue("Nodo", 0, const1);
         assertEquals("Nodo", node.name);
         assertEquals(1, node.maxServers);
-        assertFalse(node.shouldSpawnArrival(0));
-        assertFalse(node.shouldSpawnArrival(50));
-        assertFalse(node.shouldSpawnArrival(1000));
-        assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
-        assertFalse(node.shouldSpawnArrival(-1));
+        assertEquals(0, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
         node = ServerNode.createQueue("Queue", 50, const1);
         assertEquals("Queue", node.name);
         assertEquals(50, node.maxServers);
-        assertFalse(node.shouldSpawnArrival(0));
-        assertFalse(node.shouldSpawnArrival(50));
-        assertFalse(node.shouldSpawnArrival(1000));
-        assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
-        assertFalse(node.shouldSpawnArrival(-1));
+        assertEquals(0, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
         node = ServerNode.createSource("Source", const1);
         assertEquals("Source", node.name);
         assertEquals(Integer.MAX_VALUE, node.maxServers);
-        assertTrue(node.shouldSpawnArrival(0));
-        assertTrue(node.shouldSpawnArrival(50));
-        assertTrue(node.shouldSpawnArrival(1000));
-        assertTrue(node.shouldSpawnArrival(Integer.MAX_VALUE - 1));
-        assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
-        assertTrue(node.shouldSpawnArrival(-1));
+        assertEquals(Integer.MAX_VALUE, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
         node = ServerNode.createLimitedSource("Source", const1, 50);
         assertEquals("Source", node.name);
         assertEquals(Integer.MAX_VALUE, node.maxServers);
-        assertTrue(node.shouldSpawnArrival(0));
-        assertTrue(node.shouldSpawnArrival(49));
-        assertFalse(node.shouldSpawnArrival(50));
-        assertFalse(node.shouldSpawnArrival(1000));
-        assertFalse(node.shouldSpawnArrival(Integer.MAX_VALUE));
-        assertTrue(node.shouldSpawnArrival(-1));
+        assertEquals(50, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
     }
 
     @Test
     public void event() {
-        var node = ServerNode.createSource("Source", const0);
-        var event = Event.newAvailable(node, 1.0);
-        assertEquals(node, event.node);
+        var event = Event.newAvailable(0, 1.0);
+        assertEquals(0, event.nodeIndex);
         assertEquals(1.0, event.time, 0.000000000001);
         assertEquals(Event.Type.AVAILABLE, event.type);
 
-        var event2 = Event.newArrival(node, 5.0);
-        assertEquals(node, event2.node);
+        var event2 = Event.newArrival(0, 5.0);
+        assertEquals(0, event2.nodeIndex);
         assertEquals(5.0, event2.time, 0.000000000001);
         assertEquals(Event.Type.ARRIVAL, event2.type);
 
-        var event3 = Event.newDeparture(node, 8.0);
-        assertEquals(node, event3.node);
+        var event3 = Event.newDeparture(1, 8.0);
+        assertEquals(1, event3.nodeIndex);
         assertEquals(8.0, event3.time, 0.000000000001);
         assertEquals(Event.Type.DEPARTURE, event3.type);
 
@@ -170,9 +151,30 @@ public class TestSimulation {
         assertEquals(0, conn.size());
 
         var sample = net.getChildOf(0, rigged);
-        assertEquals(node1, sample);
-        sample = net.getChildOf(node, rigged);
-        assertEquals(node1, sample);
+        assertEquals(1, sample);
+        var sample2 = net.getChildOf(node, rigged);
+        assertEquals(node1, sample2);
+    }
+
+    @Test
+    public void nodeState() {
+        var net = new Net();
+        var node = ServerNode.createQueue("First", 1, const0);
+        net.addNode(node);
+        var state = new ServerNodeState(0, net);
+
+        assertEquals(0, state.index);
+        assertEquals(net, state.net);
+        assertEquals(node, state.node);
+        assertEquals(0, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+        assertEquals(0, state.queue.size());
+        assertFalse(state.isQueueFull());
+        assertTrue(state.canServe());
+        assertFalse(state.hasRequests());
+        assertFalse(state.shouldSpawnArrival());
+
+        // TODO better test
     }
 
     @Test
@@ -183,7 +185,7 @@ public class TestSimulation {
         assertTrue(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
         sim.processNextEvent(); // Arrival
@@ -204,7 +206,7 @@ public class TestSimulation {
         assertTrue(sim.hasEnded()); // No more events
         assertFalse(criteria.shouldEnd(sim));
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
         sim.processNextEvent(); // Arrival
@@ -225,7 +227,7 @@ public class TestSimulation {
         assertTrue(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
@@ -247,7 +249,7 @@ public class TestSimulation {
         assertTrue(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
         sim.processNextEvent(); // Arrival
@@ -264,7 +266,7 @@ public class TestSimulation {
         assertTrue(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
@@ -286,7 +288,7 @@ public class TestSimulation {
         assertTrue(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertFalse(criteria.shouldEnd(sim));
         sim.processNextEvent(); // Arrival
@@ -321,7 +323,7 @@ public class TestSimulation {
         var fel = sim.getFutureEventList();
         assertEquals(0, fel.size());
 
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
         assertFalse(sim.hasEnded());
         assertEquals(0, sim.getEventsProcessed());
         assertEquals(0.0, sim.getTime(), DELTA);
@@ -334,7 +336,7 @@ public class TestSimulation {
         fel = sim.getFutureEventList();
         assertEquals(1, fel.size());
         assertEquals(Event.Type.ARRIVAL, fel.get(0).type);
-        assertEquals(node0, fel.get(0).node);
+        assertEquals(0, fel.get(0).nodeIndex);
         assertEquals(0.0, fel.get(0).time, DELTA);
 
         sim.processNextEvent(); // Arrival
@@ -350,7 +352,7 @@ public class TestSimulation {
         fel = sim.getFutureEventList();
         assertEquals(1, fel.size());
         assertEquals(Event.Type.DEPARTURE, fel.get(0).type);
-        assertEquals(node0, fel.get(0).node);
+        assertEquals(0, fel.get(0).nodeIndex);
         assertEquals(1.0, fel.get(0).time, DELTA);
 
         sim.processNextEvent(); // Departure Source
@@ -366,7 +368,7 @@ public class TestSimulation {
         fel = sim.getFutureEventList();
         assertEquals(1, fel.size());
         assertEquals(Event.Type.ARRIVAL, fel.get(0).type);
-        assertEquals(node1, fel.get(0).node);
+        assertEquals(1, fel.get(0).nodeIndex);
         assertEquals(1.0, fel.get(0).time, DELTA);
 
         sim.processNextEvent(); // Arrival Queue
@@ -382,7 +384,7 @@ public class TestSimulation {
         fel = sim.getFutureEventList();
         assertEquals(1, fel.size());
         assertEquals(Event.Type.DEPARTURE, fel.get(0).type);
-        assertEquals(node1, fel.get(0).node);
+        assertEquals(1, fel.get(0).nodeIndex);
         assertEquals(2.0, fel.get(0).time, DELTA);
 
         sim.processNextEvent(); // Departure Queue
@@ -402,7 +404,7 @@ public class TestSimulation {
         var result = sim.endSimulation();
         assertEquals(2.0, result.simulationTime, DELTA);
         assertEquals(sim.seed, result.seed);
-        assertEquals(elapsed * 1e-6, result.timeElapsedMS * 1e-6, diff);
+        assertEquals(elapsed * 1e-6, result.timeElapsedMS, diff);
         assertEquals(2, result.nodes.size());
         assertEquals(1, result.nodes.get(node0.name).numArrivals, DELTA);
         assertEquals(1, result.nodes.get(node0.name).numDepartures, DELTA);
@@ -414,12 +416,12 @@ public class TestSimulation {
     public void endSim() {
         var criteria = new EndCriteria.MaxDepartures(node0.name, 5);
         var sim = new Simulation(simpleNet, rigged, criteria);
-        sim.addArrival(node0);
-        sim.addArrival(node0);
-        sim.addArrival(node0);
-        sim.addArrival(node0);
-        sim.addArrival(node0);
-        sim.addArrival(node0);
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
+        sim.addToFel(Event.newArrival(0, sim.getTime()));
 
         while (!criteria.shouldEnd(sim)) {
             sim.processNextEvent();

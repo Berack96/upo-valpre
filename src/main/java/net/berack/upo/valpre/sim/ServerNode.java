@@ -9,6 +9,7 @@ import net.berack.upo.valpre.rand.Rng;
  */
 public class ServerNode {
     public final String name;
+    public final int maxQueue;
     public final int maxServers;
     public final int spawnArrivals;
     public final Distribution service;
@@ -89,6 +90,7 @@ public class ServerNode {
             spawnArrivals = 0;
 
         this.name = name;
+        this.maxQueue = 100; // TODO change to runtime
         this.maxServers = maxServers;
         this.spawnArrivals = spawnArrivals;
         this.service = service;
@@ -115,17 +117,6 @@ public class ServerNode {
      */
     public double getUnavailableTime(Rng rng) {
         return Distribution.getPositiveSample(this.unavailable, rng);
-    }
-
-    /**
-     * Determines if the node should spawn an arrival based on the number of
-     * arrivals.
-     * 
-     * @param numArrivals The number of arrivals to check against.
-     * @return True if the node should spawn an arrival, false otherwise.
-     */
-    public boolean shouldSpawnArrival(double numArrivals) {
-        return this.spawnArrivals > Math.max(0, numArrivals);
     }
 
     @Override
