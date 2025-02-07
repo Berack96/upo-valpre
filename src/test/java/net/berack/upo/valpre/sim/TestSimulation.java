@@ -582,4 +582,37 @@ public class TestSimulation {
         assertEquals(nodeStat.numDepartures / nodeStat.lastEventTime, nodeStat.throughput, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
     }
+
+    @Test
+    public void simulationDrop() {
+        var net = new Net();
+        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(new ServerNode.Builder("Queue", _ -> 2.0).queue(20).build());
+        net.addConnection(0, 1, 1.0);
+
+        var sim = new Simulation(net, rigged);
+        var result = sim.run();
+
+        var nodeStat = result.nodes.get("Source");
+        assertEquals(50, nodeStat.numArrivals, DELTA);
+        assertEquals(50, nodeStat.numDepartures, DELTA);
+        assertEquals(1.0, nodeStat.avgQueueLength, DELTA);
+        assertEquals(1.0, nodeStat.avgResponse, DELTA);
+        assertEquals(0.0, nodeStat.avgWaitTime, DELTA);
+        assertEquals(1.0, nodeStat.maxQueueLength, DELTA);
+        assertEquals(50.0, nodeStat.busyTime, DELTA);
+        assertEquals(50.0, nodeStat.lastEventTime, DELTA);
+        assertEquals(1.0, nodeStat.throughput, DELTA);
+        assertEquals(1.0, nodeStat.utilization, DELTA);
+        assertEquals(0.0, nodeStat.unavailable, DELTA);
+
+        nodeStat = result.nodes.get("Queue");
+        assertEquals(44, nodeStat.numArrivals, DELTA);
+        assertEquals(44, nodeStat.numDepartures, DELTA);
+        assertEquals(20.0, nodeStat.maxQueueLength, DELTA);
+        assertEquals(23.0227272, nodeStat.avgResponse, DELTA);
+        assertEquals(21.0227272, nodeStat.avgWaitTime, DELTA);
+        assertEquals(0.0, nodeStat.unavailable, DELTA);
+        assertEquals(result.simulationTime, nodeStat.lastEventTime, DELTA);
+    }
 }
