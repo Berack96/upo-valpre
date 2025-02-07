@@ -108,42 +108,82 @@ public class ServerNode {
          * @return The created sink node.
          */
         public Builder(String name, Distribution service) {
+            this.reset(name, service);
+        }
+
+        /**
+         * Reset the builder with the given name and distribution.
+         * 
+         * @param name    The name of the node.
+         * @param service The distribution of the service times.
+         * @return The builder itself.
+         */
+        public Builder reset(String name, Distribution service) {
             this.name = name;
             this.service = service;
             this.maxQueue = 100; // default value
             this.maxServers = 1;
             this.spawnArrivals = 0;
             this.unavailable = null;
+            return this;
         }
 
+        /**
+         * Set the maximum number of clients in the queue.
+         * 
+         * @param maxQueue The maximum number of clients in the queue.
+         * @return The builder itself.
+         */
         public Builder queue(int maxQueue) {
             this.maxQueue = maxQueue;
             return this;
         }
 
+        /**
+         * Set the maximum number of servers.
+         * 
+         * @param maxServers The maximum number of servers.
+         * @return The builder itself.
+         */
         public Builder servers(int maxServers) {
             this.maxServers = maxServers;
             return this;
         }
 
+        /**
+         * Set the number of arrivals to spawn.
+         * 
+         * @param spawnArrivals The number of arrivals to spawn.
+         * @return The builder itself.
+         */
         public Builder spawn(int spawnArrivals) {
             this.spawnArrivals = spawnArrivals;
             return this;
         }
 
+        /**
+         * Set the distribution of the unavailable times after service.
+         * 
+         * @param unavailable The distribution of the unavailable times after service.
+         * @return The builder itself.
+         */
         public Builder unavailable(Distribution unavailable) {
             this.unavailable = unavailable;
             return this;
         }
 
+        /**
+         * Build the node with the given parameters.
+         * 
+         * @return The created node.
+         */
         public ServerNode build() {
             return new ServerNode(name, maxServers, spawnArrivals, maxQueue, service, unavailable);
         }
 
         /**
          * Creates a source node with the given name and distribution.
-         * It swpawns infinite arrivals (Integer.MAX_VALUE) that are served by infinite
-         * servers (Integer.MAX_VALUE).
+         * It swpawns infinite arrivals (Integer.MAX_VALUE).
          * 
          * @param name         The name of the node.
          * @param distribution The distribution of the inter-arrival times.
@@ -155,7 +195,7 @@ public class ServerNode {
 
         /**
          * Creates a source node with the given name, distribution, and number of
-         * arrivals to spawn that are served by infinite servers (Integer.MAX_VALUE).
+         * arrivals to spawn.
          * 
          * @param name          The name of the node.
          * @param service       The distribution of the inter-arrival times.
@@ -181,7 +221,8 @@ public class ServerNode {
 
         /**
          * Creates a queue node with the given name, maximum number of servers, and
-         * distribution.
+         * distribution. It also has a distribution for the unavailable times after
+         * each service.
          * 
          * @param name        The name of the node.
          * @param maxServers  The maximum number of servers in the queue.
