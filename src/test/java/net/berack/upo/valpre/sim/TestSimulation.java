@@ -23,8 +23,8 @@ public class TestSimulation {
     private static final ServerNode node0;
     private static final ServerNode node1;
     static {
-        node0 = ServerNode.createLimitedSource("First", const1, 0);
-        node1 = ServerNode.createQueue("Second", 1, const1);
+        node0 = ServerNode.Builder.sourceLimited("First", 0, const1);
+        node1 = ServerNode.Builder.queue("Second", 1, const1);
 
         simpleNet = new Net();
         simpleNet.addNode(node0);
@@ -41,27 +41,27 @@ public class TestSimulation {
 
     @Test
     public void serverNode() {
-        var node = ServerNode.createQueue("Nodo", 0, const1);
+        var node = ServerNode.Builder.queue("Nodo", 0, const1);
         assertEquals("Nodo", node.name);
         assertEquals(1, node.maxServers);
         assertEquals(0, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
-        node = ServerNode.createQueue("Queue", 50, const1);
+        node = ServerNode.Builder.queue("Queue", 50, const1);
         assertEquals("Queue", node.name);
         assertEquals(50, node.maxServers);
         assertEquals(0, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
-        node = ServerNode.createSource("Source", const1);
+        node = ServerNode.Builder.source("Source", const1);
         assertEquals("Source", node.name);
-        assertEquals(Integer.MAX_VALUE, node.maxServers);
+        assertEquals(1, node.maxServers);
         assertEquals(Integer.MAX_VALUE, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
-        node = ServerNode.createLimitedSource("Source", const1, 50);
+        node = ServerNode.Builder.sourceLimited("Source", 50, const1);
         assertEquals("Source", node.name);
-        assertEquals(Integer.MAX_VALUE, node.maxServers);
+        assertEquals(1, node.maxServers);
         assertEquals(50, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
     }
@@ -93,7 +93,7 @@ public class TestSimulation {
         var net = new Net();
         assertEquals(0, net.size());
 
-        var node = ServerNode.createSource("First", const0);
+        var node = ServerNode.Builder.source("First", const0);
         var index = net.addNode(node);
         assertEquals(1, net.size());
         assertEquals(0, index);
@@ -101,7 +101,7 @@ public class TestSimulation {
         assertEquals(node, net.getNode("First"));
         assertEquals(index, net.getNodeIndex("First"));
 
-        var node1 = ServerNode.createQueue("Second", 1, const0);
+        var node1 = ServerNode.Builder.queue("Second", 1, const0);
         var index1 = net.addNode(node1);
         assertEquals(2, net.size());
         assertEquals(0, index);
@@ -126,7 +126,7 @@ public class TestSimulation {
         conn = net.getChildren(1);
         assertEquals(0, conn.size());
 
-        var node2 = ServerNode.createQueue("Third", 1, const0);
+        var node2 = ServerNode.Builder.queue("Third", 1, const0);
         net.addNode(node2);
         net.addConnection(0, 2, 1.0);
         conn = net.getChildren(0);
@@ -172,7 +172,104 @@ public class TestSimulation {
         assertFalse(state.hasRequests());
         assertFalse(state.shouldSpawnArrival());
 
-        // TODO better test
+        state.numServerBusy = 1;
+        assertEquals(1, state.numServerBusy);
+        assertFalse(state.canServe());
+        assertFalse(state.hasRequests());
+
+        state.numServerBusy = 0;
+        state.numServerUnavailable = 1;
+        assertEquals(1, state.numServerUnavailable);
+        assertFalse(state.canServe());
+        assertFalse(state.hasRequests());
+
+        state.queue.add(1.0);
+        assertEquals(1, state.queue.size());
+        assertTrue(state.hasRequests());
+        assertFalse(state.isQueueFull());
+
+        state.numServerUnavailable = 0;
+        state.numServerBusy = 0;
+        assertTrue(state.canServe());
+        assertTrue(state.hasRequests());
+        state.numServerBusy = 1;
+        state.queue.poll();
+        assertEquals(0, state.queue.size());
+        assertFalse(state.hasRequests());
+    }
+
+    @Test
+    public void nodeStatsUpdates() {
+        var net = new Net();
+        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(node1);
+        net.addConnection(0, 1, 1.0);
+
+        var state = new ServerNodeState(0, net);
+
+        var event = state.spawnArrivalIfPossilbe(0);
+        assertNotNull(event);
+        assertEquals(0, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.stats.numDepartures, DELTA);
+        assertEquals(0, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+        assertEquals(Event.Type.ARRIVAL, event.type);
+        assertEquals(0, event.nodeIndex);
+        state.updateArrival(event.time);
+        assertEquals(1, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.numServerBusy);
+
+        event = state.spawnDepartureIfPossible(event.time, rigged);
+        assertNotNull(event);
+        assertEquals(1, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.stats.numDepartures, DELTA);
+        assertEquals(1, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+        assertEquals(Event.Type.DEPARTURE, event.type);
+        assertEquals(0, event.nodeIndex);
+        state.updateDeparture(event.time);
+        assertEquals(1, state.stats.numArrivals, DELTA);
+        assertEquals(1, state.stats.numDepartures, DELTA);
+        assertEquals(0, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+
+        state = new ServerNodeState(1, net);
+        event = state.spawnArrivalIfPossilbe(0);
+        assertNull(event);
+        assertEquals(0, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.stats.numDepartures, DELTA);
+        assertEquals(0, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+        state.updateArrival(0);
+        assertEquals(1, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.numServerBusy);
+
+        event = state.spawnDepartureIfPossible(0, rigged);
+        assertNotNull(event);
+        assertEquals(1, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.stats.numDepartures, DELTA);
+        assertEquals(1, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+        assertEquals(Event.Type.DEPARTURE, event.type);
+        assertEquals(1, event.nodeIndex);
+        state.updateDeparture(event.time);
+        assertEquals(1, state.stats.numArrivals, DELTA);
+        assertEquals(1, state.stats.numDepartures, DELTA);
+        assertEquals(0, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+
+        event = state.spawnUnavailableIfPossible(0, rigged);
+        assertNull(event);
+
+        state = new ServerNodeState(0, net);
+        event = state.spawnArrivalToChild(0, rigged);
+        assertNotNull(event);
+        assertEquals(0, state.stats.numArrivals, DELTA);
+        assertEquals(0, state.stats.numDepartures, DELTA);
+        assertEquals(0, state.numServerBusy);
+        assertEquals(0, state.numServerUnavailable);
+        assertEquals(Event.Type.ARRIVAL, event.type);
+        assertEquals(1, event.nodeIndex);
     }
 
     @Test
@@ -431,13 +528,13 @@ public class TestSimulation {
         assertEquals(6, res.nodes.get(node0.name).numArrivals, DELTA);
         assertEquals(5, res.nodes.get(node0.name).numDepartures, DELTA);
         assertEquals(4, res.nodes.get(node1.name).numArrivals, DELTA);
-        assertEquals(0, res.nodes.get(node1.name).numDepartures, DELTA);
+        assertEquals(3, res.nodes.get(node1.name).numDepartures, DELTA);
     }
 
     @Test
     public void simulationStats() {
         var net = new Net();
-        net.addNode(ServerNode.createLimitedSource("Source", const1, 50));
+        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
 
         var sim = new Simulation(net, rigged);
         var result = sim.run();
@@ -454,7 +551,7 @@ public class TestSimulation {
         assertEquals(1.0, nodeStat.utilization, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
 
-        net.addNode(ServerNode.createQueue("Queue", 1, const1));
+        net.addNode(ServerNode.Builder.queue("Queue", 1, const1));
         net.addConnection(0, 1, 1.0);
 
         sim = new Simulation(net, rigged);

@@ -74,12 +74,12 @@ public class NetBuilderInteractive {
                 var limit = ask("Arrivals limit (0 for Int.Max): ", Integer::parseInt, 1);
                 if (limit <= 0)
                     limit = Integer.MAX_VALUE;
-                yield ServerNode.createLimitedSource(name, distribution, limit);
+                yield ServerNode.Builder.sourceLimited(name, limit, distribution);
             }
             case 2 -> {
                 var servers = ask("Number of servers: ", Integer::parseInt, 1);
                 var unavailable = askDistribution("Unavailable distribution");
-                yield ServerNode.createQueue(name, servers, distribution, unavailable);
+                yield ServerNode.Builder.queue(name, servers, distribution, unavailable);
             }
             default -> null;
         };

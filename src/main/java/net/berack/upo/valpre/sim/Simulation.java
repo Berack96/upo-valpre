@@ -97,8 +97,12 @@ public final class Simulation {
 
                 this.addToFel(state.spawnUnavailableIfPossible(time, this.rng));
                 this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
-                this.addToFel(state.spawnArrivalToChild(time, this.rng));
                 this.addToFel(state.spawnArrivalIfPossilbe(time));
+
+                // Spawn arrival to child node if queue is not full otherwise drop
+                var ev = state.spawnArrivalToChild(time, this.rng);
+                if (ev != null && !this.states[ev.nodeIndex].isQueueFull())
+                    this.addToFel(ev);
             }
         }
     }
