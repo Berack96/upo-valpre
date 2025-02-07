@@ -147,20 +147,6 @@ public final class Net implements Iterable<ServerNode> {
     }
 
     /**
-     * Get one of the child nodes from the parent specified.
-     * If the node has no child then null is returned.
-     * 
-     * @param parent the parent node
-     * @param rng    the random number generator used for getting one of the child
-     * @return the resultig node
-     */
-    public ServerNode getChildOf(ServerNode parent, Rng rng) {
-        var index = this.indices.get(parent);
-        index = this.getChildOf(index, rng);
-        return index < 0 ? null : this.servers.get(index);
-    }
-
-    /**
      * Get one of the child nodes from the parent specified. If the index is out of
      * bounds then an exception is thrown. If the node has no child then -1 is
      * returned.
@@ -178,18 +164,6 @@ public final class Net implements Iterable<ServerNode> {
                 return conn.index;
         }
         return -1;
-    }
-
-    /**
-     * Get a list of all the children of the parent.
-     * In the list there is the node and the weight associated with.
-     * 
-     * @param parent the parent node
-     * @return the list of children
-     */
-    public List<NetChild> getChildren(ServerNode parent) {
-        var index = this.indices.get(parent);
-        return this.getChildren(index);
     }
 
     /**

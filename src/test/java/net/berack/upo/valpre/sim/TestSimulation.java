@@ -2,6 +2,8 @@ package net.berack.upo.valpre.sim;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
@@ -152,20 +154,16 @@ public class TestSimulation {
 
         var sample = net.getChildOf(0, rigged);
         assertEquals(1, sample);
-        var sample2 = net.getChildOf(node, rigged);
-        assertEquals(node1, sample2);
+        assertEquals(node1, net.getNode(sample));
     }
 
     @Test
     public void nodeState() {
-        var net = new Net();
-        var node = ServerNode.createQueue("First", 1, const0);
-        net.addNode(node);
-        var state = new ServerNodeState(0, net);
+        var state = new ServerNodeState(1, simpleNet);
 
-        assertEquals(0, state.index);
-        assertEquals(net, state.net);
-        assertEquals(node, state.node);
+        assertEquals(1, state.index);
+        assertEquals(simpleNet, state.net);
+        assertEquals(node1, state.node);
         assertEquals(0, state.numServerBusy);
         assertEquals(0, state.numServerUnavailable);
         assertEquals(0, state.queue.size());
