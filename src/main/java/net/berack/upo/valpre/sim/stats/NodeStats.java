@@ -21,11 +21,11 @@ public class NodeStats implements Cloneable {
     public double avgQueueLength = 0.0d;
     public double unavailableTime = 0.0d;
     public double busyTime = 0.0d;
-    public double waitTime = 0.0d;
     public double responseTime = 0.0d;
     public double lastEventTime = 0.0d;
 
     // derived stats, you can calculate them even at the end
+    public double waitTime = 0.0d;
     public double avgWaitTime = 0.0d;
     public double avgResponse = 0.0d;
     public double throughput = 0.0d;
