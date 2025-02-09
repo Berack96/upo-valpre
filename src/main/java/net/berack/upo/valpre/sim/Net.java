@@ -17,8 +17,6 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import net.berack.upo.valpre.rand.Rng;
-
 /**
  * A class that represents a network of queues, each with its own servers.
  * The network in question is created by adding a node and then establishing
@@ -139,26 +137,6 @@ public final class Net implements Iterable<ServerNode> {
      */
     public ServerNode getNode(int index) {
         return this.servers.get(index);
-    }
-
-    /**
-     * Get one of the child nodes from the parent specified. If the index is out of
-     * bounds then an exception is thrown. If the node has no child then -1 is
-     * returned.
-     * 
-     * @param parent the parent node
-     * @param rng    the random number generator used for getting one of the child
-     * @throws IndexOutOfBoundsException If the index is not in the range
-     * @return the resultig node
-     */
-    public int getChildOf(int parent, Rng rng) {
-        var random = rng.random();
-        for (var conn : this.connections.get(parent)) {
-            random -= conn.weight;
-            if (random <= 0)
-                return conn.index;
-        }
-        return -1;
     }
 
     /**

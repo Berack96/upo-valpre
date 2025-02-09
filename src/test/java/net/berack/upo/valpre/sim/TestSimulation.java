@@ -121,7 +121,7 @@ public class TestSimulation {
         net.addConnection(0, 1, 1.0);
         var conn = net.getChildren(0);
         assertEquals(1, conn.size());
-        assertEquals(node1, conn.get(0).child);
+        assertEquals(1, conn.get(0).index);
         assertEquals(1.0, conn.get(0).weight, DELTA);
         conn = net.getChildren(1);
         assertEquals(0, conn.size());
@@ -131,8 +131,8 @@ public class TestSimulation {
         net.addConnection(0, 2, 1.0);
         conn = net.getChildren(0);
         assertEquals(2, conn.size());
-        assertEquals(node1, conn.get(0).child);
-        assertEquals(node2, conn.get(1).child);
+        assertEquals(1, conn.get(0).index);
+        assertEquals(2, conn.get(1).index);
         assertEquals(1.0, conn.get(0).weight, DELTA);
         assertEquals(1.0, conn.get(1).weight, DELTA);
         conn = net.getChildren(1);
@@ -143,18 +143,14 @@ public class TestSimulation {
         net.normalizeWeights();
         conn = net.getChildren(0);
         assertEquals(2, conn.size());
-        assertEquals(node1, conn.get(0).child);
-        assertEquals(node2, conn.get(1).child);
+        assertEquals(1, conn.get(0).index);
+        assertEquals(2, conn.get(1).index);
         assertEquals(0.5, conn.get(0).weight, DELTA);
         assertEquals(0.5, conn.get(1).weight, DELTA);
         conn = net.getChildren(1);
         assertEquals(0, conn.size());
         conn = net.getChildren(2);
         assertEquals(0, conn.size());
-
-        var sample = net.getChildOf(0, rigged);
-        assertEquals(1, sample);
-        assertEquals(node1, net.getNode(sample));
     }
 
     @Test
@@ -162,7 +158,6 @@ public class TestSimulation {
         var state = new ServerNodeState(1, simpleNet);
 
         assertEquals(1, state.index);
-        assertEquals(simpleNet, state.net);
         assertEquals(node1, state.node);
         assertEquals(0, state.numServerBusy);
         assertEquals(0, state.numServerUnavailable);

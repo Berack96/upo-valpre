@@ -24,10 +24,15 @@ public final class Simulation {
     private long eventProcessed = 0;
 
     /**
-     * Creates a new run of the simulation with the given nodes and random number
-     * generator.
+     * Creates a new simulation for the given network.
+     * The random number generator is used to generate random numbers for the
+     * simulation.
+     * The simulation will end when the given criteria are met.
+     * NOTE: the network passed is only used to create the initial states of the
+     * nodes, so the simulation is not affected by changes to the network after
+     * the creation of this object.
      * 
-     * @param states    The nodes in the network.
+     * @param net       The network to simulate.
      * @param rng       The random number generator to use.
      * @param criterias when the simulation has to end.
      */

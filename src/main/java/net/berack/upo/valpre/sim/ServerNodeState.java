@@ -1,8 +1,10 @@
 package net.berack.upo.valpre.sim;
 
 import java.util.ArrayDeque;
+import java.util.List;
 
 import net.berack.upo.valpre.rand.Rng;
+import net.berack.upo.valpre.sim.Net.Connection;
 import net.berack.upo.valpre.sim.stats.NodeStats;
 
 /**
@@ -17,9 +19,9 @@ public class ServerNodeState {
     public final ArrayDeque<Double> queue = new ArrayDeque<>();
 
     public final int index;
-    public final Net net;
     public final ServerNode node;
     public final NodeStats stats = new NodeStats();
+    public final List<Connection> children;
 
     /**
      * Create a new node state based on the index and the net passed as input
@@ -29,8 +31,8 @@ public class ServerNodeState {
      */
     ServerNodeState(int index, Net net) {
         this.index = index;
-        this.net = net;
         this.node = net.getNode(index);
+        this.children = net.getChildren(index);
     }
 
     /**
@@ -166,9 +168,14 @@ public class ServerNodeState {
      *         otherwise
      */
     public Event spawnArrivalToChild(double time, Rng rng) {
-        var childIndex = this.net.getChildOf(this.index, rng);
-        if (childIndex >= 0)
-            return Event.newArrival(childIndex, time);
+        if (!this.children.isEmpty()) {
+            var random = rng.random();
+            for (var child : this.children) {
+                random -= child.weight;
+                if (random <= 0)
+                    return Event.newArrival(child.index, time);
+            }
+        }
         return null;
     }
 }
