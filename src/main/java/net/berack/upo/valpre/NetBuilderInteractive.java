@@ -51,8 +51,12 @@ public class NetBuilderInteractive {
         for (var i = 0; i < this.net.size(); i++) {
             var name = this.net.getNode(i).name;
             builder.append(name).append(" -> ");
-            for (var connection : this.net.getChildren(i))
-                builder.append(connection.child.name).append("(").append(connection.weight).append("), ");
+
+            for (var connection : this.net.getChildren(i)) {
+                var child = this.net.getNode(connection.index);
+                builder.append(child.name).append("(").append(connection.weight).append("), ");
+            }
+
             builder.delete(builder.length() - 2, builder.length());
             builder.append("\n");
         }
