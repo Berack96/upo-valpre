@@ -91,12 +91,7 @@ public final class Net implements Iterable<ServerNode> {
             throw new IllegalArgumentException("Can't connect to a source node");
 
         var list = this.connections.get(parent);
-        for (var conn : list) {
-            if (conn.index == child) {
-                conn.weight = weight;
-                return;
-            }
-        }
+        list.removeIf(conn -> conn.index == child);
         list.add(new Connection(child, weight));
     }
 
@@ -174,11 +169,10 @@ public final class Net implements Iterable<ServerNode> {
      * @throws IndexOutOfBoundsException If the index is not in the range
      * @return the resultig node
      */
-    public List<NetChild> getChildren(int parent) {
-        var children = new ArrayList<NetChild>();
+    public List<Connection> getChildren(int parent) {
+        var children = new ArrayList<Connection>();
         for (var conn : this.connections.get(parent)) {
-            var child = this.servers.get(conn.index);
-            var listEntry = new NetChild(child, conn.weight);
+            var listEntry = new Connection(conn.index, conn.weight);
             children.add(listEntry);
         }
 
@@ -191,12 +185,21 @@ public final class Net implements Iterable<ServerNode> {
      * are not summing to 1 or are unsure.
      */
     public void normalizeWeights() {
-        for (var list : this.connections) {
+        for (var node = 0; node < this.connections.size(); node++) {
+            var list = this.connections.get(node);
+
             var sum = 0.0d;
             for (var conn : list)
                 sum += conn.weight;
-            for (var conn : list)
-                conn.weight /= sum;
+
+            var newOne = new Connection[list.size()];
+            for (var i = 0; i < list.size(); i++) {
+                var conn = list.get(i);
+                var newWeight = conn.weight / sum;
+                newOne[i] = new Connection(conn.index, newWeight);
+            }
+
+            this.connections.set(node, List.of(newOne));
         }
     }
 
@@ -269,27 +272,14 @@ public final class Net implements Iterable<ServerNode> {
     }
 
     /**
-     * A static inner class used to represent the connection between two nodes
+     * A Static inner class used to represent the connection of a node
      */
     public static class Connection {
         public final int index;
-        public double weight;
+        public final double weight;
 
         private Connection(int index, double weight) {
             this.index = index;
-            this.weight = weight;
-        }
-    }
-
-    /**
-     * A Static inner class used to represent the connection of a node
-     */
-    public static class NetChild {
-        public final ServerNode child;
-        public final double weight;
-
-        private NetChild(ServerNode child, double weight) {
-            this.child = child;
             this.weight = weight;
         }
     }
