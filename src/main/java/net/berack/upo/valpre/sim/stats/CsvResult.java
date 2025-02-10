@@ -44,7 +44,7 @@ public class CsvResult {
 
         try (var writer = new FileWriter(this.file)) {
             for (var result : results) {
-                for (var entry : result.nodes.entrySet()) {
+                for (var entry : result) {
                     builder.append(result.seed).append(",");
                     builder.append(entry.getKey()).append(",");
                     builder.append(CsvResult.statsToCSV(entry.getValue())).append('\n');

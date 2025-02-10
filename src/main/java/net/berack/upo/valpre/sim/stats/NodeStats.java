@@ -1,6 +1,7 @@
 package net.berack.upo.valpre.sim.stats;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -14,7 +15,11 @@ import org.apache.commons.math3.distribution.TDistribution;
  * statistics are updated during simulation events, such as arrivals and
  * departures, and can be used to analyze the net's behavior and performance.
  */
-public class NodeStats implements Cloneable {
+public class NodeStats implements Cloneable, Iterable<Double> {
+    private static final String[] ORDER_OF_APPLY = { "numArrivals", "numDepartures", "maxQueueLength", "avgQueueLength",
+            "avgWaitTime", "avgResponse", "busyTime", "waitTime", "unavailableTime", "responseTime", "lastEventTime",
+            "throughput", "utilization", "unavailable" };
+
     public double numArrivals = 0.0d;
     public double numDepartures = 0.0d;
     public double maxQueueLength = 0.0d;
@@ -95,8 +100,6 @@ public class NodeStats implements Cloneable {
 
     /**
      * Apply a function to ALL the stats in this class.
-     * The only stats that are not updated with this function are the one that
-     * starts with max, min (since they are special)
      * The input of the function is the current value of the stat.
      * 
      * @param func a function to apply
@@ -106,25 +109,40 @@ public class NodeStats implements Cloneable {
     }
 
     /**
-     * A function used to merge tree stats.
-     * The only stats that are not updated with this function are the one that
-     * starts with max, min (since they are special)
+     * A function used to merge two sets of statistics.
      * 
-     * @param other
-     * @param func
+     * @param other the other stats to merge
+     * @param func  the function to merge the stats
      */
     public NodeStats merge(NodeStats other, BiFunction<Double, Double, Double> func) {
         return NodeStats.operation(this, this, other, func);
     }
 
     @Override
-    protected NodeStats clone() {
+    public NodeStats clone() {
         try {
             return (NodeStats) super.clone();
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public Iterator<Double> iterator() {
+        return new Iterator<>() {
+            private int index = 0;
+
+            @Override
+            public boolean hasNext() {
+                return this.index < ORDER_OF_APPLY.length;
+            }
+
+            @Override
+            public Double next() {
+                return NodeStats.this.of(ORDER_OF_APPLY[this.index++]);
+            }
+        };
     }
 
     /**
@@ -159,9 +177,7 @@ public class NodeStats implements Cloneable {
      * @return the order of the stats
      */
     public static String[] getOrderOfApply() {
-        return new String[] { "numArrivals", "numDepartures", "avgQueueLength", "avgWaitTime", "avgResponse",
-                "busyTime", "waitTime", "unavailableTime", "responseTime", "lastEventTime", "throughput", "utilization",
-                "unavailable" };
+        return ORDER_OF_APPLY;
     }
 
     /**
@@ -185,7 +201,7 @@ public class NodeStats implements Cloneable {
             BiFunction<Double, Double, Double> func) {
         save.numArrivals = func.apply(val1.numArrivals, val2.numArrivals);
         save.numDepartures = func.apply(val1.numDepartures, val2.numDepartures);
-        // save.maxQueueLength = func.apply(val1.maxQueueLength, val2.maxQueueLength);
+        save.maxQueueLength = func.apply(val1.maxQueueLength, val2.maxQueueLength);
         save.avgQueueLength = func.apply(val1.avgQueueLength, val2.avgQueueLength);
         save.avgWaitTime = func.apply(val1.avgWaitTime, val2.avgWaitTime);
         save.avgResponse = func.apply(val1.avgResponse, val2.avgResponse);
@@ -264,11 +280,27 @@ public class NodeStats implements Cloneable {
          * @return the error of the values
          */
         public NodeStats calcError(double alpha) {
+            return this.calcError(new NodeStats().apply(_ -> alpha));
+        }
+
+        /**
+         * Calculates the error at the selected alpha level for each NodeStats.
+         * This method computes the error for the average and standard deviation values,
+         * considering the sample size and the confidence level (alpha).
+         * The result is adjusted using a t-distribution to account for the variability
+         * in smaller sample sizes.
+         * 
+         * @param distribution the t-distribution to use
+         * @param stdDev       the standard deviation of the values
+         * @param alpha        the alpha values for each statistics
+         * @return the error of the values
+         */
+        public NodeStats calcError(NodeStats alpha) {
             var n = this.stats.size();
             var distr = new TDistribution(null, n - 1);
-            var tValue = distr.inverseCumulativeProbability(alpha);
+            var tValue = alpha.clone().apply(a -> distr.inverseCumulativeProbability(a));
 
-            return this.stdDev().apply(std -> tValue * (std / Math.sqrt(n)));
+            return this.stdDev().merge(tValue, (std, t) -> t * (std / Math.sqrt(n)));
         }
 
         /**

@@ -2,13 +2,16 @@ package net.berack.upo.valpre;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import com.esotericsoftware.kryo.KryoException;
 
+import net.berack.upo.valpre.sim.ConfidenceIndices;
 import net.berack.upo.valpre.sim.EndCriteria;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.SimulationMultiple;
 import net.berack.upo.valpre.sim.stats.CsvResult;
+import net.berack.upo.valpre.sim.stats.NodeStats;
 
 /**
  * This class is responsible for running the simulation. It parses the arguments
@@ -21,6 +24,7 @@ public class SimulationBuilder {
     private boolean parallel;
     private Net net;
     private EndCriteria[] endCriteria;
+    private ConfidenceIndices confidences;
 
     /**
      * Create a new simulation for the given net.
@@ -32,6 +36,7 @@ public class SimulationBuilder {
         try {
             var file = Parameters.getFileOrExample(netFile);
             this.net = Net.load(file);
+            this.confidences = new ConfidenceIndices(this.net);
             file.close();
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("Net file needed!");
@@ -50,16 +55,17 @@ public class SimulationBuilder {
         if (net == null)
             throw new IllegalArgumentException("Net needed!");
         this.net = net;
+        this.confidences = new ConfidenceIndices(net);
     }
 
     /**
-     * Set the number of runs for the simulation.
+     * Set the maximum number of runs for the simulation.
      * 
      * @param runs the number of runs
      * @throws IllegalArgumentException if the runs are less than 1
      * @return this simulation
      */
-    public SimulationBuilder setRuns(int runs) {
+    public SimulationBuilder setMaxRuns(int runs) {
         if (runs <= 0)
             throw new IllegalArgumentException("Runs must be greater than 0!");
 
@@ -118,15 +124,45 @@ public class SimulationBuilder {
     }
 
     /**
+     * Add a confidence index for the given node and stat.
+     * The confidence index is used to determine when the simulation should stop.
+     * 
+     * 
+     * @param node       the node
+     * @param stat       the stat to calculate the confidence index for
+     * @param confidence the confidence level expressed as a percentage [0,1]
+     * @param relError   the relative error expressed as a percentage [0,1]
+     * @return this simulation
+     * @throws IllegalArgumentException if the node is invalid
+     * @throws IllegalArgumentException if the stat is invalid
+     * @throws IllegalArgumentException if the confidence is invalid
+     * @throws IllegalArgumentException if the relative error is invalid
+     */
+    public SimulationBuilder addConfidenceIndex(String node, String stat, double confidence, double relError) {
+        if (!List.of(NodeStats.getOrderOfApply()).contains(stat))
+            throw new IllegalArgumentException("Invalid statistic: " + stat);
+        if (confidence <= 0 || confidence > 1)
+            throw new IllegalArgumentException("Confidence must be between 0 and 1");
+        if (relError <= 0 || relError > 1)
+            throw new IllegalArgumentException("Relative error must be between 0 and 1");
+
+        var index = this.net.getNodeIndex(node);
+        if (index < 0)
+            throw new IllegalArgumentException("Invalid node: " + node);
+
+        this.confidences.add(index, stat, confidence, relError);
+        return this;
+    }
+
+    /**
      * Run the simulation with the given parameters.
      * At the end it prints the results and saves them to a CSV file if requested.
      * 
      * @throws InterruptedException If the simulation is interrupted.
-     * @throws ExecutionException   If the simulation fails.
-     * @throws KryoException        If the simulation fails.
-     * @throws IOException          If the simulation fails.
+     * @throws ExecutionException   If the simulation has an error.
+     * @throws IOException          If the CSV file has a problem.
      */
-    public void run() throws InterruptedException, ExecutionException, KryoException, IOException {
+    public void run() throws InterruptedException, ExecutionException, IOException {
         var nano = System.nanoTime();
         var sim = new SimulationMultiple(this.net);
         var summary = this.parallel

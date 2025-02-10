@@ -87,4 +87,50 @@ public class SimulationMultiple {
             return results;
         }
     }
+
+    /**
+     * Run the simulation multiple times with the given seed and end criteria. The
+     * simulation runs will stop when the relative error of the confidence index is
+     * less than the given value.
+     * The results are printed on the console.
+     * 
+     * @param seed      The seed to use for the random number generator.
+     * @param criterias The criteria to determine when to end the simulation. If
+     *                  null then the simulation will run until there are no more
+     *                  events.
+     * @return The statistics the network.
+     * @throws IllegalArgumentException If the confidence is not set.
+     */
+    public void runIncremental(long seed, int runs, ConfidenceIndices confidences, EndCriteria... criterias) {
+        if (confidences == null)
+            throw new IllegalArgumentException("Confidence must be not null");
+
+        var rng = new Rng(seed);
+        var results = new Result.Summary(rng.getSeed());
+        var output = new StringBuilder();
+        var stop = false;
+        for (int i = 0; !stop; i++) {
+            var sim = new Simulation(this.net, rng, criterias);
+            var result = sim.run();
+            results.add(result);
+
+            if (i > 0) {
+                output.setLength(0);
+                output.append(String.format("\rSimulation [%6d]: ", i + 1));
+
+                var errors = confidences.calcRelativeErrors(results);
+                stop = confidences.isOk(errors);
+
+                var errString = confidences.getErrors(errors);
+                var oneSting = String.join("], [", errString);
+
+                output.append('[').append(oneSting).append("]");
+                System.out.print(output);
+            }
+        }
+
+        System.out.println("\nSimulation ended");
+        System.out.println(results);
+    }
+
 }

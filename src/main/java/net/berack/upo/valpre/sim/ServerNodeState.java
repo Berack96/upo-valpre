@@ -168,13 +168,11 @@ public class ServerNodeState {
      *         otherwise
      */
     public Event spawnArrivalToChild(double time, Rng rng) {
-        if (!this.children.isEmpty()) {
-            var random = rng.random();
-            for (var child : this.children) {
-                random -= child.weight;
-                if (random <= 0)
-                    return Event.newArrival(child.index, time);
-            }
+        var random = rng.random();
+        for (var child : this.children) {
+            random -= child.weight;
+            if (random <= 0)
+                return Event.newArrival(child.index, time);
         }
         return null;
     }
