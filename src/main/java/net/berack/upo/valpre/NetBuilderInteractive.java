@@ -51,8 +51,12 @@ public class NetBuilderInteractive {
         for (var i = 0; i < this.net.size(); i++) {
             var name = this.net.getNode(i).name;
             builder.append(name).append(" -> ");
-            for (var connection : this.net.getChildren(i))
-                builder.append(connection.child.name).append("(").append(connection.weight).append("), ");
+
+            for (var connection : this.net.getChildren(i)) {
+                var child = this.net.getNode(connection.index);
+                builder.append(child.name).append("(").append(connection.weight).append("), ");
+            }
+
             builder.delete(builder.length() - 2, builder.length());
             builder.append("\n");
         }
@@ -74,12 +78,12 @@ public class NetBuilderInteractive {
                 var limit = ask("Arrivals limit (0 for Int.Max): ", Integer::parseInt, 1);
                 if (limit <= 0)
                     limit = Integer.MAX_VALUE;
-                yield ServerNode.createLimitedSource(name, distribution, limit);
+                yield ServerNode.Builder.sourceLimited(name, limit, distribution);
             }
             case 2 -> {
                 var servers = ask("Number of servers: ", Integer::parseInt, 1);
                 var unavailable = askDistribution("Unavailable distribution");
-                yield ServerNode.createQueue(name, servers, distribution, unavailable);
+                yield ServerNode.Builder.queue(name, servers, distribution, unavailable);
             }
             default -> null;
         };

@@ -17,8 +17,6 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import net.berack.upo.valpre.rand.Rng;
-
 /**
  * A class that represents a network of queues, each with its own servers.
  * The network in question is created by adding a node and then establishing
@@ -77,6 +75,7 @@ public final class Net implements Iterable<ServerNode> {
      * @param weight The probability of the child node.
      * @throws IndexOutOfBoundsException if one of the two nodes are not in the net
      * @throws IllegalArgumentException  if the weight is negative or zero
+     * @throws IllegalArgumentException  if the child is a source node
      */
     public void addConnection(int parent, int child, double weight) {
         if (weight <= 0)
@@ -86,13 +85,11 @@ public final class Net implements Iterable<ServerNode> {
         if (parent < 0 || child < 0 || parent > max || child > max)
             throw new IndexOutOfBoundsException("One of the nodes does not exist");
 
+        if (this.servers.get(child).spawnArrivals > 0)
+            throw new IllegalArgumentException("Can't connect to a source node");
+
         var list = this.connections.get(parent);
-        for (var conn : list) {
-            if (conn.index == child) {
-                conn.weight = weight;
-                return;
-            }
-        }
+        list.removeIf(conn -> conn.index == child);
         list.add(new Connection(child, weight));
     }
 
@@ -136,58 +133,13 @@ public final class Net implements Iterable<ServerNode> {
      * 
      * @param index the index of the node
      * @return the node
+     * @throws IndexOutOfBoundsException if the index is not in the range
      */
     public ServerNode getNode(int index) {
         return this.servers.get(index);
     }
 
     /**
-     * Get one of the child nodes from the parent specified.
-     * If the node has no child then null is returned.
-     * 
-     * @param parent the parent node
-     * @param rng    the random number generator used for getting one of the child
-     * @return the resultig node
-     */
-    public ServerNode getChildOf(ServerNode parent, Rng rng) {
-        var index = this.indices.get(parent);
-        return this.getChildOf(index, rng);
-    }
-
-    /**
-     * Get one of the child nodes from the parent specified. If the index is out of
-     * bounds then an exception is thrown. If the node has no child then null is
-     * returned;
-     * 
-     * @param parent the parent node
-     * @param rng    the random number generator used for getting one of the child
-     * @throws IndexOutOfBoundsException If the index is not in the range
-     * @return the resultig node
-     */
-    public ServerNode getChildOf(int parent, Rng rng) {
-        var random = rng.random();
-        for (var conn : this.connections.get(parent)) {
-            random -= conn.weight;
-            if (random <= 0) {
-                return this.servers.get(conn.index);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get a list of all the children of the parent.
-     * In the list there is the node and the weight associated with.
-     * 
-     * @param parent the parent node
-     * @return the list of children
-     */
-    public List<NetChild> getChildren(ServerNode parent) {
-        var index = this.indices.get(parent);
-        return this.getChildren(index);
-    }
-
-    /**
      * Get a list of all the children of the parent.
      * In the list there is the node and the weight associated with.
      * 
@@ -195,11 +147,10 @@ public final class Net implements Iterable<ServerNode> {
      * @throws IndexOutOfBoundsException If the index is not in the range
      * @return the resultig node
      */
-    public List<NetChild> getChildren(int parent) {
-        var children = new ArrayList<NetChild>();
+    public List<Connection> getChildren(int parent) {
+        var children = new ArrayList<Connection>();
         for (var conn : this.connections.get(parent)) {
-            var child = this.servers.get(conn.index);
-            var listEntry = new NetChild(child, conn.weight);
+            var listEntry = new Connection(conn.index, conn.weight);
             children.add(listEntry);
         }
 
@@ -212,13 +163,36 @@ public final class Net implements Iterable<ServerNode> {
      * are not summing to 1 or are unsure.
      */
     public void normalizeWeights() {
-        for (var list : this.connections) {
+        for (var node = 0; node < this.connections.size(); node++) {
+            var list = this.connections.get(node);
+
             var sum = 0.0d;
             for (var conn : list)
                 sum += conn.weight;
-            for (var conn : list)
-                conn.weight /= sum;
+
+            var newOne = new Connection[list.size()];
+            for (var i = 0; i < list.size(); i++) {
+                var conn = list.get(i);
+                var newWeight = conn.weight / sum;
+                newOne[i] = new Connection(conn.index, newWeight);
+            }
+
+            this.connections.set(node, List.of(newOne));
         }
+    }
+
+    /**
+     * Build the node states for the simulation.
+     * This method is used to create the state of each node in the network.
+     * Note that each call to this method will create a new state for each node.
+     * 
+     * @return the array of node states
+     */
+    public ServerNodeState[] buildNodeStates() {
+        var states = new ServerNodeState[this.servers.size()];
+        for (var i = 0; i < states.length; i++)
+            states[i] = new ServerNodeState(i, this);
+        return states;
     }
 
     /**
@@ -235,6 +209,11 @@ public final class Net implements Iterable<ServerNode> {
         try (var out = new Output(new FileOutputStream(file))) {
             kryo.writeClassAndObject(out, this);
         }
+    }
+
+    @Override
+    public Iterator<ServerNode> iterator() {
+        return this.servers.iterator();
     }
 
     /**
@@ -271,33 +250,15 @@ public final class Net implements Iterable<ServerNode> {
     }
 
     /**
-     * A static inner class used to represent the connection between two nodes
+     * A Static inner class used to represent the connection of a node
      */
     public static class Connection {
         public final int index;
-        public double weight;
+        public final double weight;
 
         private Connection(int index, double weight) {
             this.index = index;
             this.weight = weight;
         }
-    }
-
-    /**
-     * A Static inner class used to represent the connection of a node
-     */
-    public static class NetChild {
-        public final ServerNode child;
-        public final double weight;
-
-        private NetChild(ServerNode child, double weight) {
-            this.child = child;
-            this.weight = weight;
-        }
-    }
-
-    @Override
-    public Iterator<ServerNode> iterator() {
-        return this.servers.iterator();
     }
 }

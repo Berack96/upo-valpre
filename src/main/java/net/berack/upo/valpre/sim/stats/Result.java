@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Represents the statistics of a network simulation.
@@ -12,7 +13,7 @@ import java.util.Map;
  * nodes, including the number of arrivals and departures, the maximum queue
  * length, the busy time, and the response time.
  */
-public class Result {
+public class Result implements Iterable<Entry<String, NodeStats>> {
     public final Map<String, NodeStats> nodes;
     public final long seed;
     public final double simulationTime;
@@ -37,6 +38,11 @@ public class Result {
     @Override
     public String toString() {
         return buildPrintable(this.seed, this.simulationTime, this.timeElapsedMS, this.nodes);
+    }
+
+    @Override
+    public java.util.Iterator<Entry<String, NodeStats>> iterator() {
+        return this.nodes.entrySet().iterator();
     }
 
     private static String buildPrintable(long seed, double simTime, double timeMS, Map<String, NodeStats> nodes) {

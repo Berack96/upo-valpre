@@ -6,7 +6,7 @@ package net.berack.upo.valpre.sim;
 public class Event implements Comparable<Event> {
     public final double time;
     public final Type type;
-    public final ServerNode node;
+    public final int nodeIndex;
 
     /**
      * Create a new event.
@@ -15,10 +15,10 @@ public class Event implements Comparable<Event> {
      * @param node The node that the event is associated with.
      * @param time The time at which the event occurs.
      */
-    private Event(Type type, ServerNode node, double time) {
+    private Event(Type type, int node, double time) {
         this.type = type;
         this.time = time;
-        this.node = node;
+        this.nodeIndex = node;
     }
 
     @Override
@@ -37,7 +37,7 @@ public class Event implements Comparable<Event> {
      * @param time The time at which the event occurs.
      * @return The new event.
      */
-    public static Event newArrival(ServerNode node, double time) {
+    public static Event newArrival(int node, double time) {
         return new Event(Type.ARRIVAL, node, time);
     }
 
@@ -48,7 +48,7 @@ public class Event implements Comparable<Event> {
      * @param time The time at which the event occurs.
      * @return The new event.
      */
-    public static Event newDeparture(ServerNode node, double time) {
+    public static Event newDeparture(int node, double time) {
         return new Event(Type.DEPARTURE, node, time);
     }
 
@@ -59,7 +59,7 @@ public class Event implements Comparable<Event> {
      * @param time The time at which the event occurs.
      * @return The new event.
      */
-    public static Event newAvailable(ServerNode node, double time) {
+    public static Event newAvailable(int node, double time) {
         return new Event(Type.AVAILABLE, node, time);
     }
 

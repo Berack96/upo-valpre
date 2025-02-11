@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class is used to save the results of the simulation to a CSV file.
@@ -44,7 +43,7 @@ public class CsvResult {
 
         try (var writer = new FileWriter(this.file)) {
             for (var result : results) {
-                for (var entry : result.nodes.entrySet()) {
+                for (var entry : result) {
                     builder.append(result.seed).append(",");
                     builder.append(entry.getKey()).append(",");
                     builder.append(CsvResult.statsToCSV(entry.getValue())).append('\n');
@@ -75,8 +74,7 @@ public class CsvResult {
     public static List<Result> loadResults(InputStream input) {
         var results = new ArrayList<Result>();
         try (var scan = new Scanner(input)) {
-            var _ = scan.nextLine();
-
+            var headerOrder = CsvResult.extractHeaderPositions(scan.nextLine());
             var nodes = new HashMap<String, NodeStats>();
             var seed = 0L;
 
@@ -92,7 +90,7 @@ public class CsvResult {
                 seed = currentSeed;
 
                 var copy = Arrays.copyOfRange(line, 2, line.length);
-                var stats = CsvResult.statsFromCSV(copy);
+                var stats = CsvResult.statsFromCSV(headerOrder, copy);
                 nodes.put(node, stats);
             }
 
@@ -124,11 +122,50 @@ public class CsvResult {
      * @param values the values to convert
      * @return the statistics object
      */
-    public static NodeStats statsFromCSV(String[] values) {
-        var i = new AtomicInteger(0);
-        var stats = new NodeStats();
-        stats.apply(_ -> Double.parseDouble(values[i.getAndIncrement()]));
-        return stats;
+    public static NodeStats statsFromCSV(String[] header, String[] values) {
+        try {
+            var stats = new NodeStats();
+            var clazz = NodeStats.class;
+
+            for (var i = 0; i < values.length; i++) {
+                var value = Double.parseDouble(values[i]);
+                var field = header[i];
+                clazz.getField(field).setDouble(stats, value);
+            }
+            return stats;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error while parsing the CSV file " + e.getMessage());
+        }
     }
 
+    /**
+     * Extract the header order from the CSV file.
+     * 
+     * @param header the header to extract
+     * @return the positions of the header
+     * @throws IllegalArgumentException if the header is not correct
+     */
+    public static String[] extractHeaderPositions(String header) {
+        var splittedHeader = header.split(",");
+
+        var headerSeed = splittedHeader[0].equals("seed");
+        var headerNode = splittedHeader[1].equals("node");
+        if (!headerSeed || !headerNode)
+            throw new IllegalArgumentException("CSV file doesn't have the node or seed header");
+
+        var allStats = NodeStats.getOrderOfApply();
+        splittedHeader = Arrays.copyOfRange(splittedHeader, 2, splittedHeader.length);
+        if (splittedHeader.length > allStats.length)
+            throw new IllegalArgumentException("CSV file doesn't have the correct header [" + allStats + "]");
+
+        var order = new String[allStats.length];
+        var stats = Arrays.asList(allStats);
+        for (var i = 0; i < splittedHeader.length; i++) {
+            var stat = splittedHeader[i];
+            var index = stats.indexOf(stat);
+            order[i] = allStats[index];
+        }
+
+        return order;
+    }
 }

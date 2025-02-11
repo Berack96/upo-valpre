@@ -1,10 +1,8 @@
 package net.berack.upo.valpre.sim;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 
 import net.berack.upo.valpre.rand.Rng;
@@ -20,39 +18,42 @@ public final class Simulation {
     public final EndCriteria[] criterias;
     public final long seed;
 
-    private final Net net;
-    private final Map<String, NodeState> states;
+    private final ServerNodeState[] states;
     private final PriorityQueue<Event> fel;
     private double time = 0.0d;
     private long eventProcessed = 0;
 
     /**
-     * Creates a new run of the simulation with the given nodes and random number
-     * generator.
+     * Creates a new simulation for the given network.
+     * The random number generator is used to generate random numbers for the
+     * simulation.
+     * The simulation will end when the given criteria are met.
+     * NOTE: the network passed is only used to create the initial states of the
+     * nodes, so the simulation is not affected by changes to the network after
+     * the creation of this object.
      * 
-     * @param states    The nodes in the network.
+     * @param net       The network to simulate.
      * @param rng       The random number generator to use.
      * @param criterias when the simulation has to end.
      */
     public Simulation(Net net, Rng rng, EndCriteria... criterias) {
         this.timeStartedNano = System.nanoTime();
-        this.net = net;
-        this.states = new HashMap<>();
+        this.states = net.buildNodeStates();
         this.fel = new PriorityQueue<>();
         this.criterias = criterias;
         this.seed = rng.getSeed();
         this.rng = rng;
 
         boolean hasLimit = false;
-        for (var node : net) {
+        for (var state : this.states) {
+            var node = state.node;
+
             // check for ending criteria in simulation
             if (node.spawnArrivals != Integer.MAX_VALUE)
                 hasLimit = true;
 
             // Initial arrivals (if spawned)
-            this.states.put(node.name, new NodeState());
-            if (node.shouldSpawnArrival(0))
-                this.addArrival(node);
+            this.addToFel(state.spawnArrivalIfPossilbe(0.0d));
         }
 
         if (!hasLimit && (criterias == null || criterias.length == 0))
@@ -83,38 +84,30 @@ public final class Simulation {
         if (event == null)
             throw new NullPointerException("No more events to process!");
 
-        var node = event.node;
-        var state = this.states.get(node.name);
+        var state = this.states[event.nodeIndex];
         this.time = event.time;
         this.eventProcessed += 1;
 
         switch (event.type) {
             case AVAILABLE -> {
-                state.stats.updateTimes(this.time, state.numServerBusy, state.numServerUnavailable, node.maxServers);
-                state.numServerUnavailable--;
-                this.addDepartureIfPossible(node, state);
+                state.updateAvailable(time);
+                this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
             }
             case ARRIVAL -> {
-                state.queue.add(this.time);
-                state.stats.updateArrival(this.time, state.queue.size());
-                state.stats.updateTimes(this.time, state.numServerBusy, state.numServerUnavailable, node.maxServers);
-                this.addDepartureIfPossible(node, state);
+                state.updateArrival(time);
+                this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
             }
             case DEPARTURE -> {
-                var arrivalTime = state.queue.poll();
-                state.stats.updateDeparture(this.time, arrivalTime);
-                state.stats.updateTimes(this.time, state.numServerBusy, state.numServerUnavailable, node.maxServers);
-                state.numServerBusy--;
+                state.updateDeparture(time);
 
-                this.addUnavailableIfPossible(node, state);
-                this.addDepartureIfPossible(node, state);
+                this.addToFel(state.spawnUnavailableIfPossible(time, this.rng));
+                this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
+                this.addToFel(state.spawnArrivalIfPossilbe(time));
 
-                var next = this.net.getChildOf(node, this.rng);
-                if (next != null)
-                    this.addArrival(next);
-
-                if (node.shouldSpawnArrival(state.stats.numArrivals))
-                    this.addArrival(node);
+                // Spawn arrival to child node if queue is not full otherwise drop
+                var ev = state.spawnArrivalToChild(time, this.rng);
+                if (ev != null && !this.states[ev.nodeIndex].isQueueFull())
+                    this.addToFel(ev);
             }
         }
     }
@@ -127,8 +120,8 @@ public final class Simulation {
     public Result endSimulation() {
         var elapsed = System.nanoTime() - this.timeStartedNano;
         var nodes = new HashMap<String, NodeStats>();
-        for (var entry : this.states.entrySet())
-            nodes.put(entry.getKey(), entry.getValue().stats);
+        for (var state : this.states)
+            nodes.put(state.node.name, state.stats);
 
         return new Result(this.seed, this.time, elapsed * 1e-6, nodes);
     }
@@ -166,9 +159,10 @@ public final class Simulation {
      * 
      * @param node the name of the node
      * @return the node
+     * @throws NullPointerException if the node does not exist.
      */
     public ServerNode getNode(String node) {
-        return this.net.getNode(node);
+        return this.getNodeState(node).node;
     }
 
     /**
@@ -176,55 +170,26 @@ public final class Simulation {
      * 
      * @param node the name of the node
      * @return the current state of the node
+     * @throws NullPointerException if the node does not exist.
      */
-    public NodeState getNodeState(String node) {
-        return this.states.get(node);
-    }
-
-    /**
-     * Adds an arrival event to the future event list. The event is created based
-     * on the given node, and no delay is added.
-     * 
-     * @param node The node to create the event for.
-     */
-    public void addArrival(ServerNode node) {
-        var event = Event.newArrival(node, this.time);
-        fel.add(event);
-    }
-
-    /**
-     * Adds a departure event to the future event list. The event is created based
-     * on the given node, and the delay is determined by the node's service
-     * distribution.
-     * 
-     * @param node  The node to create the event for.
-     * @param state The current state of the node
-     */
-    public void addDepartureIfPossible(ServerNode node, NodeState state) {
-        var canServe = node.maxServers > state.numServerBusy + state.numServerUnavailable;
-        var hasRequests = state.queue.size() > state.numServerBusy;
-
-        if (canServe && hasRequests) {
-            state.numServerBusy++;
-            var delay = node.getServiceTime(this.rng);
-            var event = Event.newDeparture(node, this.time + delay);
-            fel.add(event);
+    public ServerNodeState getNodeState(String node) {
+        for (var state : this.states) {
+            if (state.node.name.equals(node))
+                return state;
         }
+
+        throw new NullPointerException("Node not found: " + node);
     }
 
     /**
-     * Add an AVAILABLE event in the case that the node has an unavailability time.
+     * Add an arrival event to the future event list if the event is not null,
+     * otherwise do nothing.
      * 
-     * @param node  The node to create the event for
-     * @param state The current state of the node
+     * @param e the event to add
      */
-    public void addUnavailableIfPossible(ServerNode node, NodeState state) {
-        var delay = node.getUnavailableTime(rng);
-        if (delay > 0) {
-            state.numServerUnavailable++;
-            var event = Event.newAvailable(node, time + delay);
-            this.fel.add(event);
-        }
+    public void addToFel(Event e) {
+        if (e != null)
+            this.fel.add(e);
     }
 
     /**
@@ -242,17 +207,5 @@ public final class Simulation {
             }
         }
         return false;
-    }
-
-    /**
-     * Represents a summary of the state of a server node in the network.
-     * It is used by the simulation to track the number of arrivals and departures,
-     * the maximum queue length, the busy time, and the response time.
-     */
-    public static class NodeState {
-        public int numServerBusy = 0;
-        public int numServerUnavailable = 0;
-        public final NodeStats stats = new NodeStats();
-        public final ArrayDeque<Double> queue = new ArrayDeque<>();
     }
 }
