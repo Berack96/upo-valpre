@@ -19,7 +19,7 @@ public class Main {
                     new SimulationBuilder(param.get("net"))
                             .setCsv(param.get("csv"))
                             .setMaxRuns(param.getOrDefault("runs", Integer::parseInt, 100))
-                            .setSeed(param.getOrDefault("seed", Long::parseLong, 2007539552L))
+                            .setSeed(param.getOrDefault("seed", Long::parseLong, 0L))
                             .setParallel(param.get("p") != null)
                             .parseEndCriteria(param.get("end"))
                             .parseConfidenceIndices(param.get("i"))
