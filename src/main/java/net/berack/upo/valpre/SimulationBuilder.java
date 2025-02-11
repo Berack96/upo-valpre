@@ -19,13 +19,13 @@ import net.berack.upo.valpre.sim.stats.CsvResult;
  * and runs the simulation with the given parameters.
  */
 public class SimulationBuilder {
-    private String csv;
-    private int runs;
-    private long seed;
-    private Net net;
-    private EndCriteria[] endCriteria;
-    private ConfidenceIndices confidences;
+    private String csv = null;
+    private int runs = 1;
+    private long seed = 0;
+    private EndCriteria[] endCriteria = new EndCriteria[0];
     private Type type = Type.Normal;
+    private Net net;
+    private ConfidenceIndices confidences;
 
     /**
      * Create a new simulation for the given net.
@@ -93,7 +93,7 @@ public class SimulationBuilder {
      * @return this simulation
      */
     public SimulationBuilder setParallel(boolean parallel) {
-        if (parallel && !this.confidences.isEmpty())
+        if (parallel && this.confidences.isEmpty())
             this.type = Type.Parallel;
         return this;
     }
@@ -142,10 +142,8 @@ public class SimulationBuilder {
      * @throws IllegalArgumentException If one of the criteria is not valid.
      */
     public SimulationBuilder parseEndCriteria(String criterias) {
-        if (criterias == null || criterias.isEmpty()) {
-            this.endCriteria = new EndCriteria[0];
+        if (criterias == null || criterias.isEmpty())
             return this;
-        }
 
         var criteria = criterias.split(";");
         this.endCriteria = new EndCriteria[criteria.length];
@@ -170,7 +168,6 @@ public class SimulationBuilder {
     /**
      * Add a confidence index for the given node and stat.
      * The confidence index is used to determine when the simulation should stop.
-     * 
      * 
      * @param node       the node
      * @param stat       the stat to calculate the confidence index for
