@@ -7,6 +7,9 @@ import com.esotericsoftware.kryo.KryoException;
 
 import net.berack.upo.valpre.sim.ConfidenceIndices;
 import net.berack.upo.valpre.sim.EndCriteria;
+import net.berack.upo.valpre.sim.EndCriteria.MaxArrivals;
+import net.berack.upo.valpre.sim.EndCriteria.MaxDepartures;
+import net.berack.upo.valpre.sim.EndCriteria.MaxTime;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.SimulationMultiple;
 import net.berack.upo.valpre.sim.stats.CsvResult;
@@ -119,6 +122,48 @@ public class SimulationBuilder {
         if (criterias == null)
             throw new IllegalArgumentException("End criteria cannot be null!");
         this.endCriteria = criterias;
+        return this;
+    }
+
+    /**
+     * Set the end criteria for the simulation.
+     * Parses the given string to create an array of end criteria.
+     * The string passed must be in the following format:
+     * [criteria1];[criteria2];...;[criteriaN]
+     * 
+     * and each criteria must be in the following format:
+     * ClassName:param1,param2,...,paramN
+     * 
+     * If the string is empty or null, no criteria are set.
+     * If one of the criteria is not valid, an exception is thrown.
+     * 
+     * @param criterias The string to parse.
+     * @return this builder
+     * @throws IllegalArgumentException If one of the criteria is not valid.
+     */
+    public SimulationBuilder parseEndCriteria(String criterias) {
+        if (criterias == null || criterias.isEmpty()) {
+            this.endCriteria = new EndCriteria[0];
+            return this;
+        }
+
+        var criteria = criterias.split(";");
+        this.endCriteria = new EndCriteria[criteria.length];
+        for (int i = 0; i < criteria.length; i++) {
+            var current = criteria[i].substring(1, criteria[i].length() - 1); // Remove the brackets
+            var parts = current.split(":");
+            if (parts.length != 2)
+                throw new IllegalArgumentException("Invalid criteria: " + current);
+
+            var className = parts[0];
+            var params = parts[1].split(",");
+            this.endCriteria[i] = switch (className) {
+                case "MaxArrivals" -> new MaxArrivals(params[0], Integer.parseInt(params[1]));
+                case "MaxDepartures" -> new MaxDepartures(params[0], Integer.parseInt(params[1]));
+                case "MaxTime" -> new MaxTime(Double.parseDouble(params[0]));
+                default -> throw new IllegalArgumentException("Invalid criteria: " + current);
+            };
+        }
         return this;
     }
 

@@ -5,8 +5,6 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import net.berack.upo.valpre.sim.EndCriteria;
-
 public class Main {
     public static void main(String[] args) {
         if (args.length == 0)
@@ -23,7 +21,7 @@ public class Main {
                             .setMaxRuns(param.getOrDefault("runs", Integer::parseInt, 100))
                             .setSeed(param.getOrDefault("seed", Long::parseLong, 2007539552L))
                             .setParallel(param.get("p") != null)
-                            .setEndCriteria(EndCriteria.parse(param.get("end")))
+                            .parseEndCriteria(param.get("end"))
                             .parseConfidenceIndices(param.get("i"))
                             .run();
                 }
