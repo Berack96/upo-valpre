@@ -24,6 +24,7 @@ public class Main {
                             .setSeed(param.getOrDefault("seed", Long::parseLong, 2007539552L))
                             .setParallel(param.get("p") != null)
                             .setEndCriteria(EndCriteria.parse(param.get("end")))
+                            .parseConfidenceIndices(param.get("i"))
                             .run();
                 }
                 case "plot" -> {
@@ -58,6 +59,7 @@ public class Main {
         arguments.put("net", true);
         arguments.put("end", true);
         arguments.put("csv", true);
+        arguments.put("i", true);
 
         var descriptions = new HashMap<String, String>();
         descriptions.put("p", "Add this if you want the simulation to use threads (one each run).");
@@ -65,6 +67,8 @@ public class Main {
         descriptions.put("runs", "How many runs the simulator should run.");
         descriptions.put("end", "When the simulation should end. Format is [ClassName:param1,..,paramN];[..]");
         descriptions.put("net", "The file net to use. Use example1.net or example2.net for the provided ones.");
+        descriptions.put("i", "The confidence indices to use for the simulation. If active then p is ignored."
+                + "Format is [node:stat:confidence:relativeError];[..]");
 
         var csvDesc = switch (program) {
             case "simulation" -> "The filename for saving every run statistics.";
@@ -85,7 +89,8 @@ public class Main {
             var name = new File(uri).getName();
             System.out.println(message);
             System.out.println("Usage: java -jar " + name + ".jar [simulation|plot|net] [args]");
-            System.out.println("simulation args: -net <net> -csv <csv> [-runs <runs>] [-seed <seed>] [-p]");
+            System.out.println("simulation args: -net <net> [-csv <csv>] [-runs <runs>] [-seed <seed>]"
+                    + "[-p] [-end <end>] [-i <indices>]");
             System.out.println("plot args: -csv <csv>");
             System.out.println("net args: none");
             System.exit(1);

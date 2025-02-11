@@ -16,6 +16,7 @@ public class ConfidenceIndices {
     private final String[] nodes;
     private final NodeStats[] confidences;
     private final NodeStats[] relativeErrors;
+    private boolean isEmpty = true;
 
     /**
      * Create a new confidence indices object for the given network.
@@ -37,6 +38,15 @@ public class ConfidenceIndices {
     }
 
     /**
+     * Get the number of confidence indices added to the simulation.
+     * 
+     * @return the number of confidence indices
+     */
+    public boolean isEmpty() {
+        return this.isEmpty;
+    }
+
+    /**
      * Add a confidence index to the simulation. The simulation will stop when the
      * relative error of the confidence index is less than the given value.
      * 
@@ -44,15 +54,24 @@ public class ConfidenceIndices {
      * @param stat       The statistic to calculate the confidence index for.
      * @param confidence The confidence level of the confidence index.
      * @param relError   The relative error of the confidence index.
+     * @throws IllegalArgumentException If the node is invalid, the confidence is
+     *                                  not between 0 and 1, or the relative error
+     *                                  is not between 0 and 1.
+     * @throws IllegalArgumentException If the statistic is invalid.
      */
     public void add(int node, String stat, double confidence, double relError) {
         if (node < 0 || node >= this.nodes.length)
             throw new IllegalArgumentException("Invalid node: " + node);
+        if (confidence <= 0 || confidence > 1)
+            throw new IllegalArgumentException("Confidence must be between 0 and 1");
+        if (relError <= 0 || relError > 1)
+            throw new IllegalArgumentException("Relative error must be between 0 and 1");
 
         try {
             Field field = NodeStats.class.getField(stat);
             field.set(this.confidences[node], confidence);
             field.set(this.relativeErrors[node], relError);
+            this.isEmpty = false;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid statistic: " + stat);
         }
@@ -94,7 +113,7 @@ public class ConfidenceIndices {
 
             error.merge(relError, (err, rel) -> err - rel);
             for (var value : error)
-                if (value > 0)
+                if (!value.isInfinite() && !value.isNaN() && value > 0)
                     return false;
         }
 
@@ -110,20 +129,19 @@ public class ConfidenceIndices {
      * @param errors the relative errors of the statistics
      * @return the errors of the statistics
      */
-    public String[] getErrors(NodeStats[] errors) {
+    public String[] getIndices(NodeStats[] errors) {
         var statistics = NodeStats.getOrderOfApply();
         var retValues = new ArrayList<String>();
 
         for (var i = 0; i < this.relativeErrors.length; i++) {
             var error = errors[i].clone();
-            var relError = this.relativeErrors[i];
-            error.merge(relError, (err, rel) -> err - rel);
 
-            var j = 0;
-            for (var value : error) {
-                if (value > 0)
-                    retValues.add("%s:%s=%0.3f".formatted(this.nodes[i], statistics[j], value));
-                j += 1;
+            for (var stat : statistics) {
+                var err = error.of(stat);
+                if (!Double.isFinite(err))
+                    continue;
+
+                retValues.add("%s:%s=%.3f".formatted(this.nodes[i], stat, err));
             }
         }
 

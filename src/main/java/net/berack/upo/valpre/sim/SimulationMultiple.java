@@ -101,11 +101,11 @@ public class SimulationMultiple {
      * @return The statistics the network.
      * @throws IllegalArgumentException If the confidence is not set.
      */
-    public void runIncremental(long seed, int runs, ConfidenceIndices confidences, EndCriteria... criterias) {
+    public Result.Summary runIncremental(long seed, int runs, ConfidenceIndices confidences, EndCriteria... criterias) {
         if (confidences == null)
             throw new IllegalArgumentException("Confidence must be not null");
 
-        var rng = new Rng(seed);
+        var rng = new Rng(seed); // Only one RNG for all the simulations
         var results = new Result.Summary(rng.getSeed());
         var output = new StringBuilder();
         var stop = false;
@@ -121,7 +121,7 @@ public class SimulationMultiple {
                 var errors = confidences.calcRelativeErrors(results);
                 stop = confidences.isOk(errors);
 
-                var errString = confidences.getErrors(errors);
+                var errString = confidences.getIndices(errors);
                 var oneSting = String.join("], [", errString);
 
                 output.append('[').append(oneSting).append("]");
@@ -129,8 +129,8 @@ public class SimulationMultiple {
             }
         }
 
-        System.out.println("\nSimulation ended");
-        System.out.println(results);
+        System.out.println(); // remove last printed line
+        return results;
     }
 
 }

@@ -2,7 +2,6 @@ package net.berack.upo.valpre;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import com.esotericsoftware.kryo.KryoException;
 
@@ -11,7 +10,6 @@ import net.berack.upo.valpre.sim.EndCriteria;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.SimulationMultiple;
 import net.berack.upo.valpre.sim.stats.CsvResult;
-import net.berack.upo.valpre.sim.stats.NodeStats;
 
 /**
  * This class is responsible for running the simulation. It parses the arguments
@@ -21,10 +19,10 @@ public class SimulationBuilder {
     private String csv;
     private int runs;
     private long seed;
-    private boolean parallel;
     private Net net;
     private EndCriteria[] endCriteria;
     private ConfidenceIndices confidences;
+    private Type type = Type.Normal;
 
     /**
      * Create a new simulation for the given net.
@@ -92,7 +90,8 @@ public class SimulationBuilder {
      * @return this simulation
      */
     public SimulationBuilder setParallel(boolean parallel) {
-        this.parallel = parallel;
+        if (parallel && !this.confidences.isEmpty())
+            this.type = Type.Parallel;
         return this;
     }
 
@@ -133,24 +132,51 @@ public class SimulationBuilder {
      * @param confidence the confidence level expressed as a percentage [0,1]
      * @param relError   the relative error expressed as a percentage [0,1]
      * @return this simulation
-     * @throws IllegalArgumentException if the node is invalid
-     * @throws IllegalArgumentException if the stat is invalid
-     * @throws IllegalArgumentException if the confidence is invalid
-     * @throws IllegalArgumentException if the relative error is invalid
+     * @throws IllegalArgumentException if any of the input parameters is invalid
      */
     public SimulationBuilder addConfidenceIndex(String node, String stat, double confidence, double relError) {
-        if (!List.of(NodeStats.getOrderOfApply()).contains(stat))
-            throw new IllegalArgumentException("Invalid statistic: " + stat);
-        if (confidence <= 0 || confidence > 1)
-            throw new IllegalArgumentException("Confidence must be between 0 and 1");
-        if (relError <= 0 || relError > 1)
-            throw new IllegalArgumentException("Relative error must be between 0 and 1");
-
         var index = this.net.getNodeIndex(node);
         if (index < 0)
             throw new IllegalArgumentException("Invalid node: " + node);
 
         this.confidences.add(index, stat, confidence, relError);
+        this.type = Type.Incremental;
+        return this;
+    }
+
+    /**
+     * Parse the confidence indices from a string and add them to the simulation.
+     * If the string is null then nothing is done and the builder is returned.
+     * The string must be in the following format:
+     * "[node1:stat1=confidence1:relError1],..,[nodeN:statN=confidenceN:relErrorN]".
+     * 
+     * @param indices the indices to parse
+     * @return this simulation
+     * @throws IllegalArgumentException if indices are not in the correct format
+     * @throws IllegalArgumentException if the values are invalid
+     */
+    public SimulationBuilder parseConfidenceIndices(String indices) {
+        if (indices == null)
+            return this;
+
+        for (var index : indices.split(",")) {
+            var parts = index.split("=");
+            if (parts.length != 2)
+                throw new IllegalArgumentException("Invalid confidence index: " + index);
+            var first = parts[0].split(":");
+            if (first.length != 2)
+                throw new IllegalArgumentException("Invalid confidence index: " + index);
+            var second = parts[1].split(":");
+            if (second.length != 2)
+                throw new IllegalArgumentException("Invalid confidence index: " + index);
+
+            var node = first[0].substring(1);
+            var stat = first[1];
+            var confidence = Double.parseDouble(second[0]);
+            var relError = Double.parseDouble(second[1].substring(0, second[1].length() - 1));
+            this.addConfidenceIndex(node, stat, confidence, relError);
+        }
+
         return this;
     }
 
@@ -165,9 +191,11 @@ public class SimulationBuilder {
     public void run() throws InterruptedException, ExecutionException, IOException {
         var nano = System.nanoTime();
         var sim = new SimulationMultiple(this.net);
-        var summary = this.parallel
-                ? sim.runParallel(this.seed, this.runs, this.endCriteria)
-                : sim.run(this.seed, this.runs, this.endCriteria);
+        var summary = switch (this.type) {
+            case Incremental -> sim.runIncremental(this.seed, this.runs, this.confidences, this.endCriteria);
+            case Parallel -> sim.runParallel(this.seed, this.runs, this.endCriteria);
+            case Normal -> sim.run(this.seed, this.runs, this.endCriteria);
+        };
         nano = System.nanoTime() - nano;
 
         System.out.print(summary);
@@ -177,5 +205,12 @@ public class SimulationBuilder {
             new CsvResult(this.csv).saveResults(summary.getRuns());
             System.out.println("Data saved to " + this.csv);
         }
+    }
+
+    /**
+     * Inner class to handle the type of simulation.
+     */
+    private static enum Type {
+        Incremental, Parallel, Normal
     }
 }
