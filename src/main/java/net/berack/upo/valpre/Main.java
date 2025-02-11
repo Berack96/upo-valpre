@@ -85,7 +85,7 @@ public class Main {
         try {
             var uri = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI();
             var name = new File(uri).getName();
-            System.out.println(message);
+            System.err.println(message);
             System.out.println("Usage: java -jar " + name + ".jar [simulation|plot|net] [args]");
             System.out.println("simulation args: -net <net> [-csv <csv>] [-runs <runs>] [-seed <seed>]"
                     + "[-p] [-end <end>] [-i <indices>]");
