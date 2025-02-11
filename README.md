@@ -5,7 +5,9 @@ Il simulatore è iniziato con il lavoro trovato sul libro di testo [Discrete-Eve
 
 Il risultato è la creazione in una libreria per la simulazione di eventi discreti nella quale si può scegliera la topologia e la quantità di nodi nella rete da simulare.
 
-Per fare ciò si può usare il JAR risultante che si trova nelle [Releases](https://github.com/Berack96/upo-valpre/releases).
+> [!IMPORTANT]
+> Il JAR risultante che si trova nelle [Releases](https://github.com/Berack96/upo-valpre/releases).\
+> La versione di Java usata è la 23 (precisamente la [23.0.1](https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html)).
 
 ### Comandi Jar
 
@@ -24,7 +26,7 @@ Esistono vari tipi di argomenti per scegliere come fare la simulazione:
   * `-end <criteria>` per scegliere quando la simulazione finisce nel caso non ci siano dei source limitati nella creazione di arrivi. La tipologia di fine simulazione la si può trovare dentro `EndCriteria` (ovvero MaxArrivals, MaxDepartures, MaxTime) e la formattazione da usare per passare il parametro è la seguente:\
   **\[Tipo1:param1,..,paramN\];\[..\];\[TipoN:param1,..,paramN\]**
 * `java -jar upo-valpre.jar plot -csv <file>`\
-Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:
+Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:\
 ![1738603552417](image/README/1738603552417.png)
 
 Esistono dei file prefatti per vedere eventuali simulazioni che, nel caso vengano passati come parametri, automaticamente vengono usati:
