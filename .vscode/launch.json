@@ -37,7 +37,7 @@
             "name": "Run10",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net example1.net -runs 10 -seed 2007539552L"
+            "args": "simulation -net example1.net -runs 10 -seed 2007539552"
         },
         {
             "type": "java",
