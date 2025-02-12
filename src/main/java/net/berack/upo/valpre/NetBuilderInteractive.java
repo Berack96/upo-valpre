@@ -1,20 +1,47 @@
 package net.berack.upo.valpre;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Scanner;
 import java.util.function.Function;
 import net.berack.upo.valpre.rand.Distribution;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.ServerNode;
 
+/**
+ * Interactive net builder. This class allows the user to build a net by adding
+ * nodes and connections. The user can also save the net to a file.
+ */
 public class NetBuilderInteractive {
 
     private final Net net = new Net();
+    private final PrintStream out;
+    private final Scanner scanner;
+
+    /**
+     * Create a new interactive net builder. Uses System.in and System.out.
+     */
+    public NetBuilderInteractive() {
+        this(System.out, System.in);
+    }
+
+    /**
+     * Create a new interactive net builder.
+     * 
+     * @param out the output stream
+     * @param in  the input stream
+     */
+    public NetBuilderInteractive(PrintStream out, InputStream in) {
+        this.out = out;
+        this.scanner = new Scanner(in);
+    }
 
     /**
      * Run the interactive net builder.
      * 
      * @param args the arguments
      */
-    public void run() {
+    public Net run() {
         while (true) {
             try {
                 var choice = choose("Choose the next step to do:",
@@ -32,9 +59,12 @@ public class NetBuilderInteractive {
                         var targetNode = this.net.getNode(target);
                         this.net.addConnection(sourceNode, targetNode, weight);
                     }
-                    case 3 -> this.printNodes();
+                    case 3 -> this.out.println(this.net);
                     case 4 -> this.net.save(ask("Enter the filename: "));
-                    case 5 -> System.exit(0);
+                    default -> {
+                        this.scanner.close();
+                        return this.net;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -43,33 +73,12 @@ public class NetBuilderInteractive {
     }
 
     /**
-     * Print the nodes in the net.
-     */
-    private void printNodes() {
-        var builder = new StringBuilder();
-        builder.append("Nodes:\n");
-        for (var i = 0; i < this.net.size(); i++) {
-            var name = this.net.getNode(i).name;
-            builder.append(name).append(" -> ");
-
-            for (var connection : this.net.getChildren(i)) {
-                var child = this.net.getNode(connection.index);
-                builder.append(child.name).append("(").append(connection.weight).append("), ");
-            }
-
-            builder.delete(builder.length() - 2, builder.length());
-            builder.append("\n");
-        }
-        System.out.print(builder.toString());
-    }
-
-    /**
      * Build a node.
      * 
      * @return the node
      */
     private ServerNode buildNode() {
-        var choice = choose("Choose the type of node to create:", "Source", "Queue");
+        var choice = choose("Choose the type of node to create:", "Source", "Queue", "Queue with unavailable time");
         var name = ask("Node name: ");
         var distribution = askDistribution("Service distribution");
 
@@ -81,6 +90,10 @@ public class NetBuilderInteractive {
                 yield ServerNode.Builder.sourceLimited(name, limit, distribution);
             }
             case 2 -> {
+                var servers = ask("Number of servers: ", Integer::parseInt, 1);
+                yield ServerNode.Builder.queue(name, servers, distribution, null);
+            }
+            case 3 -> {
                 var servers = ask("Number of servers: ", Integer::parseInt, 1);
                 var unavailable = askDistribution("Unavailable distribution");
                 yield ServerNode.Builder.queue(name, servers, distribution, unavailable);
@@ -94,7 +107,7 @@ public class NetBuilderInteractive {
      * 
      * @return the distribution
      */
-    public static Distribution askDistribution(String ask) {
+    private Distribution askDistribution(String ask) {
         var choice = choose(ask + ":", "Exponential", "Uniform", "Erlang",
                 "UnavailableTime", "Normal", "NormalBoxMuller", "None");
 
@@ -138,7 +151,7 @@ public class NetBuilderInteractive {
      * @param ask the question to ask
      * @return the answer
      */
-    private static String ask(String ask) {
+    private String ask(String ask) {
         return ask(ask, Function.identity(), "");
     }
 
@@ -150,13 +163,13 @@ public class NetBuilderInteractive {
      * @param defaultValue the default value
      * @return the answer
      */
-    private static <T> T ask(String ask, Function<String, T> parser, T defaultValue) {
-        System.out.print(ask);
+    private <T> T ask(String ask, Function<String, T> parser, T defaultValue) {
+        this.out.print(ask);
         try {
-            var line = System.console().readLine();
+            var line = this.scanner.nextLine();
             return parser.apply(line);
         } catch (Exception e) {
-            System.out.println("Invalid input: " + e.getMessage());
+            this.out.println("Invalid input: " + e.getMessage());
             return defaultValue;
         }
     }
@@ -168,7 +181,7 @@ public class NetBuilderInteractive {
      * @param options the options to choose from
      * @return the choice
      */
-    private static int choose(String ask, String... options) {
+    private int choose(String ask, String... options) {
         var builder = new StringBuilder();
         builder.append(ask).append("\n");
         for (int i = 0; i < options.length; i++) {

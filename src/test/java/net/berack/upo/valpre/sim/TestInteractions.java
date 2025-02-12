@@ -2,8 +2,14 @@ package net.berack.upo.valpre.sim;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.List;
+
 import org.junit.Test;
 
+import net.berack.upo.valpre.NetBuilderInteractive;
 import net.berack.upo.valpre.rand.Distribution;
 
 public class TestInteractions {
@@ -90,4 +96,66 @@ public class TestInteractions {
                 + other + " -\n",
                 net.toString());
     }
+
+    @Test(timeout = 1000)
+    public void netBuilderInteractive() {
+        var out = new PrintStream(OutputStream.nullOutputStream());
+
+        var inputs = List.of("5");
+        var bytes = String.join("\n", inputs).getBytes();
+        var in = new ByteArrayInputStream(bytes);
+        var net = new NetBuilderInteractive(out, in).run();
+        assertEquals("", net.toString());
+
+        inputs = List.of("1", "1", "Source", "1", "1.0", "10000", "5");
+        bytes = String.join("\n", inputs).getBytes();
+        in = new ByteArrayInputStream("1\n1\nSource\n1\n1.0\n1000\n5\n".getBytes());
+        net = new NetBuilderInteractive(out, in).run();
+        assertEquals("Source[servers:1, queue:100, spawn:1000, Exponential(1.0)] -\n", net.toString());
+
+        inputs = List.of("1", "1", "Source", "1", "2.0", "500",
+                "1", "2", "Queue", "5", "3.2", "0.6", "1",
+                "5");
+        bytes = String.join("\n", inputs).getBytes();
+        in = new ByteArrayInputStream(bytes);
+        net = new NetBuilderInteractive(out, in).run();
+        assertEquals("Source[servers:1, queue:100, spawn:500, Exponential(2.0)] -\n"
+                + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
+
+        inputs = List.of("1", "1", "Source", "1", "2.0", "500",
+                "1", "2", "Queue", "5", "3.2", "0.6", "1",
+                "2", "Source", "Queue", "1.0",
+                "5");
+        bytes = String.join("\n", inputs).getBytes();
+        in = new ByteArrayInputStream(bytes);
+        net = new NetBuilderInteractive(out, in).run();
+        assertEquals("Source[servers:1, queue:100, spawn:500, Exponential(2.0)] -> Queue(1.0)\n"
+                + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
+    }
+
+    /*
+     * An interaction example is like this:
+     * 1. Add a node
+     * - Choose the type of node to create:
+     * - 1. Source
+     * - 2. Queue
+     * - 3. Queue with unavailable time
+     * - Node name: Name
+     * - Arrivals limit (0 for Int.Max) / Number of servers: 1
+     * - Choose the type of service distribution:
+     * - - 1. Exponential
+     * - - 2. Uniform
+     * - - 3. Erlang
+     * - - 4. UnavailableTime
+     * - - 5. Normal
+     * - - 6. NormalBoxMuller
+     * - - 7. None
+     * 2. Add a connection
+     * - Enter the source node: Source
+     * - Enter the target node: Queue
+     * - Enter the weight: 1.0
+     * 3. Print Nodes
+     * 4. Save the net
+     * 5. Exit
+     */
 }
