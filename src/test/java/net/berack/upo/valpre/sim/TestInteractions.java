@@ -55,31 +55,39 @@ public class TestInteractions {
         var net = new Net();
         assertEquals("", net.toString());
 
-        net.addNode(new ServerNode.Builder("Source", new Distribution.Exponential(1)).build());
-        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)] -\n", net.toString());
+        var node1 = new ServerNode.Builder("Source", new Distribution.Exponential(1)).build();
+        net.addNode(node1);
+        assertEquals(node1 + " -\n", net.toString());
 
-        net.addNode(new ServerNode.Builder("Server", new Distribution.Normal(3.2, 0.6)).build());
-        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)] -\n"
-                + "Server[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
+        var node2 = new ServerNode.Builder("Server", new Distribution.Normal(3.2, 0.6)).build();
+        net.addNode(node2);
+        assertEquals(node1 + " -\n" + node2 + " -\n", net.toString());
 
         net.addConnection(0, 1, 1.0);
-        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)] -> Server(1.0)\n"
-                + "Server[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
+        assertEquals(node1 + " -> Server(1.0)\n" + node2 + " -\n", net.toString());
 
-        net.addNode(new ServerNode.Builder("Server2", new Distribution.Normal(4.1, 0.1)).build());
-        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)] -> Server(1.0)\n"
-                + "Server[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n"
-                + "Server2[servers:1, queue:100, spawn:0, Normal(4.1, 0.1)] -\n", net.toString());
+        var node3 = new ServerNode.Builder("Server2", new Distribution.Normal(4.1, 0.1)).build();
+        net.addNode(node3);
+        assertEquals(node1 + " -> Server(1.0)\n" + node2 + " -\n" + node3 + " -\n", net.toString());
 
         net.addConnection(0, 2, 1.0);
         net.normalizeWeights();
-        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)] -> Server(0.5), Server2(0.5)\n"
-                + "Server[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n"
-                + "Server2[servers:1, queue:100, spawn:0, Normal(4.1, 0.1)] -\n", net.toString());
+        assertEquals(node1 + " -> Server(0.5), Server2(0.5)\n" + node2 + " -\n" + node3 + " -\n", net.toString());
 
         net.addConnection(1, 2, 1.0);
-        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)] -> Server(0.5), Server2(0.5)\n"
-                + "Server[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -> Server2(1.0)\n"
-                + "Server2[servers:1, queue:100, spawn:0, Normal(4.1, 0.1)] -\n", net.toString());
+        assertEquals(node1 + " -> Server(0.5), Server2(0.5)\n"
+                + node2 + " -> Server2(1.0)\n"
+                + node3 + " -\n",
+                net.toString());
+
+        var const0 = new Distribution.Uniform(0, 0);
+        var unavailable = new Distribution.UnavailableTime(0.1, new Distribution.Exponential(1));
+        var other = ServerNode.Builder.queue("Other", 1, const0, unavailable);
+        net.addNode(other);
+        assertEquals(node1 + " -> Server(0.5), Server2(0.5)\n"
+                + node2 + " -> Server2(1.0)\n"
+                + node3 + " -\n"
+                + other + " -\n",
+                net.toString());
     }
 }
