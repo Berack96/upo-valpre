@@ -9,6 +9,27 @@ import net.berack.upo.valpre.rand.Distribution;
 public class TestInteractions {
 
     @Test
+    public void distributionToString() throws Exception {
+        var exp = new Distribution.Exponential(1.0);
+        assertEquals("Exponential(1.0)", Distribution.toString(exp));
+
+        var uniform = new Distribution.Uniform(0.0, 1.0);
+        assertEquals("Uniform(0.0, 1.0)", Distribution.toString(uniform));
+
+        var erlang = new Distribution.Erlang(2, 1.0);
+        assertEquals("Erlang(2, 1.0)", Distribution.toString(erlang));
+
+        var normal = new Distribution.Normal(3.2, 0.6);
+        assertEquals("Normal(3.2, 0.6)", Distribution.toString(normal));
+
+        var normalBoxMuller = new Distribution.NormalBoxMuller(3.2, 0.6);
+        assertEquals("NormalBoxMuller(3.2, 0.6)", Distribution.toString(normalBoxMuller));
+
+        var unavailable = new Distribution.UnavailableTime(0.1, exp);
+        assertEquals("UnavailableTime(0.1, Exponential(1.0))", Distribution.toString(unavailable));
+    }
+
+    @Test
     public void netToString() {
         var net = new Net();
         assertEquals("", net.toString());

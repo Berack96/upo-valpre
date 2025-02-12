@@ -33,6 +33,36 @@ public interface Distribution {
     }
 
     /**
+     * Returns a string representation of the distribution.
+     * In case the distribution is null, an empty string is returned.
+     * 
+     * @param distribution The distribution to represent.
+     * @return A string representation of the distribution.
+     * @throws IllegalArgumentException if the field cannot be accessed
+     * @throws IllegalAccessException   if the field cannot be accessed
+     */
+    public static String toString(Distribution distribution) throws IllegalArgumentException, IllegalAccessException {
+        if (distribution == null)
+            return "";
+
+        var builder = new StringBuilder();
+        var dist = distribution.getClass();
+
+        builder.append(dist.getSimpleName()).append('(');
+        for (var param : dist.getFields()) {
+            var paramValue = param.get(distribution);
+            var str = paramValue instanceof Distribution
+                    ? toString((Distribution) paramValue)
+                    : paramValue;
+
+            builder.append(str).append(", ");
+        }
+
+        builder.delete(builder.length() - 2, builder.length()).append(')');
+        return builder.toString();
+    }
+
+    /**
      * Represents an exponential distribution.
      */
     public static class Exponential implements Distribution {
