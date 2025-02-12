@@ -72,6 +72,28 @@ public class ServerNode {
     }
 
     @Override
+    public String toString() {
+        try {
+            var build = new StringBuilder()
+                    .append(this.name)
+                    .append("[servers:")
+                    .append(this.maxServers)
+                    .append(", queue:")
+                    .append(this.maxQueue)
+                    .append(", spawn:")
+                    .append(this.spawnArrivals)
+                    .append(", ")
+                    .append(Distribution.toString(this.service));
+            if (this.unavailable != null)
+                build.append(", u:").append(Distribution.toString(this.unavailable));
+            return build.append(']').toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof ServerNode))
             return false;

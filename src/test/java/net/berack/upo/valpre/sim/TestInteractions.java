@@ -30,6 +30,27 @@ public class TestInteractions {
     }
 
     @Test
+    public void nodeToString() {
+        var exp = new Distribution.Exponential(1.0);
+        var normal = new Distribution.Normal(3.2, 0.6);
+        var unavailable = new Distribution.UnavailableTime(0.1, exp);
+
+        var node = new ServerNode.Builder("Source", exp).build();
+        assertEquals("Source[servers:1, queue:100, spawn:0, Exponential(1.0)]", node.toString());
+
+        node = new ServerNode.Builder("Queue", normal).build();
+        assertEquals("Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)]", node.toString());
+
+        node = new ServerNode.Builder("Queue", normal).queue(10).servers(5).spawn(100).build();
+        assertEquals("Queue[servers:5, queue:10, spawn:100, Normal(3.2, 0.6)]", node.toString());
+
+        node = new ServerNode.Builder("Queue", normal).queue(10).servers(5).spawn(100).unavailable(unavailable).build();
+        assertEquals(
+                "Queue[servers:5, queue:10, spawn:100, Normal(3.2, 0.6), u:UnavailableTime(0.1, Exponential(1.0))]",
+                node.toString());
+    }
+
+    @Test
     public void netToString() {
         var net = new Net();
         assertEquals("", net.toString());
