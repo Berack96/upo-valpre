@@ -116,7 +116,7 @@ public class SimulationMultiple {
         var results = new Result.Summary(rng.getSeed(), nodes);
         var output = new StringBuilder();
         var stop = false;
-        for (int i = 0; !stop; i++) {
+        for (int i = 0; !stop || runs >= i; i++) {
             var sim = new Simulation(this.net, rng, criterias);
             var result = sim.run();
             results.add(result);
