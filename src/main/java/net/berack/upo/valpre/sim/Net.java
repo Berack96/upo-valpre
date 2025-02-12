@@ -170,14 +170,13 @@ public final class Net implements Iterable<ServerNode> {
             for (var conn : list)
                 sum += conn.weight;
 
-            var newOne = new Connection[list.size()];
-            for (var i = 0; i < list.size(); i++) {
-                var conn = list.get(i);
+            var newOne = new ArrayList<Connection>();
+            for (var conn : list) {
                 var newWeight = conn.weight / sum;
-                newOne[i] = new Connection(conn.index, newWeight);
+                newOne.add(new Connection(conn.index, newWeight));
             }
 
-            this.connections.set(node, List.of(newOne));
+            this.connections.set(node, newOne);
         }
     }
 
