@@ -66,7 +66,7 @@ public class Main {
         descriptions.put("end", "When the simulation should end. Format is [ClassName:param1,..,paramN];[..]");
         descriptions.put("net", "The file net to use. Use example1.net or example2.net for the provided ones.");
         descriptions.put("i", "The confidence indices to use for the simulation. If active then p is ignored."
-                + "Format is [node:stat:confidence:relativeError];[..]");
+                + " Format is \"[node:stat=confidence:relativeError];[..]\"");
 
         var csvDesc = switch (program) {
             case "simulation" -> "The filename for saving every run statistics.";
