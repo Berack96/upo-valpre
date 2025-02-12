@@ -248,6 +248,48 @@ public final class Net implements Iterable<ServerNode> {
         }
     }
 
+    @Override
+    public String toString() {
+        var builder = new StringBuilder();
+        try {
+            for (var node : this.servers) {
+                var dist = node.service.getClass();
+
+                builder.append(node.name)
+                        .append("[servers:")
+                        .append(node.maxServers)
+                        .append(", queue:")
+                        .append(node.maxQueue)
+                        .append(", spawn:")
+                        .append(node.spawnArrivals)
+                        .append(", ")
+                        .append(dist.getSimpleName())
+                        .append("(");
+
+                for (var param : dist.getFields())
+                    builder.append(param.get(node.service)).append(", ");
+                builder.delete(builder.length() - 2, builder.length())
+                        .append(")] -> ");
+
+                for (var child : this.getChildren(this.indices.get(node))) {
+                    var childNode = this.servers.get(child.index);
+                    builder.append(childNode.name)
+                            .append("(")
+                            .append(child.weight)
+                            .append("), ");
+                }
+
+                builder.delete(builder.length() - 2, builder.length())
+                        .append("\n");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return builder.toString();
+    }
+
     /**
      * A Static inner class used to represent the connection of a node
      */
