@@ -63,7 +63,7 @@ public class Main {
         descriptions.put("p", "Add this if you want the simulation to use threads (one each run).");
         descriptions.put("seed", "The seed of the simulation.");
         descriptions.put("runs", "How many runs the simulator should run.");
-        descriptions.put("end", "When the simulation should end. Format is [ClassName:param1,..,paramN];[..]");
+        descriptions.put("end", "When the simulation should end. Format is \"[ClassName:param1,..,paramN];[..]\"");
         descriptions.put("net", "The file net to use. Use example1.net or example2.net for the provided ones.");
         descriptions.put("i", "The confidence indices to use for the simulation. If active then p is ignored."
                 + " Format is \"[node:stat=confidence:relativeError];[..]\"");
