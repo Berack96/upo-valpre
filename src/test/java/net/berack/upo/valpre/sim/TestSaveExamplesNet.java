@@ -1,11 +1,10 @@
 package net.berack.upo.valpre.sim;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Set;
-
 import org.junit.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -78,8 +77,8 @@ public class TestSaveExamplesNet {
 
         assertEquals(Rng.DEFAULT, res.seed);
         assertEquals(time, res.simulationTime, maxErr);
-        testNode(res.nodes.get("Source"), 10000, time, 1.0, 4.5, 0.0, 0.0);
-        testNode(res.nodes.get("Queue"), 10000, time, 2.6, 7.2, 4.0, 0.0);
+        testNode(res.getStat("Source"), 10000, time, 1.0, 4.5, 0.0, 0.0);
+        testNode(res.getStat("Queue"), 10000, time, 2.6, 7.2, 4.0, 0.0);
     }
 
     @Test
@@ -91,9 +90,9 @@ public class TestSaveExamplesNet {
 
         assertEquals(Rng.DEFAULT, res.seed);
         assertEquals(time, res.simulationTime, maxErr);
-        testNode(res.nodes.get("Source"), 10000, time, 1.0, 4.5, 0.0, 0.0);
-        testNode(res.nodes.get("Queue"), 10000, time, 2.6, 7.2, 4.0, 0.0);
-        testNode(res.nodes.get("Queue Wait"), 10000, time, 5.8, 22.3, 19.1, 8497.7);
+        testNode(res.getStat("Source"), 10000, time, 1.0, 4.5, 0.0, 0.0);
+        testNode(res.getStat("Queue"), 10000, time, 2.6, 7.2, 4.0, 0.0);
+        testNode(res.getStat("Queue Wait"), 10000, time, 5.8, 22.3, 19.1, 8497.7);
     }
 
     @Test
@@ -105,9 +104,9 @@ public class TestSaveExamplesNet {
 
         assertEquals(Rng.DEFAULT, res.seed);
         assertEquals(time, res.simulationTime, maxErr);
-        testNode(res.nodes.get("Source"), 10000, time, 1.0, 0.6, 0.0, 0.0);
-        testNode(res.nodes.get("Service1"), 10000, time, 3.5, 1.7, 1.2, 0.0);
-        testNode(res.nodes.get("Service2"), 10000, time, 1.7, 0.5, 0.22, 102.2);
+        testNode(res.getStat("Source"), 10000, time, 1.0, 0.6, 0.0, 0.0);
+        testNode(res.getStat("Service1"), 10000, time, 3.5, 1.7, 1.2, 0.0);
+        testNode(res.getStat("Service2"), 10000, time, 1.7, 0.5, 0.22, 102.2);
     }
 
     private void testNode(NodeStats stat, double numClients, double time, double avgQueue,
@@ -140,11 +139,11 @@ public class TestSaveExamplesNet {
         var list = new CsvResult(csv1).loadResults();
         var seeds = new HashSet<Long>();
         for (var element : list) {
-            assertEquals(Set.of("Source", "Queue"), element.nodes.keySet());
-            assertEquals(10000, element.nodes.get("Source").numArrivals, 0.1);
-            assertEquals(10000, element.nodes.get("Queue").numArrivals, 0.1);
-            assertEquals(0.22, element.nodes.get("Source").throughput, 0.1);
-            assertEquals(0.22, element.nodes.get("Queue").throughput, 0.1);
+            assertArrayEquals(new String[] { "Source", "Queue" }, element.nodes);
+            assertEquals(10000, element.getStat("Source").numArrivals, 0.1);
+            assertEquals(10000, element.getStat("Queue").numArrivals, 0.1);
+            assertEquals(0.22, element.getStat("Source").throughput, 0.1);
+            assertEquals(0.22, element.getStat("Queue").throughput, 0.1);
 
             seeds.add(element.seed);
         }

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -75,26 +74,25 @@ public class CsvResult {
         var results = new ArrayList<Result>();
         try (var scan = new Scanner(input)) {
             var headerOrder = CsvResult.extractHeaderPositions(scan.nextLine());
-            var nodes = new HashMap<String, NodeStats>();
-            var seed = 0L;
+            var builder = new Result.Builder();
 
             while (scan.hasNextLine()) {
                 var line = scan.nextLine().split(",");
                 var currentSeed = Long.parseLong(line[0]);
-                var node = line[1];
 
-                if (currentSeed != seed && seed != 0) {
-                    results.add(new Result(seed, 0.0, 0.0, nodes));
-                    nodes = new HashMap<>();
+                if (builder.seed != currentSeed && builder.seed != 0) {
+                    results.add(builder.build());
+                    builder.reset();
                 }
-                seed = currentSeed;
 
+                var node = line[1];
                 var copy = Arrays.copyOfRange(line, 2, line.length);
                 var stats = CsvResult.statsFromCSV(headerOrder, copy);
-                nodes.put(node, stats);
+
+                builder.seed(currentSeed).addNode(node, stats);
             }
 
-            results.add(new Result(seed, 0.0, 0.0, nodes));
+            results.add(builder.build());
         }
         return results;
     }

@@ -495,11 +495,11 @@ public class TestSimulation {
         assertEquals(2.0, result.simulationTime, DELTA);
         assertEquals(sim.seed, result.seed);
         assertEquals(elapsed * 1e-6, result.timeElapsedMS, diff);
-        assertEquals(2, result.nodes.size());
-        assertEquals(1, result.nodes.get(node0.name).numArrivals, DELTA);
-        assertEquals(1, result.nodes.get(node0.name).numDepartures, DELTA);
-        assertEquals(1, result.nodes.get(node1.name).numArrivals, DELTA);
-        assertEquals(1, result.nodes.get(node1.name).numDepartures, DELTA);
+        assertEquals(2, result.stats.length);
+        assertEquals(1, result.stats[0].numArrivals, DELTA);
+        assertEquals(1, result.stats[0].numDepartures, DELTA);
+        assertEquals(1, result.stats[1].numArrivals, DELTA);
+        assertEquals(1, result.stats[1].numDepartures, DELTA);
     }
 
     @Test
@@ -520,10 +520,10 @@ public class TestSimulation {
         assertTrue(sim.hasEnded());
         var res = sim.endSimulation();
 
-        assertEquals(6, res.nodes.get(node0.name).numArrivals, DELTA);
-        assertEquals(5, res.nodes.get(node0.name).numDepartures, DELTA);
-        assertEquals(4, res.nodes.get(node1.name).numArrivals, DELTA);
-        assertEquals(3, res.nodes.get(node1.name).numDepartures, DELTA);
+        assertEquals(6, res.stats[0].numArrivals, DELTA);
+        assertEquals(5, res.stats[0].numDepartures, DELTA);
+        assertEquals(4, res.stats[1].numArrivals, DELTA);
+        assertEquals(3, res.stats[1].numDepartures, DELTA);
     }
 
     @Test
@@ -533,7 +533,7 @@ public class TestSimulation {
 
         var sim = new Simulation(net, rigged);
         var result = sim.run();
-        var nodeStat = result.nodes.get("Source");
+        var nodeStat = result.getStat("Source");
         assertEquals(50, nodeStat.numArrivals, DELTA);
         assertEquals(50, nodeStat.numDepartures, DELTA);
         assertEquals(1.0, nodeStat.avgQueueLength, DELTA);
@@ -551,7 +551,7 @@ public class TestSimulation {
 
         sim = new Simulation(net, rigged);
         result = sim.run();
-        nodeStat = result.nodes.get("Source");
+        nodeStat = result.getStat("Source");
         assertEquals(50, nodeStat.numArrivals, DELTA);
         assertEquals(50, nodeStat.numDepartures, DELTA);
         assertEquals(1.0, nodeStat.avgQueueLength, DELTA);
@@ -563,7 +563,7 @@ public class TestSimulation {
         assertEquals(1.0, nodeStat.throughput, DELTA);
         assertEquals(1.0, nodeStat.utilization, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
-        nodeStat = result.nodes.get("Queue");
+        nodeStat = result.getStat("Queue");
         assertEquals(50, nodeStat.numArrivals, DELTA);
         assertEquals(50, nodeStat.numDepartures, DELTA);
         assertEquals(1.0, nodeStat.avgQueueLength, DELTA);
@@ -588,7 +588,7 @@ public class TestSimulation {
         var sim = new Simulation(net, rigged);
         var result = sim.run();
 
-        var nodeStat = result.nodes.get("Source");
+        var nodeStat = result.getStat("Source");
         assertEquals(50, nodeStat.numArrivals, DELTA);
         assertEquals(50, nodeStat.numDepartures, DELTA);
         assertEquals(1.0, nodeStat.avgQueueLength, DELTA);
@@ -601,7 +601,7 @@ public class TestSimulation {
         assertEquals(1.0, nodeStat.utilization, DELTA);
         assertEquals(0.0, nodeStat.unavailable, DELTA);
 
-        nodeStat = result.nodes.get("Queue");
+        nodeStat = result.getStat("Queue");
         assertEquals(44, nodeStat.numArrivals, DELTA);
         assertEquals(44, nodeStat.numDepartures, DELTA);
         assertEquals(20.0, nodeStat.maxQueueLength, DELTA);

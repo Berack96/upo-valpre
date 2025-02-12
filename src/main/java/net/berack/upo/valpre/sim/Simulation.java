@@ -1,13 +1,11 @@
 package net.berack.upo.valpre.sim;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.PriorityQueue;
 
 import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.sim.stats.Result;
-import net.berack.upo.valpre.sim.stats.NodeStats;
 
 /**
  * Process an entire run of the simulation.
@@ -119,11 +117,13 @@ public final class Simulation {
      */
     public Result endSimulation() {
         var elapsed = System.nanoTime() - this.timeStartedNano;
-        var nodes = new HashMap<String, NodeStats>();
-        for (var state : this.states)
-            nodes.put(state.node.name, state.stats);
+        var builder = new Result.Builder();
+        for (var i = 0; i < this.states.length; i++) {
+            var state = this.states[i];
+            builder.addNode(state.node.name, state.stats);
+        }
 
-        return new Result(this.seed, this.time, elapsed * 1e-6, nodes);
+        return builder.seed(this.seed).times(this.time, elapsed * 1e-6).build();
     }
 
     /**

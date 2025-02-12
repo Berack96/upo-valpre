@@ -1,5 +1,6 @@
 package net.berack.upo.valpre.sim;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -13,6 +14,7 @@ import net.berack.upo.valpre.sim.stats.Result;
  */
 public class SimulationMultiple {
     private final Net net;
+    private final String[] nodes;
 
     /**
      * Create a new object that can simulate the net in input multiple times
@@ -20,7 +22,12 @@ public class SimulationMultiple {
      * @param net the net that should be simulated
      */
     public SimulationMultiple(Net net) {
+        var nodes = new ArrayList<String>();
+        for (var node : net)
+            nodes.add(node.name);
+
         this.net = net;
+        this.nodes = nodes.toArray(new String[0]);
     }
 
     /**
@@ -37,7 +44,7 @@ public class SimulationMultiple {
      */
     public Result.Summary run(long seed, int runs, EndCriteria... criterias) {
         var rngs = Rng.getMultipleStreams(seed, runs);
-        var result = new Result.Summary(rngs[0].getSeed());
+        var result = new Result.Summary(rngs[0].getSeed(), nodes);
 
         for (int i = 0; i < runs; i++) {
             var sim = new Simulation(this.net, rngs[i], criterias);
@@ -69,7 +76,7 @@ public class SimulationMultiple {
 
         var numThreads = Math.min(runs, Runtime.getRuntime().availableProcessors());
         try (var threads = Executors.newFixedThreadPool(numThreads)) {
-            var results = new Result.Summary(rngs[0].getSeed());
+            var results = new Result.Summary(rngs[0].getSeed(), nodes);
 
             for (int i = 0; i < runs; i++) {
                 final var id = i;
@@ -106,7 +113,7 @@ public class SimulationMultiple {
             throw new IllegalArgumentException("Confidence must be not null");
 
         var rng = new Rng(seed); // Only one RNG for all the simulations
-        var results = new Result.Summary(rng.getSeed());
+        var results = new Result.Summary(rng.getSeed(), nodes);
         var output = new StringBuilder();
         var stop = false;
         for (int i = 0; !stop; i++) {
