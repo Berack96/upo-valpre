@@ -244,6 +244,29 @@ public final class Net implements Iterable<ServerNode> {
         }
     }
 
+    /**
+     * Create a copy of the net passed as input.
+     * The new net will have the same nodes and connections.
+     * 
+     * @param net the net to copy
+     * @return a new Net object
+     */
+    public static Net copyOf(Net net) {
+        var newNet = new Net();
+
+        for (var index = 0; index < net.size(); index++) {
+            var node = net.servers.get(index);
+            var conn = net.connections.get(index);
+            conn = new ArrayList<>(conn);
+
+            newNet.indices.put(node, index);
+            newNet.servers.add(node);
+            newNet.connections.add(conn);
+        }
+
+        return newNet;
+    }
+
     @Override
     public String toString() {
         var builder = new StringBuilder();
