@@ -75,7 +75,6 @@ public final class Net implements Iterable<ServerNode> {
      * @param weight The probability of the child node.
      * @throws IndexOutOfBoundsException if one of the two nodes are not in the net
      * @throws IllegalArgumentException  if the weight is negative or zero
-     * @throws IllegalArgumentException  if the child is a source node
      */
     public void addConnection(int parent, int child, double weight) {
         if (weight <= 0)
@@ -84,9 +83,6 @@ public final class Net implements Iterable<ServerNode> {
         var max = this.servers.size() - 1;
         if (parent < 0 || child < 0 || parent > max || child > max)
             throw new IndexOutOfBoundsException("One of the nodes does not exist");
-
-        if (this.servers.get(child).spawnArrivals > 0)
-            throw new IllegalArgumentException("Can't connect to a source node");
 
         var list = this.connections.get(parent);
         list.removeIf(conn -> conn.index == child);
