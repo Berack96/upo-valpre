@@ -1,6 +1,5 @@
 package net.berack.upo.valpre.sim;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -151,7 +150,7 @@ public final class Simulation {
      * @return a list of future events.
      */
     public List<Event> getFutureEventList() {
-        return new ArrayList<>(this.fel);
+        return List.copyOf(this.fel);
     }
 
     /**
