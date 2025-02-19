@@ -4,6 +4,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 import org.junit.Test;
 import org.junit.jupiter.api.AfterAll;
@@ -153,33 +155,39 @@ public class TestSaveExamplesNet {
     @Test
     @AfterAll
     public void multiSimulation1() throws Exception {
-        new SimulationBuilder(net1)
-                .setCsv(csv1)
-                .setMaxRuns(1000)
-                .setSeed(2007539552L)
-                .setParallel(true)
-                .run();
+        try (var newOut = new PrintStream(OutputStream.nullOutputStream())) {
+            new SimulationBuilder(net1)
+                    .setCsv(csv1)
+                    .setMaxRuns(1000)
+                    .setSeed(2007539552L)
+                    .setParallel(true)
+                    .run(newOut);
+        }
     }
 
     @Test
     @AfterAll
     public void multiSimulation2() throws Exception {
-        new SimulationBuilder(net2)
-                .setCsv(csv2)
-                .setMaxRuns(1000)
-                .setSeed(2007539552L)
-                .setParallel(true)
-                .run();
+        try (var newOut = new PrintStream(OutputStream.nullOutputStream())) {
+            new SimulationBuilder(net2)
+                    .setCsv(csv2)
+                    .setMaxRuns(1000)
+                    .setSeed(2007539552L)
+                    .setParallel(true)
+                    .run(newOut);
+        }
     }
 
     @Test
     @AfterAll
     public void multiSimulation3() throws Exception {
-        new SimulationBuilder(net3)
-                .setCsv(csv3)
-                .setMaxRuns(1000)
-                .setSeed(2007539552L)
-                .setParallel(true)
-                .run();
+        try (var newOut = new PrintStream(OutputStream.nullOutputStream())) {
+            new SimulationBuilder(net3)
+                    .setCsv(csv3)
+                    .setMaxRuns(1000)
+                    .setSeed(2007539552L)
+                    .setParallel(true)
+                    .run(newOut);
+        }
     }
 }

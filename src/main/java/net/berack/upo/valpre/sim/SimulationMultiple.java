@@ -1,5 +1,6 @@
 package net.berack.upo.valpre.sim;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -99,16 +100,21 @@ public class SimulationMultiple {
      * Run the simulation multiple times with the given seed and end criteria. The
      * simulation runs will stop when the relative error of the confidence index is
      * less than the given value.
-     * The results are printed on the console.
+     * The results are printed on the PrintStream.
      * 
-     * @param seed      The seed to use for the random number generator.
-     * @param criterias The criteria to determine when to end the simulation. If
-     *                  null then the simulation will run until there are no more
-     *                  events.
+     * @param seed        The seed to use for the random number generator.
+     * @param runs        The maximum number of runs to perform.
+     * @param stream      The PrintStream to print the results.
+     * @param confidences The confidence indices to use to determine when to stop
+     *                    the simulation.
+     * @param criterias   The criteria to determine when to end the simulation. If
+     *                    null then the simulation will run until there are no more
+     *                    events.
      * @return The statistics the network.
      * @throws IllegalArgumentException If the confidence is not set.
      */
-    public Result.Summary runIncremental(long seed, int runs, ConfidenceIndices confidences, EndCriteria... criterias) {
+    public Result.Summary runIncremental(long seed, int runs, PrintStream stream, ConfidenceIndices confidences,
+            EndCriteria... criterias) {
         if (confidences == null)
             throw new IllegalArgumentException("Confidence must be not null");
 
@@ -133,11 +139,11 @@ public class SimulationMultiple {
                 var oneSting = String.join("], [", errString);
 
                 output.append('[').append(oneSting).append("]");
-                System.out.print(output);
+                stream.print(output);
             }
         }
 
-        System.out.println(); // remove last printed line
+        stream.println(); // remove last printed line
         return results;
     }
 
