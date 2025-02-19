@@ -54,7 +54,7 @@ public class NetBuilderInteractive {
                     case 2 -> {
                         var source = ask("Enter the source node: ");
                         var target = ask("Enter the target node: ");
-                        var weight = ask("Enter the weight: ", Double::parseDouble, 0.0);
+                        var weight = ask("Enter the weight: ", Double::parseDouble);
                         var sourceNode = this.net.getNode(source);
                         var targetNode = this.net.getNode(target);
                         this.net.addConnection(sourceNode, targetNode, weight);
@@ -84,17 +84,17 @@ public class NetBuilderInteractive {
 
         return switch (choice) {
             case 1 -> {
-                var limit = ask("Arrivals limit (0 for Int.Max): ", Integer::parseInt, 1);
+                var limit = ask("Arrivals limit (0 for Int.Max): ", Integer::parseInt);
                 if (limit <= 0)
                     limit = Integer.MAX_VALUE;
                 yield ServerNode.Builder.sourceLimited(name, limit, distribution);
             }
             case 2 -> {
-                var servers = ask("Number of servers: ", Integer::parseInt, 1);
+                var servers = ask("Number of servers: ", Integer::parseInt);
                 yield ServerNode.Builder.queue(name, servers, distribution, null);
             }
             case 3 -> {
-                var servers = ask("Number of servers: ", Integer::parseInt, 1);
+                var servers = ask("Number of servers: ", Integer::parseInt);
                 var unavailable = askDistribution("Unavailable distribution");
                 yield ServerNode.Builder.queue(name, servers, distribution, unavailable);
             }
@@ -113,32 +113,32 @@ public class NetBuilderInteractive {
 
         return switch (choice) {
             case 1 -> {
-                var lambda = ask("Lambda: ", Double::parseDouble, 1.0);
+                var lambda = ask("Lambda: ", Double::parseDouble);
                 yield new Distribution.Exponential(lambda);
             }
             case 2 -> {
-                var min = ask("Min: ", Double::parseDouble, 0.0);
-                var max = ask("Max: ", Double::parseDouble, 1.0);
+                var min = ask("Min: ", Double::parseDouble);
+                var max = ask("Max: ", Double::parseDouble);
                 yield new Distribution.Uniform(min, max);
             }
             case 3 -> {
-                var k = ask("K: ", Integer::parseInt, 1);
-                var lambda = ask("Lambda: ", Double::parseDouble, 1.0);
+                var k = ask("K: ", Integer::parseInt);
+                var lambda = ask("Lambda: ", Double::parseDouble);
                 yield new Distribution.Erlang(k, lambda);
             }
             case 4 -> {
-                var probability = ask("Probability: ", Double::parseDouble, 0.0);
+                var probability = ask("Probability: ", Double::parseDouble);
                 var unavailable = askDistribution("Unavailable distribution");
                 yield new Distribution.UnavailableTime(probability, unavailable);
             }
             case 5 -> {
-                var mean = ask("Mean: ", Double::parseDouble, 0.0);
-                var stdDev = ask("Standard deviation: ", Double::parseDouble, 1.0);
+                var mean = ask("Mean: ", Double::parseDouble);
+                var stdDev = ask("Standard deviation: ", Double::parseDouble);
                 yield new Distribution.Normal(mean, stdDev);
             }
             case 6 -> {
-                var mean = ask("Mean: ", Double::parseDouble, 0.0);
-                var stdDev = ask("Standard deviation: ", Double::parseDouble, 1.0);
+                var mean = ask("Mean: ", Double::parseDouble);
+                var stdDev = ask("Standard deviation: ", Double::parseDouble);
                 yield new Distribution.NormalBoxMuller(mean, stdDev);
             }
             default -> null;
@@ -152,7 +152,7 @@ public class NetBuilderInteractive {
      * @return the answer
      */
     private String ask(String ask) {
-        return ask(ask, Function.identity(), "");
+        return ask(ask, Function.identity());
     }
 
     /**
@@ -163,14 +163,24 @@ public class NetBuilderInteractive {
      * @param defaultValue the default value
      * @return the answer
      */
-    private <T> T ask(String ask, Function<String, T> parser, T defaultValue) {
-        this.out.print(ask);
-        try {
+    private <T> T ask(String ask, Function<String, T> parser) {
+        var totalRows = ask.chars().filter(ch -> ch == '\n').count() + 1;
+
+        var startLine = "\033[" + totalRows + "A";
+        var clearLine = "\033[K";
+        var ask2 = startLine + clearLine + ask;
+        var first = true;
+
+        while (true) {
+            this.out.print(first ? ask : ask2);
             var line = this.scanner.nextLine();
-            return parser.apply(line);
+            first = false;
+
+            try {
+                var value = parser.apply(line);
+                return value;
         } catch (Exception e) {
-            this.out.println("Invalid input: " + e.getMessage());
-            return defaultValue;
+            }
         }
     }
 
@@ -192,7 +202,7 @@ public class NetBuilderInteractive {
         var string = builder.toString();
         var choice = 0;
         while (choice < 1 || choice > options.length)
-            choice = ask(string, Integer::parseInt, 0);
+            choice = ask(string, Integer::parseInt);
 
         return choice;
     }
