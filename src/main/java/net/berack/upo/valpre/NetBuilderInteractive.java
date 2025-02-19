@@ -166,23 +166,26 @@ public class NetBuilderInteractive {
      * @return the answer
      */
     private <T> T ask(String ask, Function<String, T> parser) {
-        var totalRows = ask.chars().filter(ch -> ch == '\n').count() + 1;
+        var totalRows = ask.chars().filter(ch -> ch == '\n').count();
 
-        var startLine = "\033[" + totalRows + "A";
-        var clearLine = "\033[K";
-        var ask2 = startLine + clearLine + ask;
+        var ask2 = "\033[" + totalRows + "A" + ask;
         var first = true;
 
-        while (true) {
-            this.out.print(first ? ask : ask2);
-            var line = this.scanner.nextLine();
-            first = false;
+        try {
+            while (true) {
+                this.out.print(first ? ask : ask2);
+                var line = this.scanner.nextLine();
+                first = false;
 
-            try {
-                var value = parser.apply(line);
-                return value;
-            } catch (Exception e) {
+                try {
+                    var value = parser.apply(line);
+                    return value;
+                } catch (Exception e) {
+                    this.out.print("\033[A\033[K"); // clear the line
+                }
             }
+        } catch (Exception e) {
+            return null; // normally when the scanner is closed
         }
     }
 
@@ -203,8 +206,12 @@ public class NetBuilderInteractive {
 
         var string = builder.toString();
         var choice = 0;
-        while (choice < 1 || choice > options.length)
-            choice = ask(string, Integer::parseInt);
+        choice = ask(string, val -> {
+            var x = Integer.parseInt(val);
+            if (x < 1 || x > options.length)
+                throw new NumberFormatException(); // retry the question
+            return x;
+        });
 
         return choice;
     }
