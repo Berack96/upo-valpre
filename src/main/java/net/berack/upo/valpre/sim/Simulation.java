@@ -97,8 +97,13 @@ public final class Simulation {
             case DEPARTURE -> {
                 state.updateDeparture(time);
 
+                // Spawn unavailability if has unavailable time
                 this.addToFel(state.spawnUnavailableIfPossible(time, this.rng));
+
+                // Spawn departure if has requests and server is available
                 this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
+
+                // Spawn arrival to self if is source node
                 this.addToFel(state.spawnArrivalIfPossilbe(time));
 
                 // Spawn arrival to child node if queue is not full otherwise drop

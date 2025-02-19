@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashSet;
 
@@ -393,8 +394,18 @@ public class TestSimulation {
 
     @Test
     public void simulation() {
-        var start = System.nanoTime();
+        assertThrows(NullPointerException.class, () -> new Simulation(null, rigged));
+        assertThrows(NullPointerException.class, () -> new Simulation(simpleNet, null));
+
         var sim = new Simulation(simpleNet, rigged);
+        assertTrue(sim.hasEnded());
+        assertEquals(0, sim.getEventsProcessed());
+        assertEquals(0.0, sim.getTime(), DELTA);
+        var fel = sim.getFutureEventList();
+        assertEquals(0, fel.size());
+
+        var start = System.nanoTime();
+        sim = new Simulation(simpleNet, rigged);
         // knowing that it takes time to allocate the object
         // we can use the average time
         var endAllocation = System.nanoTime();
@@ -410,7 +421,7 @@ public class TestSimulation {
         assertEquals(0, sim.getNodeState(node0.name).numServerUnavailable);
         assertEquals(0, sim.getNodeState(node1.name).numServerBusy);
         assertEquals(0, sim.getNodeState(node1.name).numServerUnavailable);
-        var fel = sim.getFutureEventList();
+        fel = sim.getFutureEventList();
         assertEquals(0, fel.size());
 
         sim.addToFel(Event.newArrival(0, sim.getTime()));
@@ -489,6 +500,8 @@ public class TestSimulation {
         assertEquals(0, sim.getNodeState(node1.name).numServerUnavailable);
         fel = sim.getFutureEventList();
         assertEquals(0, fel.size());
+        final var s = sim;
+        assertThrows(NullPointerException.class, () -> s.processNextEvent());
 
         var elapsed = (double) (System.nanoTime() - time);
         var result = sim.endSimulation();

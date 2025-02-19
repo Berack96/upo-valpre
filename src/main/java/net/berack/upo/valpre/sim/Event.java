@@ -23,11 +23,7 @@ public class Event implements Comparable<Event> {
 
     @Override
     public int compareTo(Event other) {
-        if (this.time < other.time)
-            return -1;
-        if (this.time == other.time)
-            return 0;
-        return 1;
+        return Double.compare(this.time, other.time);
     }
 
     /**
