@@ -69,7 +69,7 @@ public class ServerNodeState {
      * @return True if the node should spawn an arrival, false otherwise.
      */
     public boolean shouldSpawnArrival() {
-        return this.node.spawnArrivals > this.stats.numArrivals;
+        return this.node.spawnArrivals < 0 || this.node.spawnArrivals > this.stats.numArrivals;
     }
 
     /**

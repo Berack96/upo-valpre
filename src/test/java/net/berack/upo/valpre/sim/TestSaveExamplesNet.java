@@ -46,17 +46,17 @@ public class TestSaveExamplesNet {
     private static final Net net2 = new Net();
     private static final Net net3 = new Net();
     static {
-        net1.addNode(ServerNode.Builder.sourceLimited("Source", spawn, exp0_22));
+        net1.addNode(ServerNode.Builder.terminal("Source", spawn, exp0_22));
         net1.addNode(ServerNode.Builder.queue("Queue", 1, norm3_2));
         net1.addConnection(0, 1, 1.0);
 
-        net2.addNode(ServerNode.Builder.sourceLimited("Source", spawn, exp0_22));
+        net2.addNode(ServerNode.Builder.terminal("Source", spawn, exp0_22));
         net2.addNode(ServerNode.Builder.queue("Queue", 1, norm3_2));
         net2.addNode(ServerNode.Builder.queue("Queue Wait", 1, norm3_2, unNorm));
         net2.addConnection(0, 1, 1.0);
         net2.addConnection(1, 2, 1.0);
 
-        net3.addNode(ServerNode.Builder.sourceLimited("Source", spawn, exp1_5));
+        net3.addNode(ServerNode.Builder.terminal("Source", spawn, exp1_5));
         net3.addNode(ServerNode.Builder.queue("Service1", 1, exp2));
         net3.addNode(ServerNode.Builder.queue("Service2", 1, exp3_5, unExp));
         net3.addConnection(0, 1, 1.0);

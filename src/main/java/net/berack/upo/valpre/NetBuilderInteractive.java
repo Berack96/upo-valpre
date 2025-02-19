@@ -78,22 +78,24 @@ public class NetBuilderInteractive {
      * @return the node
      */
     private ServerNode buildNode() {
-        var choice = choose("Choose the type of node to create:", "Source", "Queue", "Queue with unavailable time");
+        var choice = choose("Choose the type of node to create:", "Source", "Terminal", "Queue",
+                "Queue with unavailable time");
         var name = ask("Node name: ");
         var distribution = askDistribution("Service distribution");
 
         return switch (choice) {
-            case 1 -> {
+            case 1 -> ServerNode.Builder.source(name, distribution);
+            case 2 -> {
                 var limit = ask("Arrivals limit (0 for Int.Max): ", Integer::parseInt);
                 if (limit <= 0)
                     limit = Integer.MAX_VALUE;
-                yield ServerNode.Builder.sourceLimited(name, limit, distribution);
+                yield ServerNode.Builder.terminal(name, limit, distribution);
             }
-            case 2 -> {
+            case 3 -> {
                 var servers = ask("Number of servers: ", Integer::parseInt);
                 yield ServerNode.Builder.queue(name, servers, distribution, null);
             }
-            case 3 -> {
+            case 4 -> {
                 var servers = ask("Number of servers: ", Integer::parseInt);
                 var unavailable = askDistribution("Unavailable distribution");
                 yield ServerNode.Builder.queue(name, servers, distribution, unavailable);
@@ -179,7 +181,7 @@ public class NetBuilderInteractive {
             try {
                 var value = parser.apply(line);
                 return value;
-        } catch (Exception e) {
+            } catch (Exception e) {
             }
         }
     }

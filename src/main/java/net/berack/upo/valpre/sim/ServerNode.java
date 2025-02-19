@@ -18,7 +18,7 @@ public class ServerNode {
     /**
      * Creates a generic node with the given name and distribution.
      * The servers number must be 1 or higher; if lower will be put to 1.
-     * The spawn number must be 0 or higher; if lower will be put to 0.
+     * The spawn number must be 0 or higher; if lower will be put to -1 (infinite).
      * The queue number must be equal or higher than the servers number; if lower
      * will be put to the servers number.
      * The service distribution can't be null, otherwise an exception is thrown.
@@ -37,7 +37,7 @@ public class ServerNode {
         if (servers <= 0)
             servers = 1;
         if (spawn < 0)
-            spawn = 0;
+            spawn = -1;
         if (queue < servers)
             queue = servers;
 
@@ -205,26 +205,27 @@ public class ServerNode {
 
         /**
          * Creates a source node with the given name and distribution.
-         * It swpawns infinite arrivals (Integer.MAX_VALUE).
+         * It swpawns infinite arrivals (-1).
          * 
          * @param name         The name of the node.
          * @param distribution The distribution of the inter-arrival times.
          * @return The created source node.
          */
         public static ServerNode source(String name, Distribution distribution) {
-            return new Builder(name, distribution).spawn(Integer.MAX_VALUE).build();
+            return new Builder(name, distribution).spawn(-1).build();
         }
 
         /**
-         * Creates a source node with the given name, distribution, and number of
+         * Creates a terminal node with the given name, distribution, and number of
          * arrivals to spawn.
+         * Once it has finished spawning the arrivals, it will not spawn anymore.
          * 
          * @param name          The name of the node.
          * @param service       The distribution of the inter-arrival times.
          * @param spawnArrivals The number of arrivals to spawn.
          * @return The created source node.
          */
-        public static ServerNode sourceLimited(String name, int spawnArrivals, Distribution service) {
+        public static ServerNode terminal(String name, int spawnArrivals, Distribution service) {
             return new Builder(name, service).spawn(spawnArrivals).build();
         }
 

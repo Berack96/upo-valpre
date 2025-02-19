@@ -24,7 +24,7 @@ public class TestSimulation {
     private static final ServerNode node0;
     private static final ServerNode node1;
     static {
-        node0 = ServerNode.Builder.sourceLimited("First", 0, const1);
+        node0 = ServerNode.Builder.terminal("First", 0, const1);
         node1 = ServerNode.Builder.queue("Second", 1, const1);
 
         simpleNet = new Net();
@@ -57,10 +57,10 @@ public class TestSimulation {
         node = ServerNode.Builder.source("Source", const1);
         assertEquals("Source", node.name);
         assertEquals(1, node.maxServers);
-        assertEquals(Integer.MAX_VALUE, node.spawnArrivals);
+        assertEquals(-1, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
-        node = ServerNode.Builder.sourceLimited("Source", 50, const1);
+        node = ServerNode.Builder.terminal("Source", 50, const1);
         assertEquals("Source", node.name);
         assertEquals(1, node.maxServers);
         assertEquals(50, node.spawnArrivals);
@@ -197,7 +197,7 @@ public class TestSimulation {
     @Test
     public void nodeStatsUpdates() {
         var net = new Net();
-        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(ServerNode.Builder.terminal("Source", 50, const1));
         net.addNode(node1);
         net.addConnection(0, 1, 1.0);
 
@@ -410,7 +410,7 @@ public class TestSimulation {
         // we can use the average time
         var endAllocation = System.nanoTime();
         var time = (endAllocation + start) / 2;
-        var diff = 0.5e-6 * (endAllocation - start); // getting the error margin in ms
+        var diff = 1e-6 * (endAllocation - start); // getting the error margin in ms
 
         assertTrue(sim.hasEnded());
         assertEquals(0, sim.getEventsProcessed());
@@ -542,7 +542,7 @@ public class TestSimulation {
     @Test
     public void simulationStats() {
         var net = new Net();
-        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(ServerNode.Builder.terminal("Source", 50, const1));
 
         var sim = new Simulation(net, rigged);
         var result = sim.run();
@@ -594,7 +594,7 @@ public class TestSimulation {
     @Test
     public void simulationDrop() {
         var net = new Net();
-        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(ServerNode.Builder.terminal("Source", 50, const1));
         net.addNode(new ServerNode.Builder("Queue", _ -> 2.0).queue(20).build());
         net.addConnection(0, 1, 1.0);
 

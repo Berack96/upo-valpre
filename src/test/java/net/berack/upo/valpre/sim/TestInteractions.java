@@ -107,29 +107,29 @@ public class TestInteractions {
         var net = new NetBuilderInteractive(out, in).run();
         assertEquals("", net.toString());
 
-        inputs = List.of("1", "1", "Source", "1", "1.0", "10000", "5");
+        inputs = List.of("1", "1", "Source", "1", "1.0", "5");
         bytes = String.join("\n", inputs).getBytes();
         in = new ByteArrayInputStream("1\n1\nSource\n1\n1.0\n1000\n5\n".getBytes());
         net = new NetBuilderInteractive(out, in).run();
-        assertEquals("Source[servers:1, queue:100, spawn:1000, Exponential(1.0)] -\n", net.toString());
+        assertEquals("Source[servers:1, queue:100, spawn:-1, Exponential(1.0)] -\n", net.toString());
 
-        inputs = List.of("1", "1", "Source", "1", "2.0", "500",
-                "1", "2", "Queue", "5", "3.2", "0.6", "1",
+        inputs = List.of("1", "2", "Terminal", "1", "2.0", "500",
+                "1", "3", "Queue", "5", "3.2", "0.6", "1",
                 "5");
         bytes = String.join("\n", inputs).getBytes();
         in = new ByteArrayInputStream(bytes);
         net = new NetBuilderInteractive(out, in).run();
-        assertEquals("Source[servers:1, queue:100, spawn:500, Exponential(2.0)] -\n"
+        assertEquals("Terminal[servers:1, queue:100, spawn:500, Exponential(2.0)] -\n"
                 + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
 
-        inputs = List.of("1", "1", "Source", "1", "2.0", "500",
-                "1", "2", "Queue", "5", "3.2", "0.6", "1",
+        inputs = List.of("1", "1", "Source", "1", "2.0",
+                "1", "3", "Queue", "5", "3.2", "0.6", "1",
                 "2", "Source", "Queue", "1.0",
                 "5");
         bytes = String.join("\n", inputs).getBytes();
         in = new ByteArrayInputStream(bytes);
         net = new NetBuilderInteractive(out, in).run();
-        assertEquals("Source[servers:1, queue:100, spawn:500, Exponential(2.0)] -> Queue(1.0)\n"
+        assertEquals("Source[servers:1, queue:100, spawn:-1, Exponential(2.0)] -> Queue(1.0)\n"
                 + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
     }
 
