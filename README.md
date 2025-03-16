@@ -11,8 +11,7 @@ Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.n
 > Il JAR risultante che si trova nelle [Releases](https://github.com/Berack96/upo-valpre/releases).\
 > La versione di Java usata è la 23 (precisamente la [23.0.1](https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html)).
 
----
-### Comandi Jar
+## Comandi Jar
 
 Il JAR viene invocato tramite il classico comando java: `java -jar upo-valpre.jar` al quale si aggiungono vari argomenti successivi in base a cosa si vuole fare:
 
@@ -34,8 +33,7 @@ Esistono vari tipi di argomenti per scegliere come fare la simulazione:
 Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:\
 ![1738603552417](image/README/1738603552417.png)
 
----
-### Classi Interne
+## Classi Interne
 
 Esistono molteplici classi interne che vengono usate per supportare la simulazione e/o mostrare i risultati. In generale le classi dentro il percorso [net.berack.upo.valpre](src/main/java/net/berack/upo/valpre) sono usate per l'utilizzo del jar e quindi non sono essenziali per la simulazione.
 I percorsi che invece sono direttamente responsabili per la simulazione sono:
@@ -54,13 +52,12 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
   - **ConsoleTable** utile per mostrare i risultati in console sottoforma di tabella
   - **CsvResult** utile per la lettura/scrittura dei risultati in formato csv
 
----
-### Esempi
+## Esempi
 
 Nel jar sono presenti già 2 reti per fare degli esperimenti e/o testare se il tool funziona correttamente. Per poter vedere una run usando questi esempi basta far partire il tool in modalità interattiva e scegliere di caricare gli esempi.\
 `java -jar upo-valpre.jar interactive`
 
-##### Primo esempio
+### Primo esempio
 ![1741862746304](image/README/1741862746304.png)\
 Il primo è `example1`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=0.222 e quindi media 4.5) e un centro di servizio (Queue) con tasso di servizio distribuito come una normale (μ=3.2, σ=0.6).\
 Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:
@@ -71,7 +68,11 @@ Queue Response Time = 7.3022 con un range [7.1456, 7.4589]\
 Queue Throughput = 0.2226 con un range [0.2182, 0.2271]\
 Queue Utilization = 0.7111 con un range [0.6959, 0.7262]
 
-##### Secondo esempio
+Ho successivamente modificato la rete cambiando solamente la distribuzione di servizio usata dal nodo "Queue". Le distribuzioni usate sono Normale, Esponenziale, Erlang, Uniforme.\
+Come si può notare l'utilizzo e il throughput rimangono pressochè invariati, mentre cambia il **numero medio della coda**, il **tempo medio di attesa** e, di conseguenza, anche il **tempo medio di risposta**.\
+![1742150755381](image/README/1742150755381.png)
+
+### Secondo esempio
 ![1741863043733](image/README/1741863043733.png)\
 Il secondo esempio è `example2`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=1.5 e quindi media 0.666), un centro di servizio (Service1) con tasso di servizio distribuito come una esponenziale (λ=2.0 e quindi media 0.5) e un altro centro di servizio (Service2) con tasso di servizio distribuito come una esponenziale (λ=3.5 e quindi media 0.2857) e con un tempo di indisponibilità che viene attivato con probabilità 10% e distribuito con una eseponenziale (λ=10.0 e quindi media 0.1)\
 Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:
