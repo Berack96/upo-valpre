@@ -44,7 +44,7 @@ public class Plot {
         var results = new CsvResult(csv).loadResults();
         this.summary = new Result.Summary(results);
 
-        var nodes = this.summary.getNodes().toArray(new String[0]);
+        var nodes = this.summary.getNodes();
         this.panelBarChart = new ChartPanel(null);
 
         this.nodeComboBox = new JComboBox<>(nodes);

@@ -1,8 +1,12 @@
 package net.berack.upo.valpre;
 
+import java.util.concurrent.ExecutionException;
+
 import net.berack.upo.valpre.rand.Distribution;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.ServerNode;
+import net.berack.upo.valpre.sim.SimulationMultiple;
+import net.berack.upo.valpre.sim.stats.Result;
 
 /**
  * This class provides two example networks.
@@ -10,37 +14,64 @@ import net.berack.upo.valpre.sim.ServerNode;
  * The second network is composed of a terminal node and two queue nodes.
  */
 public final class NetExamples {
+
+    /**
+     * Main method to test the example networks.
+     * It runs the fist network and prints the results.
+     * The network will have the distribution changed but the mean will be the same.
+     * 
+     * @param args not needed
+     * @throws ExecutionException   if the execution fails
+     * @throws InterruptedException if the execution is interrupted
+     */
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        var avg1 = 3.2;
+        var seed = 0l;
+
+        var nets = new Net[] {
+                getNet1("Normal", new Distribution.NormalBoxMuller(avg1, 0.6)),
+                getNet1("Exponential", new Distribution.Exponential(1 / avg1)),
+                getNet1("Erlang", new Distribution.Erlang(5, 5 / avg1)),
+                getNet1("Uniform", new Distribution.Uniform(avg1 - 1, avg1 + 1))
+        };
+
+        for (var net : nets) {
+            var summary = new SimulationMultiple(net).runParallel(seed, 1000);
+            var table = Result.getResultString(summary.getNodes(), summary.getStats());
+            System.out.println(table);
+        }
+    }
+
     /**
      * Return the first example network.
      * The net is composed of a terminal node and a queue node.
      * The terminal node generates 10000 jobs with an exponential distribution 4.5.
      * The queue node has a capacity of 1 and a service time of 3.2 with a standard
      * deviation of 0.6.
-     * The terminal node is connected to the queue node with a probability of 1.0.
      * 
      * @return the first example network
      */
     public static Net getNet1() {
-        var exp0_22 = new Distribution.Exponential(1.0 / 4.5);
         var norm3_2 = new Distribution.NormalBoxMuller(3.2, 0.6);
-        var spawn = 10000;
-        return getNet1(spawn, exp0_22, norm3_2);
+        return getNet1("Queue", norm3_2);
     }
 
     /**
      * Return the first example network.
      * The net is composed of a terminal node and a queue node.
      * The terminal node is connected to the queue node.
+     * The terminal node generates 10000 jobs with an exponential distribution 4.5.
      * 
-     * @param spawn  the number of jobs to generate
-     * @param source the distribution of the source node
-     * @param queue  the distribution of the queue node
+     * @param queue the distribution of the queue node
      * @return the first example network
      */
-    public static Net getNet1(int spawn, Distribution source, Distribution queue) {
+    public static Net getNet1(String name, Distribution queue) {
+        var spawn = 10000;
+        var source = new Distribution.Exponential(1.0 / 4.5);
+
         var net1 = new Net();
         net1.addNode(ServerNode.Builder.terminal("Source", spawn, source));
-        net1.addNode(ServerNode.Builder.queue("Queue", 1, queue));
+        net1.addNode(ServerNode.Builder.queue(name, 1, queue));
         net1.addConnection(0, 1, 1.0);
         return net1;
     }

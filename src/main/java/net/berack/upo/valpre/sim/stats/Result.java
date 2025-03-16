@@ -1,6 +1,7 @@
 package net.berack.upo.valpre.sim.stats;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,11 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
         this.stats = stats;
     }
 
+    /**
+     * Gets the stats of a node.
+     * 
+     * @return the stats of a node
+     */
     public NodeStats getStat(String node) {
         for (var i = 0; i < this.nodes.length; i++)
             if (this.nodes[i].equals(node))
@@ -45,7 +51,7 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
 
     @Override
     public String toString() {
-        return buildPrintable(this.seed, this.simulationTime, this.timeElapsedMS, this.nodes, this.stats);
+        return getResultString(this.seed, this.simulationTime, this.timeElapsedMS, this.nodes, this.stats);
     }
 
     @Override
@@ -80,9 +86,8 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
      * @param stats   the stats of each node
      * @return a string representation of the result
      */
-    private static String buildPrintable(long seed, double simTime, double timeMS, String[] nodes, NodeStats[] stats) {
+    public static String getResultString(long seed, double simTime, double timeMS, String[] nodes, NodeStats[] stats) {
         var size = (int) Math.ceil(Math.max(Math.log10(simTime), 1));
-        var iFormat = "%" + size + ".0f";
         var fFormat = "%" + (size + 4) + ".3f";
 
         var builder = new StringBuilder();
@@ -90,6 +95,26 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
         builder.append(String.format("Seed:       \t%d\n", seed));
         builder.append(String.format("Simulation: \t" + fFormat + "\n", simTime));
         builder.append(String.format("Elapsed:    \t" + fFormat + "ms\n", timeMS));
+        builder.append(getResultString(nodes, stats));
+        return builder.toString();
+    }
+
+    /**
+     * Create a string representation of the result. It only display the stats of
+     * each node in a table format.
+     * 
+     * @param nodes the names of the nodes
+     * @param stats the stats of each node
+     * @return a string representation of the result
+     * @throws AssertionError if the nodes and stats do not match
+     */
+    public static String getResultString(String[] nodes, NodeStats[] stats) {
+        assert nodes.length == stats.length;
+
+        var size = (int) Math.ceil(Math.max(Math.log10(stats[0].lastEventTime), 1));
+        var iFormat = "%" + size + ".0f";
+        var fFormat = "%" + (size + 4) + ".3f";
+        var builder = new StringBuilder();
 
         var table = new ConsoleTable("Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput",
                 "Utilization %", "Unavailable %", "Last Event");
@@ -206,12 +231,24 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
         }
 
         /**
-         * Gets the nodes of the summary.
+         * Gets a copy of the nodes of the summary.
          * 
          * @return the nodes of the summary
          */
-        public List<String> getNodes() {
-            return List.of(this.nodes);
+        public String[] getNodes() {
+            return Arrays.copyOf(this.nodes, this.nodes.length);
+        }
+
+        /**
+         * Gets the statistics of the nodes of the summary.
+         * 
+         * @return the statistics of the nodes of the summary
+         */
+        public NodeStats[] getStats() {
+            var stats = new NodeStats[this.nodes.length];
+            for (var i = 0; i < this.nodes.length; i++)
+                stats[i] = this.stats[i].average;
+            return stats;
         }
 
         /**
@@ -239,11 +276,8 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
 
         @Override
         public String toString() {
-            var stats = new NodeStats[this.nodes.length];
-            for (var i = 0; i < this.nodes.length; i++)
-                stats[i] = this.stats[i].average;
-
-            return buildPrintable(this.seed, this.avgSimulationTime, this.avgTimeElapsedMS, this.nodes, stats);
+            return getResultString(this.seed, this.avgSimulationTime, this.avgTimeElapsedMS, this.nodes,
+                    this.getStats());
         }
     }
 

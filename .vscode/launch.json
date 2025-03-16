@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "NetExamples",
+            "request": "launch",
+            "mainClass": "net.berack.upo.valpre.NetExamples",
+            "projectName": "valpre"
+        },
+        {
+            "type": "java",
             "name": "Run1k Simple",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
@@ -52,6 +59,6 @@
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
             "args": "interactive"
-        },
+        }
     ]
 }
