@@ -13,7 +13,7 @@ Il risultato è la creazione in una libreria per la simulazione di eventi discre
 
 Il JAR viene invocato tramite il classico comando java: `java -jar upo-valpre.jar` al quale si aggiungono vari argomenti successivi in base a cosa si vuole fare:
 
-* `java -jar upo-valpre.jar net`\
+* `java -jar upo-valpre.jar interactive`\
 Usato per avviare una sessione interattiva per la creazione di una rete. Da usare se la rete è relativamente breve da descrivere, altrimenti è più comodo usare il codice della libreria per la generazione della rete.\
 Una volta scelta la rete è necessario salvarla in un file per la successiva simulazione e analisi.
 * `java -jar upo-valpre.jar simulation -net <file> [other]`\
@@ -28,10 +28,6 @@ Esistono vari tipi di argomenti per scegliere come fare la simulazione:
 * `java -jar upo-valpre.jar plot -csv <file>`\
 Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:\
 ![1738603552417](image/README/1738603552417.png)
-
-Esistono dei file prefatti per vedere eventuali simulazioni che, nel caso vengano passati come parametri, automaticamente vengono usati:
-* `example1.net`, `example2.net` e `example3.net` per `simulation -net`
-* `example1.csv`, `example2.csv` e `example3.csv` per `plot -csv`
 
 ### Classi Interne
 

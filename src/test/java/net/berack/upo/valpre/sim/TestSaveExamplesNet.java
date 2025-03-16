@@ -21,7 +21,7 @@ import net.berack.upo.valpre.sim.stats.NodeStats;
 
 public class TestSaveExamplesNet {
 
-    private static final String path = "src/main/resources/example%d.%s";
+    private static final String path = "src/test/resources/example%d.%s";
     private static final String netFile1 = path.formatted(1, "net");
     private static final String netFile2 = path.formatted(2, "net");
     private static final String csv1 = path.formatted(1, "csv");

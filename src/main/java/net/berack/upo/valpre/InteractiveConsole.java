@@ -39,12 +39,11 @@ public class InteractiveConsole {
     /**
      * Run the interactive net builder.
      */
-    public Net runNetBuilder() {
+    public Net run() {
         while (true) {
             try {
-                var choice = choose("Choose the next step to do:",
-                        "Add a node", "Add a connection", "Print Nodes", "Save the net", "Load net", "Clear",
-                        "Exit");
+                var choice = choose(this.net + "\nChoose the next step to do:",
+                        "Add a node", "Add a connection", "Save the net", "Load net", "Clear", "Exit");
                 switch (choice) {
                     case 1 -> {
                         var node = this.buildNode();
@@ -58,8 +57,9 @@ public class InteractiveConsole {
                         var targetNode = this.net.getNode(target);
                         this.net.addConnection(sourceNode, targetNode, weight);
                     }
-                    case 3 -> this.out.println(this.net);
-                    case 4 -> this.net.save(ask("Enter the filename: "));
+                    case 3 -> this.net.save(ask("Enter the filename: "));
+                    case 4 -> this.net = Net.load(ask("Enter the filename: "));
+                    case 5 -> this.net = new Net();
                     default -> {
                         this.scanner.close();
                         return this.net;
