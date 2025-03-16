@@ -39,7 +39,7 @@ public class InteractiveConsole {
     /**
      * Run the interactive net builder.
      */
-    public Net run() {
+    public Net runBuilder() {
         while (true) {
             try {
                 var choice = choose(this.net + "\nChoose the next step to do:",

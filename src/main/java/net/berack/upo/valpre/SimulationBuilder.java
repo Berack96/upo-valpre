@@ -37,10 +37,8 @@ public class SimulationBuilder {
      */
     public SimulationBuilder(String netFile) throws IOException {
         try {
-            var file = Parameters.getFileOrExample(netFile);
-            this.net = Net.load(file);
+            this.net = Net.load(netFile);
             this.confidences = new ConfidenceIndices(this.net);
-            file.close();
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("Net file needed!");
         } catch (KryoException e) {

@@ -41,12 +41,7 @@ public class Plot {
      * @throws IOException if anything happens while reading the file
      */
     public Plot(String csv) throws IOException {
-        var stream = Parameters.getFileOrExample(csv);
-        if (stream == null)
-            throw new IllegalArgumentException("CSV file needed!");
-        var results = CsvResult.loadResults(stream);
-        stream.close();
-
+        var results = new CsvResult(csv).loadResults();
         this.summary = new Result.Summary(results);
 
         var nodes = this.summary.getNodes().toArray(new String[0]);

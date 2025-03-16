@@ -141,7 +141,7 @@ public class TestInteractions {
         var inputs = String.join("\n", commands);
         var bytes = inputs.getBytes();
         var in = new ByteArrayInputStream(bytes);
-        return new InteractiveConsole(out, in).run();
+        return new InteractiveConsole(out, in).runBuilder();
     }
 
     /*
