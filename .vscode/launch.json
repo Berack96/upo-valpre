@@ -9,49 +9,42 @@
             "name": "Run1k Simple",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net example1.net -runs 1000 -p"
+            "args": "simulation -net src/test/resources/example1.net -runs 1000 -p"
         },
         {
             "type": "java",
             "name": "Run1k Complex",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net example2.net -runs 1000 -p"
-        },
-        {
-            "type": "java",
-            "name": "Run1k Complex EXP",
-            "request": "launch",
-            "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net example3.net -runs 1000 -p"
+            "args": "simulation -net src/test/resources/example2.net -runs 1000 -p"
         },
         {
             "type": "java",
             "name": "Run Incremental",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net example3.net -runs 1000 -i \"[Service1:throughput=0.98:0.01],[Service2:utilization=0.98:0.01],[Service2:unavailable=0.98:0.01]\""
+            "args": "simulation -net src/test/resources/example2.net -runs 1000 -i \"[Service1:throughput=0.98:0.01],[Service2:utilization=0.98:0.01],[Service2:unavailable=0.98:0.01]\""
         },
         {
             "type": "java",
             "name": "Run10",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net example1.net -runs 10 -seed 2007539552"
+            "args": "simulation -net src/test/resources/example1.net -runs 10 -seed 2007539552"
         },
         {
             "type": "java",
             "name": "Plot Simple",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "plot -csv example1.csv"
+            "args": "plot -csv src/test/resources/example1.csv"
         },
         {
             "type": "java",
             "name": "Plot Complex",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "plot -csv example2.csv"
+            "args": "plot -csv src/test/resources/example2.csv"
         },
         {
             "type": "java",
