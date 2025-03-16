@@ -13,61 +13,26 @@ import org.junit.jupiter.api.BeforeAll;
 
 import com.esotericsoftware.kryo.KryoException;
 
+import net.berack.upo.valpre.NetExamples;
 import net.berack.upo.valpre.SimulationBuilder;
-import net.berack.upo.valpre.rand.Distribution;
 import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.sim.stats.CsvResult;
 import net.berack.upo.valpre.sim.stats.NodeStats;
 
 public class TestSaveExamplesNet {
 
-    private static final Distribution exp0_22 = new Distribution.Exponential(1.0 / 4.5);
-    private static final Distribution exp2 = new Distribution.Exponential(2.0);
-    private static final Distribution exp1_5 = new Distribution.Exponential(1.5);
-    private static final Distribution exp3_5 = new Distribution.Exponential(3.5);
-    private static final Distribution exp10 = new Distribution.Exponential(10.0);
-
-    private static final Distribution norm3_2 = new Distribution.NormalBoxMuller(3.2, 0.6);
-    private static final Distribution norm4_2 = new Distribution.NormalBoxMuller(4.2, 0.6);
-
-    private static final Distribution unNorm = new Distribution.UnavailableTime(0.2, norm4_2);
-    private static final Distribution unExp = new Distribution.UnavailableTime(0.1, exp10);
-
-    private static final int spawn = 10000;
     private static final String path = "src/main/resources/example%d.%s";
     private static final String netFile1 = path.formatted(1, "net");
     private static final String netFile2 = path.formatted(2, "net");
-    private static final String netFile3 = path.formatted(3, "net");
     private static final String csv1 = path.formatted(1, "csv");
     private static final String csv2 = path.formatted(2, "csv");
-    private static final String csv3 = path.formatted(3, "csv");
-
-    private static final Net net1 = new Net();
-    private static final Net net2 = new Net();
-    private static final Net net3 = new Net();
-    static {
-        net1.addNode(ServerNode.Builder.terminal("Source", spawn, exp0_22));
-        net1.addNode(ServerNode.Builder.queue("Queue", 1, norm3_2));
-        net1.addConnection(0, 1, 1.0);
-
-        net2.addNode(ServerNode.Builder.terminal("Source", spawn, exp0_22));
-        net2.addNode(ServerNode.Builder.queue("Queue", 1, norm3_2));
-        net2.addNode(ServerNode.Builder.queue("Queue Wait", 1, norm3_2, unNorm));
-        net2.addConnection(0, 1, 1.0);
-        net2.addConnection(1, 2, 1.0);
-
-        net3.addNode(ServerNode.Builder.terminal("Source", spawn, exp1_5));
-        net3.addNode(ServerNode.Builder.queue("Service1", 1, exp2));
-        net3.addNode(ServerNode.Builder.queue("Service2", 1, exp3_5, unExp));
-        net3.addConnection(0, 1, 1.0);
-        net3.addConnection(1, 2, 1.0);
-    }
+    private static final Net net1 = NetExamples.getNet1();
+    private static final Net net2 = NetExamples.getNet2();
 
     @BeforeAll
     public void saveAll() throws IOException {
         net1.save(netFile1);
         net2.save(netFile2);
-        net3.save(netFile3);
     }
 
     @Test
@@ -86,20 +51,6 @@ public class TestSaveExamplesNet {
     @Test
     public void loadExample2() throws KryoException, IOException {
         var sim = new Simulation(Net.load(netFile2), new Rng());
-        var res = sim.run();
-        var time = 45417.0;
-        var maxErr = time / 1000.0;
-
-        assertEquals(Rng.DEFAULT, res.seed);
-        assertEquals(time, res.simulationTime, maxErr);
-        testNode(res.getStat("Source"), 10000, time, 1.0, 4.5, 0.0, 0.0);
-        testNode(res.getStat("Queue"), 10000, time, 2.6, 7.2, 4.0, 0.0);
-        testNode(res.getStat("Queue Wait"), 10000, time, 5.8, 22.3, 19.1, 8497.7);
-    }
-
-    @Test
-    public void loadExample3() throws KryoException, IOException {
-        var sim = new Simulation(Net.load(netFile3), new Rng());
         var res = sim.run();
         var time = 6736.0;
         var maxErr = time / 1000.0;
@@ -171,19 +122,6 @@ public class TestSaveExamplesNet {
         try (var newOut = new PrintStream(OutputStream.nullOutputStream())) {
             new SimulationBuilder(net2)
                     .setCsv(csv2)
-                    .setMaxRuns(1000)
-                    .setSeed(2007539552L)
-                    .setParallel(true)
-                    .run(newOut);
-        }
-    }
-
-    @Test
-    @AfterAll
-    public void multiSimulation3() throws Exception {
-        try (var newOut = new PrintStream(OutputStream.nullOutputStream())) {
-            new SimulationBuilder(net3)
-                    .setCsv(csv3)
                     .setMaxRuns(1000)
                     .setSeed(2007539552L)
                     .setParallel(true)
