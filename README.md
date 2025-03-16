@@ -5,8 +5,6 @@ Il simulatore è iniziato con il lavoro trovato sul libro di testo [Discrete-Eve
 
 Il risultato è la creazione in una libreria per la simulazione di eventi discreti nella quale si può scegliera la topologia e la quantità di nodi nella rete da simulare.
 
-Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.net/Download.html) e le reti usate per fare il confronto si possono trovare sotto [le risorse del main](https://github.com/Berack96/upo-valpre/tree/main/src/main/resources).
-
 > [!IMPORTANT]
 > Il JAR risultante che si trova nelle [Releases](https://github.com/Berack96/upo-valpre/releases).\
 > La versione di Java usata è la 23 (precisamente la [23.0.1](https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html)).
@@ -55,7 +53,8 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
 ## Esempi
 
 Nel jar sono presenti già 2 reti per fare degli esperimenti e/o testare se il tool funziona correttamente. Per poter vedere una run usando questi esempi basta far partire il tool in modalità interattiva e scegliere di caricare gli esempi.\
-`java -jar upo-valpre.jar interactive`
+`java -jar upo-valpre.jar interactive`\
+Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.net/Download.html) e le reti usate per fare il confronto si possono trovare sotto [le risorse del test](src/test/resources).
 
 ### Primo esempio
 ![1741862746304](image/README/1741862746304.png)\
