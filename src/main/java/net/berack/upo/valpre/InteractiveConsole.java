@@ -12,16 +12,16 @@ import net.berack.upo.valpre.sim.ServerNode;
  * Interactive net builder. This class allows the user to build a net by adding
  * nodes and connections. The user can also save the net to a file.
  */
-public class NetBuilderInteractive {
+public class InteractiveConsole {
 
-    private final Net net = new Net();
+    private Net net = new Net();
     private final PrintStream out;
     private final Scanner scanner;
 
     /**
      * Create a new interactive net builder. Uses System.in and System.out.
      */
-    public NetBuilderInteractive() {
+    public InteractiveConsole() {
         this(System.out, System.in);
     }
 
@@ -31,21 +31,20 @@ public class NetBuilderInteractive {
      * @param out the output stream
      * @param in  the input stream
      */
-    public NetBuilderInteractive(PrintStream out, InputStream in) {
+    public InteractiveConsole(PrintStream out, InputStream in) {
         this.out = out;
         this.scanner = new Scanner(in);
     }
 
     /**
      * Run the interactive net builder.
-     * 
-     * @param args the arguments
      */
-    public Net run() {
+    public Net runNetBuilder() {
         while (true) {
             try {
                 var choice = choose("Choose the next step to do:",
-                        "Add a node", "Add a connection", "Print Nodes", "Save the net", "Exit");
+                        "Add a node", "Add a connection", "Print Nodes", "Save the net", "Load net", "Clear",
+                        "Exit");
                 switch (choice) {
                     case 1 -> {
                         var node = this.buildNode();

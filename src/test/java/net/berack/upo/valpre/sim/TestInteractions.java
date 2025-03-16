@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import net.berack.upo.valpre.NetBuilderInteractive;
+import net.berack.upo.valpre.InteractiveConsole;
 import net.berack.upo.valpre.rand.Distribution;
 
 public class TestInteractions {
@@ -104,31 +104,31 @@ public class TestInteractions {
         var inputs = List.of("5");
         var bytes = String.join("\n", inputs).getBytes();
         var in = new ByteArrayInputStream(bytes);
-        var net = new NetBuilderInteractive(out, in).run();
+        var net = new InteractiveConsole(out, in).runNetBuilder();
         assertEquals("", net.toString());
 
-        inputs = List.of("1", "1", "Source", "1", "1.0", "5");
+        inputs = List.of("1", "1", "Source", "1", "1.0", "7");
         bytes = String.join("\n", inputs).getBytes();
         in = new ByteArrayInputStream("1\n1\nSource\n1\n1.0\n1000\n5\n".getBytes());
-        net = new NetBuilderInteractive(out, in).run();
+        net = new InteractiveConsole(out, in).runNetBuilder();
         assertEquals("Source[servers:1, queue:100, spawn:-1, Exponential(1.0)] -\n", net.toString());
 
         inputs = List.of("1", "2", "Terminal", "1", "2.0", "500",
                 "1", "3", "Queue", "5", "3.2", "0.6", "1",
-                "5");
+                "7");
         bytes = String.join("\n", inputs).getBytes();
         in = new ByteArrayInputStream(bytes);
-        net = new NetBuilderInteractive(out, in).run();
+        net = new InteractiveConsole(out, in).runNetBuilder();
         assertEquals("Terminal[servers:1, queue:100, spawn:500, Exponential(2.0)] -\n"
                 + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
 
         inputs = List.of("1", "1", "Source", "1", "2.0",
                 "1", "3", "Queue", "5", "3.2", "0.6", "1",
                 "2", "Source", "Queue", "1.0",
-                "5");
+                "7");
         bytes = String.join("\n", inputs).getBytes();
         in = new ByteArrayInputStream(bytes);
-        net = new NetBuilderInteractive(out, in).run();
+        net = new InteractiveConsole(out, in).runNetBuilder();
         assertEquals("Source[servers:1, queue:100, spawn:-1, Exponential(2.0)] -> Queue(1.0)\n"
                 + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
     }
@@ -156,6 +156,8 @@ public class TestInteractions {
      * - Enter the weight: 1.0
      * 3. Print Nodes
      * 4. Save the net
-     * 5. Exit
+     * 5. Load net
+     * 6. Clear
+     * 7. Exit
      */
 }

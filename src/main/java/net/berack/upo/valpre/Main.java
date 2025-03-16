@@ -31,10 +31,7 @@ public class Main {
                     var plot = new Plot(csv);
                     plot.show();
                 }
-                case "net" -> {
-                    var net = new NetBuilderInteractive();
-                    net.run();
-                }
+                case "net" -> new InteractiveConsole().runNetBuilder();
                 default -> exit("Invalid program!");
             }
         } catch (Exception e) {
