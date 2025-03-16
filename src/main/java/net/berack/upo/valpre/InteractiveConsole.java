@@ -1,9 +1,15 @@
 package net.berack.upo.valpre;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+
+import com.esotericsoftware.kryo.KryoException;
+
 import net.berack.upo.valpre.rand.Distribution;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.ServerNode;
@@ -39,27 +45,18 @@ public class InteractiveConsole {
     /**
      * Run the interactive net builder.
      */
-    public Net runBuilder() {
+    public Net run() {
         while (true) {
             try {
                 var choice = choose(this.net + "\nChoose the next step to do:",
-                        "Add a node", "Add a connection", "Save the net", "Load net", "Clear", "Exit");
+                        "Add a node", "Add a connection", "Save the net", "Load net", "Clear", "Run", "Exit");
                 switch (choice) {
-                    case 1 -> {
-                        var node = this.buildNode();
-                        this.net.addNode(node);
-                    }
-                    case 2 -> {
-                        var source = ask("Enter the source node: ");
-                        var target = ask("Enter the target node: ");
-                        var weight = ask("Enter the weight: ", Double::parseDouble);
-                        var sourceNode = this.net.getNode(source);
-                        var targetNode = this.net.getNode(target);
-                        this.net.addConnection(sourceNode, targetNode, weight);
-                    }
+                    case 1 -> this.buildNode();
+                    case 2 -> this.buildConnection();
                     case 3 -> this.net.save(ask("Enter the filename: "));
-                    case 4 -> this.net = Net.load(ask("Enter the filename: "));
+                    case 4 -> this.loadNet();
                     case 5 -> this.net = new Net();
+                    case 6 -> this.simpleRuns();
                     default -> {
                         this.scanner.close();
                         return this.net;
@@ -72,17 +69,15 @@ public class InteractiveConsole {
     }
 
     /**
-     * Build a node.
-     * 
-     * @return the node
+     * Build a node as a source, terminal, queue, or queue with unavailable time.
      */
-    private ServerNode buildNode() {
+    private void buildNode() {
         var choice = choose("Choose the type of node to create:", "Source", "Terminal", "Queue",
                 "Queue with unavailable time");
         var name = ask("Node name: ");
         var distribution = askDistribution("Service distribution");
 
-        return switch (choice) {
+        var node = switch (choice) {
             case 1 -> ServerNode.Builder.source(name, distribution);
             case 2 -> {
                 var limit = ask("Arrivals limit (0 for Int.Max): ", Integer::parseInt);
@@ -101,6 +96,61 @@ public class InteractiveConsole {
             }
             default -> null;
         };
+
+        if (node != null)
+            this.net.addNode(node);
+    }
+
+    /**
+     * Build a connection.
+     */
+    private void buildConnection() {
+        var source = ask("Enter the source node: ");
+        var target = ask("Enter the target node: ");
+        var weight = ask("Enter the weight: ", Double::parseDouble);
+        var sourceNode = this.net.getNode(source);
+        var targetNode = this.net.getNode(target);
+        this.net.addConnection(sourceNode, targetNode, weight);
+    }
+
+    /**
+     * Load a net from a file or from examples.
+     */
+    private void loadNet() throws KryoException, IOException {
+        var choice = choose("Choose the type of net to load:", "From file", "From examples");
+        this.net = switch (choice) {
+            case 1 -> Net.load(ask("Enter the filename: "));
+            case 2 -> {
+                var choice2 = choose("Choose the example to load:",
+                        "Example 1: Source -> Queue",
+                        "Example 2: Source -> Queue -> Queue");
+                yield switch (choice2) {
+                    case 1 -> NetExamples.getNet1();
+                    case 2 -> NetExamples.getNet2();
+                    default -> null;
+                };
+            }
+            default -> null;
+        };
+    }
+
+    /**
+     * Run the simulation with the net.
+     */
+    private void simpleRuns() throws InterruptedException, ExecutionException, IOException {
+        var choice = choose("Choose what to do:", "100 Run", "1K Runs", "1K Runs + Plot");
+        switch (choice) {
+            case 1 -> new SimulationBuilder(net).setMaxRuns(100).setParallel(true).run();
+            case 2 -> new SimulationBuilder(net).setMaxRuns(1000).setParallel(true).run();
+            case 3 -> {
+                var randName = "rand" + System.currentTimeMillis() + ".csv";
+                new SimulationBuilder(net).setMaxRuns(1000).setParallel(true).setCsv(randName).run();
+                new Plot(randName).show();
+                new File(randName).delete();
+            }
+            default -> {
+            }
+        }
     }
 
     /**

@@ -31,7 +31,7 @@ public class Main {
                     var plot = new Plot(csv);
                     plot.show();
                 }
-                case "interactive" -> new InteractiveConsole().runBuilder();
+                case "interactive" -> new InteractiveConsole().run();
                 default -> exit("Invalid program!");
             }
         } catch (Exception e) {

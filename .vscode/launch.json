@@ -55,10 +55,10 @@
         },
         {
             "type": "java",
-            "name": "Build Net",
+            "name": "Interactive Net Builder",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "net"
+            "args": "interactive"
         },
     ]
 }

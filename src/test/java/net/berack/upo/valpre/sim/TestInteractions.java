@@ -100,17 +100,17 @@ public class TestInteractions {
     public void netBuilderInteractive() {
 
         // Test the interactive console EXIT
-        var net = runInteraction("6");
+        var net = runInteraction("7");
         assertEquals("", net.toString());
 
         // Test the interactive console ADD NODE
-        net = runInteraction("1", "1", "Source", "1", "1.0", "6");
+        net = runInteraction("1", "1", "Source", "1", "1.0", "7");
         assertEquals("Source[servers:1, queue:100, spawn:-1, Exponential(1.0)] -\n", net.toString());
 
-        // Test the interactive console ADD SECOND NODE 
+        // Test the interactive console ADD SECOND NODE
         net = runInteraction("1", "2", "Terminal", "1", "2.0", "500",
                 "1", "3", "Queue", "5", "3.2", "0.6", "1",
-                "6");
+                "7");
         assertEquals("Terminal[servers:1, queue:100, spawn:500, Exponential(2.0)] -\n"
                 + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
 
@@ -118,7 +118,7 @@ public class TestInteractions {
         net = runInteraction("1", "1", "Source", "1", "2.0",
                 "1", "3", "Queue", "5", "3.2", "0.6", "1",
                 "2", "Source", "Queue", "1.0",
-                "6");
+                "7");
         assertEquals("Source[servers:1, queue:100, spawn:-1, Exponential(2.0)] -> Queue(1.0)\n"
                 + "Queue[servers:1, queue:100, spawn:0, Normal(3.2, 0.6)] -\n", net.toString());
 
@@ -127,13 +127,27 @@ public class TestInteractions {
                 "1", "3", "Queue", "5", "3.2", "0.6", "1",
                 "2", "Source", "Queue", "1.0",
                 "2", "Queue", "Queue", "1.0",
-                "5", "6");
+                "5", "7");
         assertEquals("", net.toString());
 
         // Test the interactive console LOAD
-        net = runInteraction("4", "src/test/resources/example1.net", "6");
+        net = runInteraction("4", "1", "src/test/resources/example1.net", "7");
         assertEquals("Source[servers:1, queue:100, spawn:10000, Exponential(0.2222222222222222)] -> Queue(1.0)\n"
-                + "Queue[servers:1, queue:100, spawn:0, NormalBoxMuller(3.2, 0.6)] -\n", net.toString());
+                + "Queue[servers:1, queue:100, spawn:0, NormalBoxMuller(3.2, 0.6)] -\n",
+                net.toString());
+
+        // Test the interactive console LOAD EXAMPLE 1
+        net = runInteraction("4", "2", "1", "7");
+        assertEquals("Source[servers:1, queue:100, spawn:10000, Exponential(0.2222222222222222)] -> Queue(1.0)\n"
+                + "Queue[servers:1, queue:100, spawn:0, NormalBoxMuller(3.2, 0.6)] -\n",
+                net.toString());
+
+        // Test the interactive console LOAD EXAMPLE 2
+        net = runInteraction("4", "2", "2", "7");
+        assertEquals("Source[servers:1, queue:100, spawn:10000, Exponential(1.5)] -> Service1(1.0)\n"
+                + "Service1[servers:1, queue:100, spawn:0, Exponential(2.0)] -> Service2(1.0)\n"
+                + "Service2[servers:1, queue:100, spawn:0, Exponential(3.5), u:UnavailableTime(0.1, Exponential(10.0))] -\n",
+                net.toString());
     }
 
     private static Net runInteraction(String... commands) {
@@ -141,7 +155,7 @@ public class TestInteractions {
         var inputs = String.join("\n", commands);
         var bytes = inputs.getBytes();
         var in = new ByteArrayInputStream(bytes);
-        return new InteractiveConsole(out, in).runBuilder();
+        return new InteractiveConsole(out, in).run();
     }
 
     /*
