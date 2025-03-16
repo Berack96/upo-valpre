@@ -31,10 +31,7 @@ public class Main {
                     var plot = new Plot(csv);
                     plot.show();
                 }
-                case "net" -> {
-                    var net = new NetBuilderInteractive();
-                    net.run();
-                }
+                case "interactive" -> new InteractiveConsole().run();
                 default -> exit("Invalid program!");
             }
         } catch (Exception e) {
@@ -86,11 +83,11 @@ public class Main {
             var uri = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI();
             var name = new File(uri).getName();
             System.err.println(message);
-            System.out.println("Usage: java -jar " + name + ".jar [simulation|plot|net] [args]");
+            System.out.println("Usage: java -jar " + name + ".jar [simulation|plot|interactive] [args]");
             System.out.println("simulation args: -net <net> [-csv <csv>] [-runs <runs>] [-seed <seed>]"
                     + "[-p] [-end <end>] [-i <indices>]");
             System.out.println("plot args: -csv <csv>");
-            System.out.println("net args: none");
+            System.out.println("interactive: no args needed");
             System.exit(1);
         } catch (URISyntaxException e) {
             e.printStackTrace();

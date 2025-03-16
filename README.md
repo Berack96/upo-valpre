@@ -16,7 +16,7 @@ Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.n
 
 Il JAR viene invocato tramite il classico comando java: `java -jar upo-valpre.jar` al quale si aggiungono vari argomenti successivi in base a cosa si vuole fare:
 
-* `java -jar upo-valpre.jar net`\
+* `java -jar upo-valpre.jar interactive`\
 Usato per avviare una sessione interattiva per la creazione di una rete. Da usare se la rete è relativamente breve da descrivere, altrimenti è più comodo usare il codice della libreria per la generazione della rete.\
 Una volta scelta la rete è necessario salvarla in un file per la successiva simulazione e analisi.
 * `java -jar upo-valpre.jar simulation -net <file> [other]`\
@@ -33,10 +33,6 @@ Esistono vari tipi di argomenti per scegliere come fare la simulazione:
 * `java -jar upo-valpre.jar plot -csv <file>`\
 Mostra (con un ambiente grafico) una finestra nella quale si può scegliere quale nodo vedere e ogni statistica associata ad esso. Di seguito un'immagine di esempio:\
 ![1738603552417](image/README/1738603552417.png)
-
-Esistono dei file prefatti per vedere eventuali simulazioni che, nel caso vengano passati come parametri, automaticamente vengono usati:
-* `example1.net`, `example2.net` e `example3.net` per `simulation -net`
-* `example1.csv`, `example2.csv` e `example3.csv` per `plot -csv`
 
 ---
 ### Classi Interne
@@ -61,14 +57,13 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
 ---
 ### Esempi
 
-Nel jar sono presenti già 3 reti per fare degli esperimenti e/o testare se il tool funziona correttamente. Per tutti e tre gli esempi i comandi usati sono i seguenti, dove viene sostituito un numero al posto dell'asterisco:
-- `java -jar .\upo-valpre.jar simulation -net example*.net -runs 100` per fare una simulazione di 100 run e vedere i risultati aggregati.
-- `java -jar .\upo-valpre.jar plot -csv example*.csv` per mostrare un'aggregazione con più dettagli di una simulazione di 1000 run.
+Nel jar sono presenti già 2 reti per fare degli esperimenti e/o testare se il tool funziona correttamente. Per poter vedere una run usando questi esempi basta far partire il tool in modalità interattiva e scegliere di caricare gli esempi.\
+`java -jar upo-valpre.jar interactive`
 
 ##### Primo esempio
 ![1741862746304](image/README/1741862746304.png)\
 Il primo è `example1`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=0.222 e quindi media 4.5) e un centro di servizio (Queue) con tasso di servizio distribuito come una normale (μ=3.2, σ=0.6).\
-Se si effettua una simulazione con il comando precedente si vedranno i risultati sulla console in questo modo:
+Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:
 ![1741860064265](image/README/1741860064265.png)
 
 Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simili a quelli prodotti dalla libreria:\
@@ -78,15 +73,10 @@ Queue Utilization = 0.7111 con un range [0.6959, 0.7262]
 
 ##### Secondo esempio
 ![1741863043733](image/README/1741863043733.png)\
-Il secondo è `example2`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=0.222 e quindi media 4.5), un centro di servizio (Queue) con tasso di servizio distribuito come una normale (μ=3.2, σ=0.6) e un altro centro di servizio (Queue Wait) con tasso di servizio distribuito come una normale (μ=3.2, σ=0.6) e con un tempo di indisponibilità che viene attivato con probabilità 20% e distribuito con una normale (μ=4.2, σ=0.6)\
-Se si effettua una simulazione con il comando precedente si vedranno i risultati sulla console in questo modo:
-![1741862185715](image/README/1741862185715.png)
-
-##### Terzo esempio
-![1741863043733](image/README/1741863043733.png)\
-Il terzo è `example3`; è uguale al secondo esempio ma nel quale cambiano i nomi dei nodi e le loro distribuzioni: è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=1.5 e quindi media 0.666), un centro di servizio (Service1) con tasso di servizio distribuito come una esponenziale (λ=2.0 e quindi media 0.5) e un altro centro di servizio (Service2) con tasso di servizio distribuito come una esponenziale (λ=3.5 e quindi media 0.2857) e con un tempo di indisponibilità che viene attivato con probabilità 10% e distribuito con una eseponenziale (λ=10.0 e quindi media 0.1)\
-Se si effettua una simulazione con il comando precedente si vedranno i risultati sulla console in questo modo:
+Il secondo esempio è `example2`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=1.5 e quindi media 0.666), un centro di servizio (Service1) con tasso di servizio distribuito come una esponenziale (λ=2.0 e quindi media 0.5) e un altro centro di servizio (Service2) con tasso di servizio distribuito come una esponenziale (λ=3.5 e quindi media 0.2857) e con un tempo di indisponibilità che viene attivato con probabilità 10% e distribuito con una eseponenziale (λ=10.0 e quindi media 0.1)\
+Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:
 ![1741862486547](image/README/1741862486547.png)
+
 Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simili a quelli prodotti dalla libreria:\
 Service1 Response Time ~ 1.9866\
 Busy2 Response Time ~ 0.2825\
@@ -95,4 +85,3 @@ Service1 Utilization ~ 0.7488\
 Calibration Number of Customers ~ 0.0150\
 Busy2 Number of Customers ~ 0.4279\
 Throughput ~ 1.5000
-

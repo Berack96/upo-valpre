@@ -1,8 +1,5 @@
 package net.berack.upo.valpre;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -193,24 +190,5 @@ public class Parameters {
             System.out.println(param.helper(descriptions));
             throw new IllegalArgumentException("Invalid arguments");
         }
-    }
-
-    /**
-     * Get the file or the example file if it is present.
-     * 
-     * @param file the file to get
-     * @return the file or the example file
-     * @throws FileNotFoundException if the file is not found
-     */
-    public static InputStream getFileOrExample(String file) throws FileNotFoundException {
-        if (file == null)
-            return null;
-
-        if (file.startsWith("example")) {
-            var resource = Parameters.class.getClassLoader().getResourceAsStream(file);
-            if (resource != null)
-                return resource;
-        }
-        return new FileInputStream(file);
     }
 }

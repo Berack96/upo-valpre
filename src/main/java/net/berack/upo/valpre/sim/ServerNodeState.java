@@ -69,7 +69,7 @@ public class ServerNodeState {
      * @return True if the node should spawn an arrival, false otherwise.
      */
     public boolean shouldSpawnArrival() {
-        return this.node.spawnArrivals > this.stats.numArrivals;
+        return this.node.spawnArrivals < 0 || this.node.spawnArrivals > this.stats.numArrivals;
     }
 
     /**
@@ -159,6 +159,23 @@ public class ServerNodeState {
     }
 
     /**
+     * Get a random child based on the weights of the children and the random number
+     * generator passed as input
+     * 
+     * @param rng the random number generator
+     * @return the index of the child or -1 if no child is selected
+     */
+    public int getRandomChild(Rng rng) {
+        var random = rng.random();
+        for (var child : this.children) {
+            random -= child.weight;
+            if (random <= 0)
+                return child.index;
+        }
+        return -1;
+    }
+
+    /**
      * Create an arrival event to a child node based on the node and the time passed
      * as input
      * 
@@ -168,12 +185,7 @@ public class ServerNodeState {
      *         otherwise
      */
     public Event spawnArrivalToChild(double time, Rng rng) {
-        var random = rng.random();
-        for (var child : this.children) {
-            random -= child.weight;
-            if (random <= 0)
-                return Event.newArrival(child.index, time);
-        }
-        return null;
+        var child = this.getRandomChild(rng);
+        return child > -1 ? Event.newArrival(child, time) : null;
     }
 }

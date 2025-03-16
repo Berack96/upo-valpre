@@ -75,7 +75,6 @@ public final class Net implements Iterable<ServerNode> {
      * @param weight The probability of the child node.
      * @throws IndexOutOfBoundsException if one of the two nodes are not in the net
      * @throws IllegalArgumentException  if the weight is negative or zero
-     * @throws IllegalArgumentException  if the child is a source node
      */
     public void addConnection(int parent, int child, double weight) {
         if (weight <= 0)
@@ -84,9 +83,6 @@ public final class Net implements Iterable<ServerNode> {
         var max = this.servers.size() - 1;
         if (parent < 0 || child < 0 || parent > max || child > max)
             throw new IndexOutOfBoundsException("One of the nodes does not exist");
-
-        if (this.servers.get(child).spawnArrivals > 0)
-            throw new IllegalArgumentException("Can't connect to a source node");
 
         var list = this.connections.get(parent);
         list.removeIf(conn -> conn.index == child);
@@ -170,14 +166,13 @@ public final class Net implements Iterable<ServerNode> {
             for (var conn : list)
                 sum += conn.weight;
 
-            var newOne = new Connection[list.size()];
-            for (var i = 0; i < list.size(); i++) {
-                var conn = list.get(i);
+            var newOne = new ArrayList<Connection>();
+            for (var conn : list) {
                 var newWeight = conn.weight / sum;
-                newOne[i] = new Connection(conn.index, newWeight);
+                newOne.add(new Connection(conn.index, newWeight));
             }
 
-            this.connections.set(node, List.of(newOne));
+            this.connections.set(node, newOne);
         }
     }
 
@@ -247,6 +242,56 @@ public final class Net implements Iterable<ServerNode> {
         try (var in = new Input(stream)) {
             return (Net) kryo.readClassAndObject(in);
         }
+    }
+
+    /**
+     * Create a copy of the net passed as input.
+     * The new net will have the same nodes and connections.
+     * 
+     * @param net the net to copy
+     * @return a new Net object
+     */
+    public static Net copyOf(Net net) {
+        var newNet = new Net();
+
+        for (var index = 0; index < net.size(); index++) {
+            var node = net.servers.get(index);
+            var conn = net.connections.get(index);
+            conn = new ArrayList<>(conn);
+
+            newNet.indices.put(node, index);
+            newNet.servers.add(node);
+            newNet.connections.add(conn);
+        }
+
+        return newNet;
+    }
+
+    @Override
+    public String toString() {
+        var builder = new StringBuilder();
+        try {
+            for (var node : this.servers) {
+                builder.append(node)
+                        .append(" -> ");
+
+                for (var child : this.getChildren(this.indices.get(node))) {
+                    var childNode = this.servers.get(child.index);
+                    builder.append(childNode.name)
+                            .append("(")
+                            .append(child.weight)
+                            .append("), ");
+                }
+
+                builder.delete(builder.length() - 2, builder.length())
+                        .append("\n");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return builder.toString();
     }
 
     /**

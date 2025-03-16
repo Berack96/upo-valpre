@@ -2,6 +2,7 @@ package net.berack.upo.valpre;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.concurrent.ExecutionException;
 import com.esotericsoftware.kryo.KryoException;
 
@@ -13,6 +14,7 @@ import net.berack.upo.valpre.sim.EndCriteria.MaxTime;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.SimulationMultiple;
 import net.berack.upo.valpre.sim.stats.CsvResult;
+import net.berack.upo.valpre.sim.stats.Result;
 
 /**
  * This class is responsible for running the simulation. It parses the arguments
@@ -35,10 +37,8 @@ public class SimulationBuilder {
      */
     public SimulationBuilder(String netFile) throws IOException {
         try {
-            var file = Parameters.getFileOrExample(netFile);
-            this.net = Net.load(file);
+            this.net = Net.load(netFile);
             this.confidences = new ConfidenceIndices(this.net);
-            file.close();
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("Net file needed!");
         } catch (KryoException e) {
@@ -230,23 +230,38 @@ public class SimulationBuilder {
      * @throws ExecutionException   If the simulation has an error.
      * @throws IOException          If the CSV file has a problem.
      */
-    public void run() throws InterruptedException, ExecutionException, IOException {
+    public Result.Summary run() throws InterruptedException, ExecutionException, IOException {
+        return this.run(System.out);
+    }
+
+    /**
+     * Run the simulation with the given parameters.
+     * At the end it prints the results and saves them to a CSV file if requested.
+     * 
+     * @param out the output stream to print the results
+     * @throws InterruptedException If the simulation is interrupted.
+     * @throws ExecutionException   If the simulation has an error.
+     * @throws IOException          If the CSV file has a problem.
+     */
+    public Result.Summary run(PrintStream out) throws InterruptedException, ExecutionException, IOException {
         var nano = System.nanoTime();
         var sim = new SimulationMultiple(this.net);
         var summary = switch (this.type) {
-            case Incremental -> sim.runIncremental(this.seed, this.runs, this.confidences, this.endCriteria);
+            case Incremental -> sim.runIncremental(this.seed, this.runs, out, this.confidences, this.endCriteria);
             case Parallel -> sim.runParallel(this.seed, this.runs, this.endCriteria);
             case Normal -> sim.run(this.seed, this.runs, this.endCriteria);
         };
         nano = System.nanoTime() - nano;
 
-        System.out.print(summary);
-        System.out.println("Final time " + nano / 1e6 + "ms");
+        out.print(summary);
+        out.println("Final time " + nano / 1e6 + "ms");
 
         if (csv != null) {
             new CsvResult(this.csv).saveResults(summary.getRuns());
-            System.out.println("Data saved to " + this.csv);
+            out.println("Data saved to " + this.csv);
         }
+
+        return summary;
     }
 
     /**

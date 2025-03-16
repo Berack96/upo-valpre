@@ -1,6 +1,5 @@
 package net.berack.upo.valpre.sim;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -98,8 +97,13 @@ public final class Simulation {
             case DEPARTURE -> {
                 state.updateDeparture(time);
 
+                // Spawn unavailability if has unavailable time
                 this.addToFel(state.spawnUnavailableIfPossible(time, this.rng));
+
+                // Spawn departure if has requests and server is available
                 this.addToFel(state.spawnDepartureIfPossible(time, this.rng));
+
+                // Spawn arrival to self if is source node
                 this.addToFel(state.spawnArrivalIfPossilbe(time));
 
                 // Spawn arrival to child node if queue is not full otherwise drop
@@ -151,7 +155,7 @@ public final class Simulation {
      * @return a list of future events.
      */
     public List<Event> getFutureEventList() {
-        return new ArrayList<>(this.fel);
+        return List.copyOf(this.fel);
     }
 
     /**

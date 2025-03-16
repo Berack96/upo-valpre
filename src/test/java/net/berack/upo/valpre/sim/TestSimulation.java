@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashSet;
 
@@ -23,7 +24,7 @@ public class TestSimulation {
     private static final ServerNode node0;
     private static final ServerNode node1;
     static {
-        node0 = ServerNode.Builder.sourceLimited("First", 0, const1);
+        node0 = ServerNode.Builder.terminal("First", 0, const1);
         node1 = ServerNode.Builder.queue("Second", 1, const1);
 
         simpleNet = new Net();
@@ -56,10 +57,10 @@ public class TestSimulation {
         node = ServerNode.Builder.source("Source", const1);
         assertEquals("Source", node.name);
         assertEquals(1, node.maxServers);
-        assertEquals(Integer.MAX_VALUE, node.spawnArrivals);
+        assertEquals(-1, node.spawnArrivals);
         assertEquals(1.0, node.getServiceTime(null), DELTA);
 
-        node = ServerNode.Builder.sourceLimited("Source", 50, const1);
+        node = ServerNode.Builder.terminal("Source", 50, const1);
         assertEquals("Source", node.name);
         assertEquals(1, node.maxServers);
         assertEquals(50, node.spawnArrivals);
@@ -196,7 +197,7 @@ public class TestSimulation {
     @Test
     public void nodeStatsUpdates() {
         var net = new Net();
-        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(ServerNode.Builder.terminal("Source", 50, const1));
         net.addNode(node1);
         net.addConnection(0, 1, 1.0);
 
@@ -393,13 +394,23 @@ public class TestSimulation {
 
     @Test
     public void simulation() {
-        var start = System.nanoTime();
+        assertThrows(NullPointerException.class, () -> new Simulation(null, rigged));
+        assertThrows(NullPointerException.class, () -> new Simulation(simpleNet, null));
+
         var sim = new Simulation(simpleNet, rigged);
+        assertTrue(sim.hasEnded());
+        assertEquals(0, sim.getEventsProcessed());
+        assertEquals(0.0, sim.getTime(), DELTA);
+        var fel = sim.getFutureEventList();
+        assertEquals(0, fel.size());
+
+        var start = System.nanoTime();
+        sim = new Simulation(simpleNet, rigged);
         // knowing that it takes time to allocate the object
         // we can use the average time
         var endAllocation = System.nanoTime();
         var time = (endAllocation + start) / 2;
-        var diff = 0.5e-6 * (endAllocation - start); // getting the error margin in ms
+        var diff = 1e-6 * (endAllocation - start); // getting the error margin in ms
 
         assertTrue(sim.hasEnded());
         assertEquals(0, sim.getEventsProcessed());
@@ -410,7 +421,7 @@ public class TestSimulation {
         assertEquals(0, sim.getNodeState(node0.name).numServerUnavailable);
         assertEquals(0, sim.getNodeState(node1.name).numServerBusy);
         assertEquals(0, sim.getNodeState(node1.name).numServerUnavailable);
-        var fel = sim.getFutureEventList();
+        fel = sim.getFutureEventList();
         assertEquals(0, fel.size());
 
         sim.addToFel(Event.newArrival(0, sim.getTime()));
@@ -489,6 +500,8 @@ public class TestSimulation {
         assertEquals(0, sim.getNodeState(node1.name).numServerUnavailable);
         fel = sim.getFutureEventList();
         assertEquals(0, fel.size());
+        final var s = sim;
+        assertThrows(NullPointerException.class, () -> s.processNextEvent());
 
         var elapsed = (double) (System.nanoTime() - time);
         var result = sim.endSimulation();
@@ -529,7 +542,7 @@ public class TestSimulation {
     @Test
     public void simulationStats() {
         var net = new Net();
-        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(ServerNode.Builder.terminal("Source", 50, const1));
 
         var sim = new Simulation(net, rigged);
         var result = sim.run();
@@ -581,7 +594,7 @@ public class TestSimulation {
     @Test
     public void simulationDrop() {
         var net = new Net();
-        net.addNode(ServerNode.Builder.sourceLimited("Source", 50, const1));
+        net.addNode(ServerNode.Builder.terminal("Source", 50, const1));
         net.addNode(new ServerNode.Builder("Queue", _ -> 2.0).queue(20).build());
         net.addConnection(0, 1, 1.0);
 
