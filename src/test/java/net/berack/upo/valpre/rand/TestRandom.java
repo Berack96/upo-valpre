@@ -55,4 +55,23 @@ public class TestRandom {
 
         assertTrue("Standard Dev must be less than [" + expected + "] -> [" + stdDev + "]", stdDev < expected);
     }
+
+    @Test
+    public void testMean() {
+        var rng = new Rng();
+        var normal = new Distribution.NormalBoxMuller(1 / 3.5, 0.6);
+        var mean = 0.0;
+
+        for (var i = 0; i < 100000; i++) {
+            var sample = Distribution.getPositiveSample(normal, rng);
+            mean = (mean * (i + 1) + sample) / (i + 2);
+        }
+        assertEquals(0.6, mean, 0.01);
+
+        for (var i = 0; i < 100000; i++) {
+            var sample = Math.max(0, normal.sample(rng));
+            mean = (mean * (i + 1) + sample) / (i + 2);
+        }
+        assertEquals(0.41, mean, 0.01);
+    }
 }

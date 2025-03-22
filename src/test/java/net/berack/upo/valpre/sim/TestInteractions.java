@@ -144,8 +144,8 @@ public class TestInteractions {
 
         // Test the interactive console LOAD EXAMPLE 2
         net = runInteraction("4", "2", "2", "7");
-        assertEquals("Source[servers:1, queue:100, spawn:10000, Exponential(1.5)] -> Service1(1.0)\n"
-                + "Service1[servers:1, queue:100, spawn:0, Exponential(2.0)] -> Service2(1.0)\n"
+        assertEquals("Source[servers:1, queue:100, spawn:10000, Exponential(1.5)] -> Service(1.0)\n"
+                + "Service[servers:1, queue:100, spawn:0, Exponential(2.0)] -> Service2(1.0)\n"
                 + "Service2[servers:1, queue:100, spawn:0, Exponential(3.5), u:UnavailableTime(0.1, Exponential(10.0))] -\n",
                 net.toString());
     }

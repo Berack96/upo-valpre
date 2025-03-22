@@ -49,7 +49,7 @@ public class ConsoleTable {
             builder.append('║');
             builder.append(" ".repeat(first));
             builder.append(val);
-            builder.append(" ".repeat(diff - first));
+            builder.append(" ".repeat(Math.max(diff - first, 0)));
         }
 
         builder.append("║\n");
