@@ -54,7 +54,15 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
 
 Nel jar sono presenti già 2 reti per fare degli esperimenti e/o testare se il tool funziona correttamente. Per poter vedere una run usando questi esempi basta far partire il tool in modalità interattiva e scegliere di caricare gli esempi.\
 `java -jar upo-valpre.jar interactive`\
-Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.net/Download.html) e le reti usate per fare il confronto si possono trovare sotto [le risorse del test](src/test/resources).
+Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.net/Download.html) e le reti usate per fare il confronto si possono trovare sotto [le risorse del test](src/test/resources).\
+Inoltre in alcune istanze state modificate le due reti di esempio in modo da mostrare cosa succede con l'aumento del numero di clienti nel sistema e cambiando la distribuzione di servizio di un nodo. Ogni valore ottenuto ha un sample di 1000 simulazioni. I risultati possono essere presi dal seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing)\
+Le distribuzioni usate hanno tutte la stessa media μ:
+- Normale(μ, 0.6)
+- Uniforme(μ - (μ\*0.1), μ + (μ\*0.1))
+- Esponenziale(1/μ)
+- Erlang(5, 5/μ)
+- Iperesponenziale(p=\[0.5, 0.5\], e=\[1/(μ\*0.5), 1/(μ\*1.5)\])
+
 
 ### Primo esempio
 ![1741862746304](image/README/1741862746304.png)\
@@ -66,6 +74,13 @@ Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simil
 Queue Response Time = 7.3022 con un range [7.1456, 7.4589]\
 Queue Throughput = 0.2226 con un range [0.2182, 0.2271]\
 Queue Utilization = 0.7111 con un range [0.6959, 0.7262]
+
+Successivamente ho cambiato la distribuzione di servizio usata dal nodo "Queue".\
+Come si può notare l'utilizzo e il throughput rimangono pressochè invariati tra le varie distribuzioni, ma convergono con l'aumentare dei clienti.\
+I valori che cambiano sono il **numero medio della coda**, il **tempo medio di attesa** e, di conseguenza, anche il **tempo medio di risposta**.\
+![1742150755381](image/README/1742150755381.png)\
+Di seguito si può vedere il cambiamento del tempo medio di attesa, il numero medio della coda e l'utilizzazione al variare del numero di clienti nel sistema.\
+![1742556358341](image/README/1742556358341.png)
 
 ### Secondo esempio
 ![1741863043733](image/README/1741863043733.png)\
@@ -82,26 +97,7 @@ Calibration Number of Customers ~ 0.0150\
 Busy2 Number of Customers ~ 0.4279\
 Throughput ~ 1.5000
 
-### Modifiche alle reti
-
-Di seguito sono state modificate le due reti descritte precedentemente in modo da mostrare cosa succede con l'aumento del numero di clienti nel sistema e cambiando la distribuzione di servizio di un nodo. Ogni valore ottenuto ha un sample di 1000 simulazioni. I risultati possono essere presi dal seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing)\
-Le distribuzioni usate hanno tutte la stessa media μ:
-- Normale(μ, 0.6)
-- Uniforme(μ - (μ\*0.1), μ + (μ\*0.1))
-- Esponenziale(1/μ)
-- Erlang(5, 5/μ)
-- Iperesponenziale(p=\[0.5, 0.5\], e=\[1/(μ\*0.5), 1/(μ\*1.5)\])
-
-##### Prima rete
-Per la prima rete ho cambiato la distribuzione di servizio usata dal nodo "Queue".\
-Come si può notare l'utilizzo e il throughput rimangono pressochè invariati tra le varie distribuzioni, ma convergono con l'aumentare dei clienti.\
-I valori che cambiano sono il **numero medio della coda**, il **tempo medio di attesa** e, di conseguenza, anche il **tempo medio di risposta**.\
-![1742150755381](image/README/1742150755381.png)\
-Di seguito si può vedere il cambiamento del tempo medio di attesa, il numero medio della coda e l'utilizzazione al variare del numero di clienti nel sistema.\
-![1742556358341](image/README/1742556358341.png)
-
-##### Secoda rete
-Per la seconda rete ho cambiato la distribuzione di servizio usata dal nodo "Service2".\
+Successivamente ho cambiato la distribuzione di servizio usata dal nodo "Service2".\
 Anche in questo caso l'utilizzo e il throughput rimangono pressochè invariati e convergono con l'aumentare dei clienti nel sistema, ma cambiano il **numero medio della coda** e il **tempo medio di attesa**.\
 Una particolarità di questa rete è il basso valore atteso per il tempo di servizio. Questo, in concomitanza con il resample in caso di valori negativi, fa si di aumentare la media della Distribuzione Normale. Nei grafici seguenti è stata inclusa la Normale solo nell'ultimo per mostrare la differenza rispetto le altre distribuzioni.\
 ![1742632017987](image/README/1742632017987.png)
