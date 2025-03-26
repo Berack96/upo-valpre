@@ -113,7 +113,7 @@ public class Plot {
             var frame = new JFrame("Graph of the Simulation");
             frame.add(rootPane);
             frame.setSize(800, 600);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setVisible(true);
         });
     }

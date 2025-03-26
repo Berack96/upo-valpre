@@ -131,4 +131,13 @@ public class Rng {
 		var t = multiplier * (seed % Q) - R * (seed / Q);
 		return t > 0 ? t : (t + modulus);
 	}
+
+	/**
+	 * This creates a new seed based on the current time.
+	 * 
+	 * @return a new seed
+	 */
+	public static long newSeed() {
+		return System.currentTimeMillis() % MODULUS;
+	}
 }

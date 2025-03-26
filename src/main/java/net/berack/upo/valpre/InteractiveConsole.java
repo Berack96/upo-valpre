@@ -1,16 +1,15 @@
 package net.berack.upo.valpre;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import com.esotericsoftware.kryo.KryoException;
 
 import net.berack.upo.valpre.rand.Distribution;
+import net.berack.upo.valpre.rand.Rng;
 import net.berack.upo.valpre.sim.Net;
 import net.berack.upo.valpre.sim.ServerNode;
 
@@ -137,16 +136,18 @@ public class InteractiveConsole {
     /**
      * Run the simulation with the net.
      */
-    private void simpleRuns() throws InterruptedException, ExecutionException, IOException {
-        var choice = choose("Choose what to do:", "100 Run", "1K Runs", "1K Runs + Plot");
+    private void simpleRuns() throws Exception {
+        var choice = choose("Choose what to do:", "100 Run", "1K Runs", "Run max 10K with confidence", "Back");
+        var seed = Rng.newSeed();
+        var csv = "run" + seed + ".csv";
         switch (choice) {
-            case 1 -> new SimulationBuilder(net).setMaxRuns(100).setParallel(true).run();
-            case 2 -> new SimulationBuilder(net).setMaxRuns(1000).setParallel(true).run();
-            case 3 -> {
-                var randName = "rand" + System.currentTimeMillis() + ".csv";
-                new SimulationBuilder(net).setMaxRuns(1000).setParallel(true).setCsv(randName).run();
-                new Plot(randName).show();
-                new File(randName).delete();
+            case 1 -> new SimulationBuilder(net).setSeed(seed).setMaxRuns(100).setParallel(true).setCsv(csv).run();
+            case 2 -> new SimulationBuilder(net).setSeed(seed).setMaxRuns(1000).setParallel(true).setCsv(csv).run();
+            case 3 -> new SimulationBuilder(net).setSeed(seed).setMaxRuns(1000).setParallel(true).setCsv(csv).run();
+            case 4 -> {
+                var indices = ask("Confidence indices with format [node:stat=confidence:relativeError];[..]\n");
+                new SimulationBuilder(net).setSeed(seed).setMaxRuns(10000).parseConfidenceIndices(indices).setCsv(csv)
+                        .run();
             }
             default -> {
             }

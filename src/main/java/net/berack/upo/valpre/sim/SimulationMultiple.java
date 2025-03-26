@@ -146,5 +146,4 @@ public class SimulationMultiple {
         stream.println(); // remove last printed line
         return results;
     }
-
 }
