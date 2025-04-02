@@ -143,8 +143,7 @@ public class InteractiveConsole {
         switch (choice) {
             case 1 -> new SimulationBuilder(net).setSeed(seed).setMaxRuns(100).setParallel(true).setCsv(csv).run();
             case 2 -> new SimulationBuilder(net).setSeed(seed).setMaxRuns(1000).setParallel(true).setCsv(csv).run();
-            case 3 -> new SimulationBuilder(net).setSeed(seed).setMaxRuns(1000).setParallel(true).setCsv(csv).run();
-            case 4 -> {
+            case 3 -> {
                 var indices = ask("Confidence indices with format [node:stat=confidence:relativeError];[..]\n");
                 new SimulationBuilder(net).setSeed(seed).setMaxRuns(10000).parseConfidenceIndices(indices).setCsv(csv)
                         .run();

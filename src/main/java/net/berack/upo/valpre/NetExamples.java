@@ -67,9 +67,6 @@ public final class NetExamples {
                 new double[] { 1 / (avg * 0.5), 1 / (avg * 1.5) },
                 new double[] { 0.5f, 0.5f });
 
-        System.out.println("Normal: " + normal.mean);
-        System.out.println("Uniform: " + uniform.min + " - " + uniform.max);
-
         for (var spawn : spawnTotals) {
             System.out.println("Spawn: " + spawn);
             var nets = new Net[] {
