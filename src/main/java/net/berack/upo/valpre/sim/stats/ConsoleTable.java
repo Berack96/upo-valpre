@@ -21,13 +21,27 @@ public class ConsoleTable {
      * @throws NullPointerException if the array is null
      */
     public ConsoleTable(String... header) {
-        var max = 0;
+        this(-1, header);
+    }
+
+    /**
+     * Create a new table with the header passed as input.
+     * The table will have as many columns as the length of the header array.
+     * Each column will have the same size and will be the max length of all the
+     * headers string or the maxLen passed as input.
+     * 
+     * @param maxLen the max length of the columns
+     * @param header an array of strings
+     * @throws NullPointerException if the array is null
+     */
+    public ConsoleTable(int maxLen, String... header) {
+        var max = Math.max(0, maxLen);
         for (var name : header)
             max = Math.max(max, name.length());
 
         this.columns = header.length;
         this.maxLen = max + 2;
-        this.border = ("+" + "═".repeat(maxLen)).repeat(header.length) + "+\n";
+        this.border = ("+" + "═".repeat(this.maxLen)).repeat(header.length) + "+\n";
         this.builder.append(border);
         this.addRow(header);
     }
@@ -45,7 +59,7 @@ public class ConsoleTable {
 
         for (var val : values) {
             var diff = maxLen - val.length();
-            var first = (int) Math.ceil(diff / 2.0);
+            var first = Math.max((int) Math.ceil(diff / 2.0), 0);
             builder.append('║');
             builder.append(" ".repeat(first));
             builder.append(val);
