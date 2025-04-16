@@ -116,8 +116,14 @@ public class Result implements Iterable<Entry<String, NodeStats>> {
         var fFormat = "%" + (size + 4) + ".3f";
         var builder = new StringBuilder();
 
-        var table = new ConsoleTable("Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response", "Throughput",
-                "Utilization %", "Unavailable %", "Last Event");
+        var maxNameLen = 0;
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            maxNameLen = Math.max(node.length(), maxNameLen);
+        }
+
+        var table = new ConsoleTable(maxNameLen, "Node", "Departures", "Avg Queue", "Avg Wait", "Avg Response",
+                "Throughput", "Utilization %", "Unavailable %", "Last Event");
 
         for (var i = 0; i < nodes.length; i++) {
             var node = nodes[i];

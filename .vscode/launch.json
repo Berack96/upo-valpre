@@ -30,7 +30,7 @@
             "name": "Run Incremental",
             "request": "launch",
             "mainClass": "net.berack.upo.valpre.Main",
-            "args": "simulation -net src/test/resources/example2.net -runs 1000 -i \"[Service1:throughput=0.98:0.01],[Service2:utilization=0.98:0.01],[Service2:unavailable=0.98:0.01]\""
+            "args": "simulation -net src/test/resources/example2.net -runs 1000 -indices \"[Service1:throughput=0.98:0.01],[Service2:utilization=0.98:0.01],[Service2:unavailable=0.98:0.01]\""
         },
         {
             "type": "java",

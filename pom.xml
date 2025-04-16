@@ -41,5 +41,10 @@
             <artifactId>jfreechart</artifactId>
             <version>1.5.5</version>
         </dependency>
+        <dependency>
+            <groupId>net.sourceforge.argparse4j</groupId>
+            <artifactId>argparse4j</artifactId>
+            <version>0.9.0</version>
+        </dependency>
     </dependencies>
 </project>

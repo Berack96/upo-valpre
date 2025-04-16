@@ -54,7 +54,7 @@ I percorsi che invece sono direttamente responsabili per la simulazione sono:
 
 Nel jar sono presenti già 2 reti per fare degli esperimenti e/o testare se il tool funziona correttamente. Per poter vedere una run usando questi esempi basta far partire il tool in modalità interattiva e scegliere di caricare gli esempi.\
 `java -jar upo-valpre.jar interactive`\
-Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.net/Download.html) e le reti usate per fare il confronto si possono trovare sotto [le risorse del test](src/test/resources).\
+Questa libreria è stata confrontata con il tool [JMT](https://jmt.sourceforge.net/Download.html); le reti usate per fare il confronto si possono trovare sotto [le risorse del test](src/test/resources) e in esse ci sono anche i risultati ottenuti dalle run.\
 Inoltre in alcune istanze state modificate le due reti di esempio in modo da mostrare cosa succede con l'aumento del numero di clienti nel sistema e cambiando la distribuzione di servizio di un nodo. Ogni valore ottenuto ha un sample di 1000 simulazioni. I risultati possono essere presi dal seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing)\
 Le distribuzioni usate hanno tutte la stessa media μ:
 - Normale(μ, 0.6)
@@ -67,13 +67,18 @@ Le distribuzioni usate hanno tutte la stessa media μ:
 ### Primo esempio
 ![1741862746304](image/README/1741862746304.png)\
 Il primo è `example1`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=0.222 e quindi media 4.5) e un centro di servizio (Queue) con tasso di servizio distribuito come una normale (μ=3.2, σ=0.6).\
-Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:
+Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:\
 ![1741860064265](image/README/1741860064265.png)
 
-Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simili a quelli prodotti dalla libreria:\
-Queue Response Time = 7.3022 con un range [7.1456, 7.4589]\
-Queue Throughput = 0.2226 con un range [0.2182, 0.2271]\
-Queue Utilization = 0.7111 con un range [0.6959, 0.7262]
+O se si utilizza la parte grafica si possono vedere i risultati della Queue con l'incertezza:\
+![1744786768084](image/README/1744786768084.png)
+
+Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simili a quelli prodotti dalla libreria:
+```
+Response Time (Queue)   7.3022 con range [7.1456, 7.4589]
+Throughput (Queue)      0.2226 con range [0.2182, 0.2271]
+Utilization (Queue)     0.7111 con range [0.6959, 0.7262]
+```
 
 Successivamente ho cambiato la distribuzione di servizio usata dal nodo "Queue".\
 Come si può notare l'utilizzo e il throughput rimangono pressochè invariati tra le varie distribuzioni, ma convergono con l'aumentare dei clienti.\
@@ -85,19 +90,24 @@ Di seguito si può vedere il cambiamento del tempo medio di attesa, il numero me
 ### Secondo esempio
 ![1741863043733](image/README/1741863043733.png)\
 Il secondo esempio è `example2`; è una rete composta da una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=1.5 e quindi media 0.666), un centro di servizio (Service1) con tasso di servizio distribuito come una esponenziale (λ=2.0 e quindi media 0.5) e un altro centro di servizio (Service2) con tasso di servizio distribuito come una esponenziale (λ=3.5 e quindi media 0.2857) e con un tempo di indisponibilità che viene attivato con probabilità 10% e distribuito con una eseponenziale (λ=10.0 e quindi media 0.1)\
-Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:
+Se si effettua una simulazione si vedranno i risultati sulla console in questo modo:\
 ![1741862486547](image/README/1741862486547.png)
 
-Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simili a quelli prodotti dalla libreria:\
-Service1 Response Time ~ 1.9866\
-Busy2 Response Time ~ 0.2825\
-Queue2 Response Time ~ 0.2279\
-Service1 Utilization ~ 0.7488\
-Calibration Number of Customers ~ 0.0150\
-Busy2 Number of Customers ~ 0.4279\
-Throughput ~ 1.5000
+O se si utilizza la parte grafica si possono vedere i risultati del Service2 con l'incertezza:\
+![1744786814771](image/README/1744786814771.png)
+
+Il tool JMT con la stessa rete produce i seguenti risultati che sono molto simili a quelli prodotti dalla libreria:
+```
+Response Time (Service1)          2.0115 con range [1.9671, 2.0559]
+Response Time (Busy2)             0.2858 con range [0.2816, 0.2899]
+Response Time (Queue2)            0.2318 con range [0.2250, 0.2387]
+Utilization (Service1)            0.7472 con range [0.7410, 0.7534]
+Number of Customers (Busy2)       0.4285 con range [0.4248, 0.4322]
+Number of Customers (Calibration) 0.0149 con range [0.0148, 0.0151]
+Throughput del Sistema            1.5094 con range [1.5005, 1.5183]
+```
 
 Successivamente ho cambiato la distribuzione di servizio usata dal nodo "Service2".\
-Anche in questo caso l'utilizzo e il throughput rimangono pressochè invariati e convergono con l'aumentare dei clienti nel sistema, ma cambiano il **numero medio della coda** e il **tempo medio di attesa**.\
+Anche in questo caso l'utilizzo e il throughput rimangono pressochè invariati e convergono con l'aumentare dei clienti nel sistema, ma cambiano il **numero medio della coda** e il **tempo medio di attesa**.![1744793029362](image/README/1744793029362.png)\
 Una particolarità di questa rete è il basso valore atteso per il tempo di servizio. Questo, in concomitanza con il resample in caso di valori negativi, fa si di aumentare la media della Distribuzione Normale. Nei grafici seguenti è stata inclusa la Normale solo nell'ultimo per mostrare la differenza rispetto le altre distribuzioni.\
 ![1742632017987](image/README/1742632017987.png)
