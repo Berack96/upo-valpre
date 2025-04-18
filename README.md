@@ -97,7 +97,7 @@ Una particolarità di questa rete è il basso valore atteso per il tempo di serv
 
 ### Confronto con JMT
 
-Il tool JMT con le stesse reti di base (ovvero senza cambiare la Distribuzione) ottiene risultati simili al simulatore. Essi si possono trovare al seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing) nei fogli colorati di blu (example1, example2, Riassunto) oppure direttamente dalla seguente tabella:\
+Il tool JMT con le stesse reti di base (ovvero senza cambiare la Distribuzione) ottiene risultati simili al simulatore. Le reti usate per fare il confronto si possono trovare dentro la cartella delle [risorse di test](https://github.com/Berack96/upo-valpre/tree/main/src/test/resources). I risultati ottenuti dal simulatore e da JMT si possono trovare al seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing) nei fogli colorati di blu (example1, example2, Riassunto) oppure direttamente dalla seguente tabella:\
 ![1744966407854](image/README/1744966407854.png)
 
 Si possono notare due note messe nella tabella che servono ad indicare da dove vengono presi alcuni dati: La response, l'utilization% e l'unavailable% di Service2.\
