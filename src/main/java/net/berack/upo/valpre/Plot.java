@@ -144,7 +144,8 @@ public class Plot {
 
             var model = this.statList.getModel();
             var avg = summary.average;
-            var err = summary.calcError(0.95);
+            var err = summary.calcError(0.95)
+                    .apply(val -> val / 2); // Done to get the error for the mean value
 
             for (int i = 0; i < model.getSize(); i++) {
                 var entry = model.getElementAt(i);
