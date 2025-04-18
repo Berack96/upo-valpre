@@ -65,6 +65,8 @@ Le distribuzioni usate hanno tutte la stessa media μ e sono state create con qu
 - Erlang(5, 5/μ)
 - Iperesponenziale(p=\[0.5, 0.5\], e=\[1/(μ\*0.5), 1/(μ\*1.5)\])
 
+---
+
 ### Primo esempio
 ![1741862746304](image/README/1741862746304.png)\
 `example1` è una rete con una fonte di clienti (Source) che arrivano con tasso esponenziale (λ=0.222, media 4.5) e un centro di servizio (Queue) con tasso di servizio distribuito come una normale (μ=3.2, σ=0.6).\
@@ -79,6 +81,8 @@ Modificando la distribuzione di servizio del nodo "Queue", si osservano variazio
 
 Di seguito si può vedere il cambiamento del tempo medio di attesa, il numero medio della coda e l'utilizzazione al variare del numero di clienti nel sistema.\
 ![1742556358341](image/README/1742556358341.png)
+
+---
 
 ### Secondo esempio
 ![1741863043733](image/README/1741863043733.png)\
@@ -95,14 +99,20 @@ Anche in questo caso, modificando la distribuzione di servizio del nodo "Service
 Una particolarità di questa rete è il basso valore atteso per il tempo di servizio. Questo, in concomitanza con il resample in caso di valori negativi, fa si di aumentare la media della Distribuzione Normale. Nei grafici seguenti è stata inclusa la Normale solo nell'ultimo per mostrare la differenza rispetto le altre distribuzioni.\
 ![1742632017987](image/README/1742632017987.png)
 
-### Confronto con JMT
+## Confronto con JMT
 
-Il tool JMT con le stesse reti di base (ovvero senza cambiare la Distribuzione) ottiene risultati simili al simulatore. Le reti usate per fare il confronto si possono trovare dentro la cartella delle [risorse di test](https://github.com/Berack96/upo-valpre/tree/main/src/test/resources). I risultati ottenuti dal simulatore e da JMT si possono trovare al seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing) nei fogli colorati di blu (example1, example2, Riassunto) oppure direttamente dalla seguente tabella:\
+Il tool JMT con le stesse reti di base (ovvero senza cambiare la Distribuzione) ottiene risultati simili al simulatore. Le reti usate per fare il confronto si possono trovare dentro la cartella delle [risorse di test](src/test/resources). I risultati ottenuti dal simulatore e da JMT si possono trovare al seguente [link](https://docs.google.com/spreadsheets/d/1yM1fvlpc2mIIpRe8M7_ry8m3DC3ZxNA204mM60O2hoQ/edit?usp=sharing) nei fogli colorati di blu (example1, example2, Riassunto) oppure direttamente dalla seguente tabella:\
 ![1744966407854](image/README/1744966407854.png)
 
 Si possono notare due note messe nella tabella che servono ad indicare da dove vengono presi alcuni dati: La response, l'utilization% e l'unavailable% di Service2.\
 Infatti essi si possono derivare da alcuni dati presenti dentro il simulatore JMT:
 - Response: è il totale dato da Queue2 + Busy2 dato che il primo indica l'attesa della coda, mentre il secondo indica il tempo medio di servizio.
-- Utilizazion%: è il valore preso dal numero medio di customer di Busy2. In questo caso indica proprio quanto la stazione (essendo single server) è occupata.
+- Utilization%: è il valore preso dal numero medio di customer di Busy2. In questo caso indica proprio quanto la stazione (essendo single server) è occupata.
 - Unavailable%: è il valore preso dal numero medio di customer di Calibration. In questo caso indica proprio quanto la stazione (essendo single server) è ferma e non può servire i clienti.
 
+---
+
+Per quanto riguarda il confronto con l'aumentare dei clienti nel sistema, JMT non permette di fermare la simulazione una volta elaborati N clienti, perciò è stata solo modificata la distribuzione e sono stati salvati i dati. Il risultato è la seguente tabella:\
+![1745009420186](image/README/1745009420186.png)
+
+Notare che, le osservazioni precedenti per la rete2, valgono anche in questo caso per il calcolo del tempo di risposta.
