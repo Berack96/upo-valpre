@@ -298,7 +298,8 @@ public class NodeStats implements Cloneable, Iterable<Double> {
         public NodeStats calcError(NodeStats alpha) {
             var n = this.stats.size();
             var distr = new TDistribution(null, n - 1);
-            var tValue = alpha.clone().apply(a -> distr.inverseCumulativeProbability(a));
+            var prob = alpha.clone().apply(a -> 1 - (1 - a) / 2.0d);
+            var tValue = prob.apply(p -> distr.inverseCumulativeProbability(p));
 
             return this.stdDev().merge(tValue, (std, t) -> t * (std / Math.sqrt(n)));
         }

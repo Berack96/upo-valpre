@@ -201,7 +201,7 @@ public class SimulationBuilder {
         if (indices == null)
             return this;
 
-        for (var index : indices.split(",")) {
+        for (var index : indices.split(";")) {
             var parts = index.split("=");
             if (parts.length != 2)
                 throw new IllegalArgumentException("Invalid confidence index: " + index);

@@ -138,7 +138,7 @@ public class ConfidenceIndices {
 
             for (var stat : statistics) {
                 var err = error.of(stat);
-                if (!Double.isFinite(err))
+                if (!Double.isFinite(err) || err == 0.0d)
                     continue;
 
                 retValues.add("%s:%s=%.3f".formatted(this.nodes[i], stat, err));
